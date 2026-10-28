@@ -1,0 +1,56 @@
+/*
+ * Mar's shell (see marShell.ts). Scoped to Mar's proposal by the
+ * `data-proposal` attribute on <html>; Pablo's stays as it is.
+ */
+
+/* One flat, dark page: no glass mesh behind the content. */
+:root[data-proposal='mariana'] .proto-shell {
+  background: var(--color-content-background);
+}
+:root[data-proposal='mariana'] .proto-main::before {
+  display: none;
+}
+
+/* The sidebar floats over the page: smoked, blurred, no border. */
+:root[data-proposal='mariana'] .proto-sidebar {
+  position: absolute;
+  inset: 8px auto 8px 8px;
+  margin: 0;
+  z-index: 20;
+  border-radius: 18px;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(40px) saturate(1.2);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 0.45);
+}
+
+/* The content runs edge to edge, under the sidebar's blur. */
+:root[data-proposal='mariana'] .proto-main.proto-main {
+  margin: 0;
+  border-radius: 0;
+  background: var(--color-content-background);
+  padding-left: 252px;
+  transition: padding-left 320ms cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+:root[data-proposal='mariana'] .mar-closed .proto-main.proto-main {
+  padding-left: 56px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-proposal='mariana'] .proto-main.proto-main {
+    transition: none;
+  }
+}
+
+/* A page under a photo: its title sits low on the photo, larger. */
+:root[data-proposal='mariana'] .mar-backdrop ~ div > header:first-child {
+  padding-top: 168px;
+}
+:root[data-proposal='mariana'] .mar-backdrop ~ div > header:first-child h1 {
+  font-size: 52px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+/* Mariana: no sparkles icon anywhere in her proposal. */
+:root[data-proposal='mariana'] [class*='lucide-sparkles'] {
+  display: none;
+}
