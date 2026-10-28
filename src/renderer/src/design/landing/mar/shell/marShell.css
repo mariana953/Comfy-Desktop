@@ -184,3 +184,45 @@
   background-color: color-mix(in oklch, var(--color-card-background) 90%, transparent);
   backdrop-filter: blur(32px) saturate(1.2);
 }
+
+/* Ambient dock (MarDock.vue): no sidebar; the content takes the whole
+   window and leaves room at the bottom for the dock. */
+:root[data-mar-dock='on'] .proto-sidebar {
+  display: none;
+}
+:root[data-mar-dock='on'] .proto-main.proto-main {
+  margin: 0;
+  border-radius: 0;
+  padding-bottom: 88px;
+}
+
+/* Home under the dock (Exploration 17): a tall photo, a large greeting
+   centred on it, recent work rising over its lower edge. */
+:root[data-mar-dock='on'] .mar-backdrop.mar-backdrop {
+  height: 640px;
+}
+:root[data-mar-dock='on'] .mar-home > section:first-child {
+  padding-top: 64px;
+}
+:root[data-mar-dock='on'] .mar-home h1 {
+  margin-bottom: 28px;
+  font-size: 64px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+/* Pablo's prototype resets buttons inside .proto-ui with a high-specificity
+   rule; the dock's buttons keep their own size and padding. */
+:root .proto-ui.proto-ui.proto-ui .mar-dock-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-lens-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-flyout-row {
+  padding: 6px 8px;
+}

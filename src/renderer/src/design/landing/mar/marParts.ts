@@ -3,30 +3,35 @@ import { computed } from 'vue'
 /**
  * What Mar's proposal shows on Home, decided per part. Pablo's proposal
  * (Proposal: Pablo) is his branch as it is; Mar's (Proposal: Mar) is her
- * draft: floating sidebar and page photos, the Create menu, Pablo's
- * greeting with a compact prompt, builds as pills, no examples on Home
- * (they live in Agent), recent work as photo cards, and What's new as tabs.
+ * draft, Figma "Exploration 17 · Ambient dock": a tall page photo with a
+ * large greeting, the Create menu, a compact prompt, recent work as photo
+ * cards, example workflows as compact rows, What's new as tabs, and the
+ * builds in the dock instead of on Home.
+ * Shell: the Ambient dock (Figma "Exploration 17") instead of a sidebar.
  * The parts stay named so a part can go back to Pablo's in one line.
  */
 
 export type Side = 'pablo' | 'mar'
 
+/** Shell: Pablo's sidebar, the floating sidebar, or the Ambient dock. */
+export type Shell = Side | 'dock'
+
 export interface Parts {
-  shell: Side
+  shell: Shell
   actions: Side
   top: Side
-  builds: Side
-  examples: Side | 'off'
+  builds: Side | 'off'
+  examples: Side | 'off' | 'rows'
   recent: Side
   news: Side | 'banner'
 }
 
 const MAR: Parts = {
-  shell: 'mar',
+  shell: 'dock',
   actions: 'mar',
   top: 'pablo',
-  builds: 'mar',
-  examples: 'off',
+  builds: 'off',
+  examples: 'rows',
   recent: 'mar',
   news: 'mar'
 }

@@ -1,14 +1,15 @@
 # Decisions
 
 Open questions from the design-system kickoff with Pablo (2026-10-26) and
-where each one stands. "In Mar" says whether it is already in the prototype.
+where each one stands. "In Mar" says whether it is already in the prototype
+("Tweak": in the Prototype menu, to compare with Pablo's).
 
 | #   | Question                                                        | Decision                                                                                                                                                                                    | Status   | In Mar  |
 | --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
 | 1   | Keep the glass / translucent style?                             | No glass borders. Transparency only over imagery and overlays (chips, scrims, the prompt bar). Surfaces are white at low opacity.                                                           | Proposed | Not yet |
 | 2   | Colour or black and white?                                      | Neutral UI, imagery leads. White primary (one per screen). Colour only for status (running, update, error) and progress. Brand colour only in moments (installer, first run, empty states). | Proposed | Not yet |
 | 3   | Themes                                                          | Light and dark only; no branded purple theme for now.                                                                                                                                       | Decided  | —       |
-| 4   | Workflow tabs: top bar in the app, one level lower in a browser | Open                                                                                                                                                                                        | Open     |         |
+| 4   | Workflow tabs: top bar in the app, one level lower in a browser | Proposed: the title bar holds only tabs (Home as an icon, one per open workflow and app), where things run and the agent on the right; Create and Build both named. Browser: not yet.       | Proposed | Tweak   |
 | 5   | Agent blends into the canvas                                    | Open. Direction: the agent is its own panel that pushes the canvas, told apart by place, not colour.                                                                                        | Open     |         |
 | 6   | Two homes (ComfyUI from Git / Cloud has none)                   | Open. See Figma "IA · Unified".                                                                                                                                                             | Open     |         |
 | 7   | Install and first-run flow                                      | Open                                                                                                                                                                                        | Open     |         |

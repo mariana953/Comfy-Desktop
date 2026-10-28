@@ -15,31 +15,44 @@ The menu's **UI** section picks the look: **Void** (the main one) or the
 other directions in `ui/looks/`. **Tune the UI…** opens a panel with live
 knobs on top of it (corners, surfaces, borders, shadows), saved per browser. The knobs live in `uiTuner.ts`.
 
+## Title bar tweak
+
+Prototype menu › **Title bar**: **Breadcrumb** (Pablo's) or **Tabs**
+(`shell/titleTabs.ts`). Tabs: Home as a fixed icon tab, one tab per open
+workflow and app, then where things run (it opens the build switcher) and
+the agent on the right. The sidebar's lens switch keeps Create and Build,
+both named (`shell/MarLensSwitch.vue`); the agent leaves it.
+
 ## What it changes
 
-- Home: one Create button top right; Open ComfyUI and Deploy are its menu.
-- Builds on Home are tiles: where it runs and its state on top, name and
-  place below.
-- Greeting and prompt box sit higher; the prompt box is two lines tall.
-- Example workflows are Pablo's hand of cards (interactive), in the same
-  column as the prompt and the builds.
-- Recent workflows are cards with a meta line and a value on the right
-  (build, when), with one photo series (Magnific stock, `assets/`).
-- What's new is one full-width branded banner at a time (`LaunchBanner.vue`):
-  a looping visual, one centred message, a white CTA, dots. Gradients stand in
-  until the brand-kit loops from Magnific land in `assets/`.
-- The Agent lens uses a chat bubble icon.
+Mar's draft follows Figma "Exploration 17 · Ambient dock":
+
+- No sidebar: one floating dock at the bottom (`shell/MarDock.vue`) with
+  the pages, the recent builds and their state, projects and spaces in a
+  flyout, the workspace, and the Create / Build / Agent switch at the end,
+  like Figma's mode switch. In Build it shows Build's pages.
+- Home: a tall page photo with a large greeting, the Create menu top
+  right, a compact prompt box, recent work as photo cards, example
+  workflows as compact rows, What's new as tabs.
+- Agent: Mar's chat (`agent/MarAgent.vue`) over the same scripted flows.
+- Chips on images are dark grey with a blur; tabs slide; micro-animations
+  live in `motion/`.
 
 ## How it stays apart
 
 Everything new is in this folder. Pablo's files only gain small hooks:
 
-- `prototypeOptions.ts`: the Proposal, UI and Tune groups.
+- `prototypeOptions.ts`: the Proposal, UI and Tune groups, and Title bar.
 - `comfyTitleBar/TitleBarApp.vue`: the Prototype menu shows a heading per
   section, with Proposal first.
 - `LandingPrototypes.vue`: mounts the UI tuner.
 - `pages/modes/ModePages.vue`: Home goes through `HomeEntry.vue`.
-- `variants/VariantModes.vue`: the Agent icon comes from `proposal.ts`.
+- `variants/VariantModes.vue`: the Agent icon comes from `proposal.ts`;
+  with Title bar › Tabs, the lens switch is `MarLensSwitch.vue`.
+- `parts/nav/TitleBarBreadcrumb.vue`: shows `MarTitleTabs.vue` instead
+  while Title bar › Tabs is on.
+- `titleBar.ts`, `titleBarBridge.ts`: publish the tabs and take their
+  clicks (tab, close tab, agent).
 
 With Proposal: Pablo, the prototype is exactly his.
 

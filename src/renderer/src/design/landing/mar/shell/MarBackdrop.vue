@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { heroImage } from './marShell'
+import MarDock from './MarDock.vue'
+import { heroImage, marDockOn } from './marShell'
 import './marShell.css'
 import '../motion/motion.css'
 import '../motion/tabSlide'
@@ -15,6 +16,7 @@ import '../motion/tabSlide'
   <div v-if="heroImage" class="mar-backdrop" aria-hidden="true">
     <img :src="heroImage" alt="" />
   </div>
+  <MarDock v-if="marDockOn" />
 </template>
 
 <style scoped>

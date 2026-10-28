@@ -46,7 +46,7 @@ watch(
   }
 )
 
-/** Mar's floating sidebar: her draft, with the switch on. */
+/** Mar's floating sidebar (an earlier shell, kept for comparison). */
 export const marShellOn = computed(() => isMariana.value && active.value.shell === 'mar')
 
 watch(
@@ -54,6 +54,18 @@ watch(
   (on) => {
     if (on) document.documentElement.dataset.marShell = 'on'
     else delete document.documentElement.dataset.marShell
+  },
+  { immediate: true }
+)
+
+/** Mar's Ambient dock: no sidebar, one dock at the bottom (MarDock.vue). */
+export const marDockOn = computed(() => isMariana.value && active.value.shell === 'dock')
+
+watch(
+  marDockOn,
+  (on) => {
+    if (on) document.documentElement.dataset.marDock = 'on'
+    else delete document.documentElement.dataset.marDock
   },
   { immediate: true }
 )

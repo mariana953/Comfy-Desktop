@@ -27,12 +27,18 @@ import {
   hostActions,
   instanceById,
   instances,
+  openDetail,
   proto,
   recentInstances
 } from '../useProto'
 import { can } from '../milestones'
 import { TEMPLATES } from '../mock'
 import portraitSeaside from './assets/portrait-seaside.jpg'
+import portraitGarden from './assets/portrait-garden.jpg'
+import lakeFog from './assets/lake-fog.jpg'
+import portraitSun from './assets/portrait-sun.jpg'
+import hillsSunset from './assets/hills-sunset.jpg'
+import portraitSmile from './assets/portrait-smile.jpg'
 import forestFog from './assets/forest-fog.jpg'
 import portraitGrass from './assets/portrait-grass.jpg'
 import hillsFog from './assets/hills-fog.jpg'
@@ -71,6 +77,17 @@ const actions = computed(() => [
 const noLocal = computed(() => !instances.value.some((i) => i.kind === 'local'))
 const builds = computed(() => recentInstances.value.slice(0, 3))
 const tight = computed(() => parts.value.top === 'mar')
+
+// Example workflows as compact rows (Exploration 17): photo, title, what it does.
+const EXAMPLE_ART = [portraitGarden, lakeFog, portraitSun, hillsSunset, portraitSmile]
+const exampleRows = computed(() =>
+  TEMPLATES.filter((t) => t.kind === 'graph')
+    .slice(0, 5)
+    .map((t, i) => {
+      const [title, what] = t.title.split(':').map((x) => x.trim())
+      return { id: t.id, title: title!, what: what ?? t.category, src: EXAMPLE_ART[i]! }
+    })
+)
 
 const RECENT_ART = [portraitSeaside, forestFog, portraitGrass, hillsFog, portraitWindow]
 const recent = computed(() =>
@@ -119,7 +136,7 @@ const recent = computed(() =>
               <BuildPill v-for="i in builds" :key="i.id" :inst="i" />
             </div>
           </div>
-          <QuickLaunch v-else />
+          <QuickLaunch v-else-if="parts.builds === 'pablo'" />
         </template>
       </div>
     </section>
@@ -147,7 +164,7 @@ const recent = computed(() =>
       />
 
       <section v-if="parts.recent === 'mar' && recent.length" class="mt-10">
-        <SectionHeader title="Recently used">
+        <SectionHeader title="Recently used" link="See all" @link="go('workflows')">
           <template #controls>
             <span
               class="inline-flex h-5 items-center rounded-full bg-secondary-background px-2 text-ui text-muted-foreground"
@@ -168,6 +185,33 @@ const recent = computed(() =>
         </ScrollRow>
       </section>
       <RecentWork v-else-if="parts.recent === 'pablo'" />
+
+      <section v-if="parts.examples === 'rows'" class="mt-10">
+        <SectionHeader
+          title="Example workflows"
+          :link="can.explore ? 'Explore all' : undefined"
+          @link="go('explore')"
+        >
+          <template #controls>
+            <span class="text-ui text-subtle-foreground">{{ TEMPLATES.length }}</span>
+          </template>
+        </SectionHeader>
+        <div class="grid grid-cols-5 gap-3">
+          <button
+            v-for="e in exampleRows"
+            :key="e.id"
+            type="button"
+            class="mar-surface flex min-w-0 items-center gap-3 rounded-card p-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+            @click="openDetail('template', e.id)"
+          >
+            <img :src="e.src" alt="" class="size-12 shrink-0 rounded-control object-cover" />
+            <span class="min-w-0">
+              <span class="block truncate text-ui font-medium">{{ e.title }}</span>
+              <span class="block truncate text-ui text-subtle-foreground">{{ e.what }}</span>
+            </span>
+          </button>
+        </div>
+      </section>
 
       <template v-if="can.explore">
         <WhatsNew v-if="parts.news === 'mar'" />
