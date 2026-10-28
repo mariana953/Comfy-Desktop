@@ -177,12 +177,12 @@
   background-color: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
 }
 
-/* The prompt box stays nearly opaque: it is where you type, so what is
-   behind it should only show faintly. */
+/* The prompt box is mostly opaque: it is where you type, so what is
+   behind it only shows faintly, through a blur. */
 :root[data-mar-ui='on'] .proto-main .mar-prompt.bg-card-background,
 :root[data-mar-ui='on'] .proto-main .mar-composer {
-  background-color: color-mix(in oklch, var(--color-card-background) 90%, transparent);
-  backdrop-filter: blur(32px) saturate(1.2);
+  background-color: color-mix(in oklch, var(--color-card-background) 78%, transparent);
+  backdrop-filter: blur(28px) saturate(1.2);
 }
 
 /* Ambient dock (MarDock.vue): no sidebar; the content takes the whole
@@ -291,4 +291,19 @@
 }
 :root[data-mar-ui='on'] .mar-backdrop.is-bloom::before {
   height: 90px;
+}
+
+/* Mar's greeting: solid text in the page's foreground, Semi Bold and a
+   touch smaller, instead of the grey gradient that muddied over the
+   background. */
+:root[data-mar-ui='on'] .mar-greeting.mar-greeting {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--color-base-foreground);
+  font-weight: 600;
+  text-shadow: 0 2px 24px color-mix(in oklch, var(--color-content-background) 55%, transparent);
+}
+:root[data-mar-dock='on'] .mar-home h1.mar-greeting {
+  font-size: 56px;
+  letter-spacing: -0.035em;
 }

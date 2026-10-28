@@ -125,7 +125,10 @@ const recent = computed(() =>
       <div :class="['flex flex-1 flex-col', noLocal || !tight ? 'justify-center pt-10' : '']">
         <StartPaths v-if="noLocal" />
         <template v-else>
-          <Greeting :class="tight ? 'mb-4! pt-0!' : ''" />
+          <Greeting
+            text="Hi Mar. Let's create"
+            :class="['mar-greeting', tight ? 'mb-4! pt-0!' : '']"
+          />
           <PromptBox v-if="can.agent" target class="mar-prompt" />
           <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-210">
             <div class="mb-2.5 flex items-center justify-between px-1">
