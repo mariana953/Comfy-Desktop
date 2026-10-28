@@ -15,20 +15,16 @@ export interface Knob {
 
 export interface Tuning {
   radius: 'sharp' | 'default' | 'soft'
-  text: 'small' | 'default' | 'large'
   contrast: 'low' | 'default' | 'high'
   borders: 'none' | 'hairline' | 'glass'
   shadows: 'off' | 'default'
-  focus: 'white' | 'blue' | 'violet'
 }
 
 const DEFAULTS: Tuning = {
   radius: 'default',
-  text: 'default',
   contrast: 'default',
   borders: 'none',
-  shadows: 'default',
-  focus: 'white'
+  shadows: 'default'
 }
 
 export const KNOBS: Knob[] = [
@@ -39,15 +35,6 @@ export const KNOBS: Knob[] = [
       { value: 'sharp', label: 'Sharp' },
       { value: 'default', label: 'Default' },
       { value: 'soft', label: 'Soft' }
-    ]
-  },
-  {
-    key: 'text',
-    label: 'Text size',
-    options: [
-      { value: 'small', label: '12' },
-      { value: 'default', label: '13' },
-      { value: 'large', label: '14' }
     ]
   },
   {
@@ -75,15 +62,6 @@ export const KNOBS: Knob[] = [
       { value: 'off', label: 'Off' },
       { value: 'default', label: 'On' }
     ]
-  },
-  {
-    key: 'focus',
-    label: 'Focus and progress',
-    options: [
-      { value: 'white', label: 'White' },
-      { value: 'blue', label: 'Blue' },
-      { value: 'violet', label: 'Violet' }
-    ]
   }
 ]
 
@@ -102,10 +80,6 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
       '--radius-control': '12px',
       '--radius-min': '6px'
     }
-  },
-  text: {
-    small: { '--text-ui': '12px', '--text-ui--line-height': '18px' },
-    large: { '--text-ui': '14px', '--text-ui--line-height': '22px' }
   },
   contrast: {
     low: {
@@ -140,10 +114,6 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
       '--shadow-elev-hover': 'none',
       '--shadow-highlight': 'none'
     }
-  },
-  focus: {
-    blue: { '--color-border-focus': 'oklch(0.68 0.15 250)' },
-    violet: { '--color-border-focus': 'oklch(0.66 0.16 295)' }
   }
 }
 

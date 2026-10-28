@@ -13,8 +13,7 @@ Pablo's at that milestone. What changed and why is in
 
 The menu's **UI** section picks the look: **Void** (the main one) or the
 other directions in `ui/looks/`. **Tune the UI…** opens a panel with live
-knobs on top of it (corners, text size, surfaces, borders, shadows, chips on
-images, focus colour), saved per browser. The knobs live in `uiTuner.ts`.
+knobs on top of it (corners, surfaces, borders, shadows), saved per browser. The knobs live in `uiTuner.ts`.
 
 ## What it changes
 
