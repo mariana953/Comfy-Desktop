@@ -10,12 +10,12 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
  */
 const canvas = ref<HTMLCanvasElement>()
 
-// Plum, warm amber and a touch of Comfy yellow; low alpha so the page
-// stays neutral and the content leads.
+// Muted plum, warm sand and a hint of Comfy yellow, at low alpha: a
+// tint more than a colour, so the page stays neutral and the content leads.
 const BLOBS = [
-  { c: '120,72,150', x: 0.28, y: 0.42, r: 0.45, p: 0 },
-  { c: '200,140,90', x: 0.72, y: 0.52, r: 0.4, p: 2 },
-  { c: '226,236,110', x: 0.55, y: 0.26, r: 0.2, p: 4 }
+  { c: '118,96,140', x: 0.28, y: 0.42, r: 0.5, p: 0 },
+  { c: '170,136,108', x: 0.72, y: 0.52, r: 0.45, p: 2 },
+  { c: '196,200,150', x: 0.55, y: 0.26, r: 0.24, p: 4 }
 ]
 
 let raf = 0
@@ -46,23 +46,23 @@ onMounted(() => {
   fit()
 
   const frame = (): void => {
-    if (!still) t += 0.005
+    if (!still) t += 0.0025
     const k = (Math.sin(t) + 1) / 2
     x.clearRect(0, 0, w, h)
     x.save()
-    x.filter = 'blur(48px)'
+    x.filter = 'blur(72px)'
     for (const b of BLOBS) {
       const bx = w * (b.x + 0.06 * Math.sin(t * 0.7 + b.p))
       const by = h * (b.y + 0.08 * Math.cos(t * 0.5 + b.p))
       const g = x.createRadialGradient(bx, by, 0, bx, by, w * b.r)
-      g.addColorStop(0, `rgba(${b.c},${0.3 + 0.22 * k})`)
+      g.addColorStop(0, `rgba(${b.c},${0.2 + 0.1 * k})`)
       g.addColorStop(1, `rgba(${b.c},0)`)
       x.fillStyle = g
       x.fillRect(0, 0, w, h)
     }
     x.restore()
     // Grain: strongest while the colour is faint, fading as it "resolves".
-    const amount = 0.16 * (1 - k) + 0.04
+    const amount = 0.08 * (1 - k) + 0.025
     for (let i = 0; i < noise.data.length; i += 4) {
       const v = Math.random() * 255
       noise.data[i] = noise.data[i + 1] = noise.data[i + 2] = v
