@@ -6,7 +6,7 @@ import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
 import { isMariana, proposal, PROPOSALS } from './proposal'
 import { SURFACES, surface } from './shell/surface'
 import { homeBackground, marNav, type HomeBackground, type MarNav } from './shell/marShell'
-import { SCREENS, ZOOMS, screen } from './screen'
+import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
@@ -98,6 +98,26 @@ function set(key: keyof Tuning, value: string): void {
             @click="screen.zoom = z"
           >
             {{ Math.round(z * 100) }}%
+          </button>
+        </div>
+        <span class="mt-1.5 text-ui text-subtle-foreground">Colour</span>
+        <div class="flex flex-col gap-px">
+          <button
+            v-for="d in DISPLAYS"
+            :key="d.id"
+            type="button"
+            :aria-pressed="screen.display === d.id"
+            :title="d.note"
+            :class="[
+              'flex h-7 items-center justify-between gap-2 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              screen.display === d.id
+                ? 'bg-secondary-background-hover text-base-foreground'
+                : 'text-muted-foreground hover:bg-secondary-background hover:text-base-foreground'
+            ]"
+            @click="screen.display = d.id"
+          >
+            <span class="shrink-0">{{ d.label }}</span
+            ><span class="truncate text-subtle-foreground">{{ d.note }}</span>
           </button>
         </div>
       </div>

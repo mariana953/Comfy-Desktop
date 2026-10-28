@@ -664,3 +664,8 @@
     sans-serif;
   text-align: center;
 }
+
+/* Screen simulator › colour: the picked panel's look over the whole app. */
+:root #app {
+  filter: var(--scr-filter, none);
+}

@@ -30,17 +30,43 @@ export const SCREENS: ScreenPreset[] = [
 
 export const ZOOMS = [0.9, 1, 1.1, 1.25]
 
+/** How the panel renders colour. A rough stand-in for the screens people
+ *  look at us on, applied as a filter over the whole app. */
+export const DISPLAYS: { id: string; label: string; note: string; filter: string }[] = [
+  { id: 'true', label: 'Accurate', note: 'Calibrated screen', filter: '' },
+  {
+    id: 'washed',
+    label: 'Washed out',
+    note: 'Cheap laptop panel: greyish blacks, low contrast',
+    filter: 'contrast(0.82) brightness(1.1)'
+  },
+  {
+    id: 'punchy',
+    label: 'Punchy',
+    note: 'Glossy or OLED: deep blacks, saturated',
+    filter: 'contrast(1.18) saturate(1.2)'
+  },
+  { id: 'dim', label: 'Dim', note: 'Brightness turned down', filter: 'brightness(0.75)' },
+  {
+    id: 'warm',
+    label: 'Night Shift',
+    note: 'Warm night mode (macOS, Windows)',
+    filter: 'sepia(0.3) saturate(1.15) hue-rotate(-12deg)'
+  }
+]
+
 const KEY = 'comfy.design.mar.screen'
 
-function load(): { id: string; zoom: number } {
+function load(): { id: string; zoom: number; display: string } {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? '{}')
     return {
       id: SCREENS.some((s) => s.id === v.id) ? v.id : 'fit',
-      zoom: ZOOMS.includes(v.zoom) ? v.zoom : 1
+      zoom: ZOOMS.includes(v.zoom) ? v.zoom : 1,
+      display: DISPLAYS.some((d) => d.id === v.display) ? v.display : 'true'
     }
   } catch {
-    return { id: 'fit', zoom: 1 }
+    return { id: 'fit', zoom: 1, display: 'true' }
   }
 }
 
@@ -51,6 +77,9 @@ const LABEL = 28
 
 function apply(): void {
   const root = document.documentElement
+  const filter = DISPLAYS.find((d) => d.id === screen.display)?.filter
+  if (filter) root.style.setProperty('--scr-filter', filter)
+  else root.style.removeProperty('--scr-filter')
   const preset = SCREENS.find((s) => s.id === screen.id)
   if (!preset?.w && screen.zoom === 1) {
     delete root.dataset.marScreen
