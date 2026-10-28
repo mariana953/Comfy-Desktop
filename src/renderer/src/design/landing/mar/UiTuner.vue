@@ -13,7 +13,8 @@ import { homeBackground, marNav, type HomeBackground, type MarNav } from './shel
 const NAVS: { value: MarNav; label: string }[] = [
   { value: 'sidebar', label: 'Sidebar' },
   { value: 'floating', label: 'Floating' },
-  { value: 'dock', label: 'Dock' }
+  { value: 'dock', label: 'Dock' },
+  { value: 'pablo', label: "Pablo's" }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom' },

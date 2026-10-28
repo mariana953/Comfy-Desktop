@@ -595,3 +595,11 @@
     0 2px 4px oklch(0 0 0 / 0.35),
     0 10px 26px oklch(0 0 0 / 0.34);
 }
+
+/* Navigation: Pablo's: his sidebar as it is, starting below the floating
+   title bar. */
+:root[data-mar-ui='on']:not([data-mar-surface='cloud'])
+  .proto-ui:has(> .glass-titlebar)
+  .proto-sidebar.proto-sidebar {
+  margin-top: 52px;
+}
