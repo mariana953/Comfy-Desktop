@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   MessageCircle,
+  MessageSquare,
   Palette,
   Plus,
   Rocket,
@@ -25,6 +26,8 @@ import {
   Workflow
 } from 'lucide-vue-next'
 import { go, goIn, proto, toast, workspace, type Mode, type Page } from '../../useProto'
+import { agent, resetAgent } from '../../agent'
+import { flow, resetFlow } from '../../appFlow'
 import { can, landingPage } from '../../milestones'
 import { INSTANCES, PROJECTS, USER } from '../../mock'
 import { SPACES } from '../../spaces'
@@ -113,6 +116,21 @@ function lens(m: Mode): void {
   goIn(m, m === 'build' ? 'build-overview' : m === 'agent' ? 'agent' : landingPage())
 }
 const open = computed(() => !marNav.collapsed)
+
+// Agent lens: a new chat and the recent ones, as in Pablo's AgentNav.
+const currentChat = computed(
+  () => (flow.messages.length ? flow.messages : agent.messages).find((m) => m.role === 'user')?.text
+)
+const RECENT_CHATS = [
+  'Seasonal backgrounds for Nike',
+  'Coca-Cola shade swatches app',
+  'Upscale Porsche renders to 4K'
+]
+function newChat(): void {
+  resetAgent()
+  resetFlow()
+  go('agent')
+}
 </script>
 
 <template>
@@ -175,6 +193,41 @@ const open = computed(() => !marNav.collapsed)
             ><span class="flex-1 truncate">{{ i.label }}</span
             ><span v-if="i.count" class="text-subtle-foreground">{{ i.count }}</span></template
           >
+        </button>
+      </template>
+
+      <template v-if="proto.mode === 'agent'">
+        <button
+          type="button"
+          class="mar-side-row"
+          :title="open ? undefined : 'New chat'"
+          @click="newChat"
+        >
+          <Plus :size="16" /><span v-if="open" class="flex-1 truncate">New chat</span>
+        </button>
+        <div class="mar-side-label">
+          <span v-if="open">Recent</span><span v-else class="mar-side-sep" />
+        </div>
+        <button
+          v-if="currentChat"
+          type="button"
+          class="mar-side-row is-on"
+          :title="open ? undefined : currentChat"
+          @click="go('agent')"
+        >
+          <MessageSquare :size="16" /><span v-if="open" class="flex-1 truncate">{{
+            currentChat
+          }}</span>
+        </button>
+        <button
+          v-for="r in RECENT_CHATS"
+          :key="r"
+          type="button"
+          class="mar-side-row"
+          :title="open ? undefined : r"
+          @click="toast(`Open “${r}”`)"
+        >
+          <MessageSquare :size="16" /><span v-if="open" class="flex-1 truncate">{{ r }}</span>
         </button>
       </template>
 

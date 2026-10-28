@@ -303,7 +303,7 @@
   text-shadow: 0 2px 24px color-mix(in oklch, var(--color-content-background) 55%, transparent);
 }
 :root:is([data-mar-dock='on'], [data-mar-side]) .mar-home h1.mar-greeting {
-  font-size: 56px;
+  font-size: 40px;
   letter-spacing: -0.035em;
 }
 
