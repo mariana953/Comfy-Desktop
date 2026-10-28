@@ -143,6 +143,7 @@ watch(
       }
     }
     document.documentElement.dataset.marBorders = t.borders
+    document.documentElement.dataset.marShadows = t.shadows
     try {
       localStorage.setItem(KEY, JSON.stringify(t))
     } catch {

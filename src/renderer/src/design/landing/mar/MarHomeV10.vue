@@ -140,7 +140,10 @@ const recent = computed(() =>
             text="Hi Mar. Let's create"
             :class="['mar-greeting', tight ? 'mb-4! pt-0!' : '']"
           />
-          <PromptBox v-if="can.agent" target class="mar-prompt" />
+          <!-- One line tall; while you type it grows over what's below. -->
+          <div v-if="can.agent" class="mar-prompt-slot">
+            <PromptBox target class="mar-prompt" />
+          </div>
           <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-210">
             <div class="mb-2.5 flex items-center justify-between px-1">
               <span class="text-ui text-muted-foreground">Or launch ComfyUI</span>
@@ -243,18 +246,59 @@ const recent = computed(() =>
 </template>
 
 <style scoped>
-/* A compact prompt box: one line to type in, tighter padding, so the page
-   starts higher. It grows as the text does. */
+/* The prompt box: one line, the build picker, the mic and send on the
+   same line. Focused, it opens to three lines (up to six as you type) over
+   the content below, which never moves. */
+.mar-prompt-slot {
+  position: relative;
+  z-index: 5;
+  height: 58px;
+}
+.mar-prompt-slot > .mar-prompt {
+  position: absolute;
+  inset: 0 0 auto;
+}
 .mar-prompt {
-  padding-top: 12px;
-  padding-bottom: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 10px;
+  padding: 10px 10px 10px 20px;
+  border-radius: 24px;
+}
+.mar-prompt > :deep(:first-child:not(.relative)) {
+  grid-column: 1 / -1;
+}
+.mar-prompt > :deep(.relative) {
+  align-self: center;
+  padding-top: 0;
+}
+.mar-prompt :deep(.relative > div[aria-hidden]) {
+  padding-top: 0;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .mar-prompt :deep(textarea) {
-  height: calc(1lh + 18px);
+  height: 1lh;
+  min-height: 1lh;
   field-sizing: content;
   max-height: 6lh;
+  transition: min-height 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.mar-prompt :deep(.mt-1\.5) {
-  margin-top: 2px;
+.mar-prompt:focus-within :deep(textarea) {
+  min-height: 3lh;
+}
+.mar-prompt > :deep(.mt-1\.5) {
+  margin-top: 0;
+  gap: 6px;
+}
+/* The build picker: the build itself, no "Run on" label. */
+.mar-prompt :deep(.mt-1\.5 button > .text-subtle-foreground:not(:last-child)) {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mar-prompt :deep(textarea) {
+    transition: none;
+  }
 }
 </style>

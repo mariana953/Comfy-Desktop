@@ -597,3 +597,20 @@
     0 2px 4px oklch(0 0 0 / 0.35),
     0 10px 26px oklch(0 0 0 / 0.34);
 }
+
+/* Comfy Cloud: the sidebar starts below the browser's tab and address bar. */
+:root[data-mar-surface='cloud'][data-mar-side] .mar-side.mar-side {
+  top: 86px;
+}
+:root[data-mar-surface='cloud'][data-mar-side-style='integrated'][data-mar-side]
+  .mar-side.mar-side {
+  top: 78px;
+}
+
+/* Shadows: Off (Tune the UI) flattens every raised surface. */
+:root[data-mar-shadows='off']
+  .proto-ui
+  :is(.shadow-elev, .mar-prompt, .mar-side, .mar-dock, [role='menu']),
+:root[data-mar-shadows='off'] .proto-ui .shadow-elev:hover {
+  box-shadow: none !important;
+}
