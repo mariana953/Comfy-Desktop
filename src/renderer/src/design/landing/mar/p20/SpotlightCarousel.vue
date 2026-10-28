@@ -7,7 +7,7 @@ import forestFog from '../assets/forest-fog.jpg'
 
 /**
  * 16 · Spotlight: What's new as one wide photo carousel. The message sits
- * on the left over a dark veil (a chip, a large title, one line, a white
+ * on the left over a dark veil (a large title, one line, a white
  * CTA and a quiet link); timed segments under it fill as each slide plays
  * and move on to the next. Pointer over it pauses; a segment jumps to its
  * slide. No Up next list (Mar's call). Slides are the What's new banner's
@@ -85,7 +85,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 <template>
   <section class="mt-10" aria-roledescription="carousel" aria-label="What's new">
     <div
-      class="relative h-[340px] overflow-hidden rounded-[22px] bg-[oklch(0.2_0.004_285)] [clip-path:inset(0_round_22px)]"
+      class="relative h-[260px] overflow-hidden rounded-[22px] bg-[oklch(0.2_0.004_285)] [clip-path:inset(0_round_22px)]"
       @mouseenter="paused = true"
       @mouseleave="paused = false"
       @focusin="paused = true"
@@ -108,12 +108,8 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
           class="absolute top-1/2 left-9 flex max-w-[min(640px,70%)] -translate-y-[58%] flex-col items-start gap-3"
           aria-live="polite"
         >
-          <span
-            class="rounded-[7px] bg-media-overlay px-[7px] py-0.5 text-[11px] leading-[1.4] font-medium text-white/92 backdrop-blur-md"
-            >{{ slide.kind }} · {{ index + 1 }} of {{ SLIDES.length }}</span
-          >
           <h3
-            class="text-[40px] leading-[1.12] font-semibold tracking-[-0.03em] text-white/97 [text-wrap:balance]"
+            class="text-[32px] leading-[1.12] font-semibold tracking-[-0.03em] text-white/97 [text-wrap:balance]"
           >
             {{ slide.title }}
           </h3>
