@@ -170,20 +170,6 @@ function set(key: keyof Tuning, value: string): void {
         <Select v-model="marNav.id" :options="NAVS" class="w-full" />
       </div>
 
-      <!-- The 20 Figma proposals, as switches (p20/). -->
-      <div v-if="isMariana" class="flex flex-col gap-2">
-        <span class="text-ui font-medium text-base-foreground">Proposals · 20</span>
-        <label v-for="r in P20_ROWS" :key="r.key" class="flex items-center gap-2">
-          <span class="w-24 shrink-0 text-ui text-subtle-foreground">{{ r.label }}</span>
-          <Select
-            :model-value="p20[r.key]"
-            :options="p20Options(r.key)"
-            class="min-w-0 flex-1"
-            @update:model-value="(v: string) => ((p20 as Record<string, string>)[r.key] = v)"
-          />
-        </label>
-      </div>
-
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Templates</span>
         <Select v-model="templateStyle.id" :options="TEMPLATE_STYLES" class="w-full" />
@@ -282,6 +268,25 @@ function set(key: keyof Tuning, value: string): void {
           </button>
         </div>
       </div>
+
+      <!-- Figma explorations (p20/): kept as secondary options, folded
+           away at the end. Not the direction; only for reference. -->
+      <details v-if="isMariana" class="mar-tuner-more">
+        <summary class="cursor-pointer text-ui text-subtle-foreground">
+          More options · Figma explorations
+        </summary>
+        <div class="mt-2.5 flex flex-col gap-2">
+          <label v-for="r in P20_ROWS" :key="r.key" class="flex items-center gap-2">
+            <span class="w-24 shrink-0 text-ui text-subtle-foreground">{{ r.label }}</span>
+            <Select
+              :model-value="p20[r.key]"
+              :options="p20Options(r.key)"
+              class="min-w-0 flex-1"
+              @update:model-value="(v: string) => ((p20 as Record<string, string>)[r.key] = v)"
+            />
+          </label>
+        </div>
+      </details>
 
       <Button variant="ghost" size="sm" class="self-start" @click="reset">Reset</Button>
     </aside>

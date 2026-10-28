@@ -11,8 +11,8 @@ import { reactive, watch } from 'vue'
 export const P20 = {
   homeLayout: [
     { value: 'default', label: 'Default' },
-    { value: 'command', label: '02 · Command home' },
     { value: 'bento', label: '03 · Bento' },
+    { value: 'command', label: '02 · Command home' },
     { value: 'composer', label: '05 · Composer' },
     { value: 'timeline', label: '11 · Timeline' },
     { value: 'canvas', label: '12 · Canvas hero' },
