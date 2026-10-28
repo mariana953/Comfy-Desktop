@@ -244,3 +244,21 @@
   padding: 0 12px;
   font-size: var(--text-ui);
 }
+
+/* Pages under a photo: text and controls keep their contrast. The
+   subtitle reads at muted strength, and filters, search and sort get a
+   smoked, blurred fill of their own instead of a thin tint. */
+:root[data-mar-ui='on'] .mar-backdrop ~ div > header:first-child p {
+  color: var(--color-muted-foreground);
+}
+:root[data-mar-ui='on'] .mar-backdrop ~ div :is(.bg-secondary-background, [role='group']) {
+  background-color: color-mix(in oklch, var(--color-content-background) 55%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+:root[data-mar-ui='on'] .mar-backdrop ~ div :is(.text-subtle-foreground, .text-muted-foreground) {
+  text-shadow: 0 1px 12px color-mix(in oklch, var(--color-content-background) 70%, transparent);
+}
+
+:root[data-mar-ui='on'] .mar-backdrop ~ div .bg-secondary-background input {
+  background-color: transparent;
+}

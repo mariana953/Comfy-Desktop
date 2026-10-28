@@ -35,7 +35,8 @@ import '../motion/tabSlide'
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(14px);
+  filter: blur(14px) saturate(0.85);
+  opacity: 0.7;
   transform: scale(1.08);
 }
 .mar-backdrop::after {
@@ -44,8 +45,8 @@ import '../motion/tabSlide'
   inset: 0;
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--color-content-background) 45%, transparent),
-    color-mix(in oklch, var(--color-content-background) 20%, transparent) 35%,
+    color-mix(in oklch, var(--color-content-background) 62%, transparent),
+    color-mix(in oklch, var(--color-content-background) 45%, transparent) 45%,
     var(--color-content-background) 100%
   );
 }
