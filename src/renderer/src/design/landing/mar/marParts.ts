@@ -5,7 +5,7 @@ import { computed } from 'vue'
  * (Proposal: Pablo) is his branch as it is; Mar's (Proposal: Mar) is her
  * draft, Figma "Exploration 17 · Ambient dock": a tall page photo with a
  * large greeting, the Create menu, a compact prompt, recent work as photo
- * cards, example workflows as compact rows, What's new as tabs, and the
+ * cards, What's new as tabs (example workflows live in Agent), and the
  * builds in the dock instead of on Home.
  * Shell: the Ambient dock (Figma "Exploration 17") instead of a sidebar.
  * The parts stay named so a part can go back to Pablo's in one line.
@@ -31,7 +31,7 @@ const MAR: Parts = {
   actions: 'mar',
   top: 'pablo',
   builds: 'off',
-  examples: 'rows',
+  examples: 'off',
   recent: 'mar',
   news: 'mar'
 }

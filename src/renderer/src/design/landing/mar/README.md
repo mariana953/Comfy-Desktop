@@ -32,8 +32,8 @@ Mar's draft follows Figma "Exploration 17 · Ambient dock":
   flyout, the workspace, and the Create / Build / Agent switch at the end,
   like Figma's mode switch. In Build it shows Build's pages.
 - Home: a tall page photo with a large greeting, the Create menu top
-  right, a compact prompt box, recent work as photo cards, example
-  workflows as compact rows, What's new as tabs.
+  right, a compact prompt box, recent work as photo cards, What's new as
+  tabs. Example workflows live in Agent, not on Home.
 - Agent: Mar's chat (`agent/MarAgent.vue`) over the same scripted flows.
 - Chips on images are dark grey with a blur; tabs slide; micro-animations
   live in `motion/`.
