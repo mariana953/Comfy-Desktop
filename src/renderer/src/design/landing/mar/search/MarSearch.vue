@@ -5,6 +5,7 @@ import { PROJECTS, TEMPLATES, WORKFLOWS, thumb } from '../../mock'
 import { SPACES } from '../../spaces'
 import { go, openDetail, type Page } from '../../useProto'
 import { search } from './search'
+import { favorites } from '../favorites'
 
 /**
  * Global search (⌘K) in Mar's proposal, kept from the comfy-home-v1 audit:
@@ -39,7 +40,14 @@ const popular = computed(() => templates.slice(0, 3))
 
 const hits = computed<Hit[]>(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q) return templates.slice(3, 10)
+  if (!q)
+    return [
+      ...favorites.ids
+        .map((id) => templates.find((t) => t.key === `t:${id}`))
+        .filter((t) => t !== undefined)
+        .map((t) => ({ ...t, key: `f:${t.key}`, group: 'Favorites' })),
+      ...templates.slice(3, 10)
+    ]
   const has = (s: string): boolean => s.toLowerCase().includes(q)
   return [
     ...templates.filter((t) => has(t.label)),

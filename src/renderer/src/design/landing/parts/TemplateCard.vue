@@ -6,6 +6,7 @@ import { openDetail } from '../useProto'
 import { thumb, type Template } from '../mock'
 import CategoryChip from '../mar/CategoryChip.vue'
 import { isMariana } from '../mar/proposal'
+import FavoriteStar from '../mar/FavoriteStar.vue'
 
 const { t } = defineProps<{ t: Template }>()
 </script>
@@ -29,6 +30,7 @@ const { t } = defineProps<{ t: Template }>()
         <Waypoints v-if="t.kind === 'graph'" :size="12" /><LayoutGrid v-else :size="12" />
       </Badge>
     </template>
+    <template v-if="isMariana" #top-right><FavoriteStar :id="t.id" /></template>
     <p class="truncate text-ui font-medium">{{ t.title }}</p>
   </MediaCard>
 </template>

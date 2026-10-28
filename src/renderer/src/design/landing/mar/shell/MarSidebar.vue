@@ -26,11 +26,12 @@ import {
   Server,
   Workflow
 } from 'lucide-vue-next'
-import { go, goIn, proto, toast, workspace, type Mode, type Page } from '../../useProto'
+import { go, goIn, openDetail, proto, toast, workspace, type Mode, type Page } from '../../useProto'
 import { agent, resetAgent } from '../../agent'
 import { flow, resetFlow } from '../../appFlow'
 import { can, landingPage } from '../../milestones'
-import { INSTANCES, PROJECTS, USER } from '../../mock'
+import { INSTANCES, PROJECTS, TEMPLATES, USER, thumb } from '../../mock'
+import { favorites } from '../favorites'
 import { SPACES } from '../../spaces'
 import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
@@ -102,6 +103,10 @@ const groups = computed(() =>
 const isOn = (i: Item): boolean =>
   proto.activeTab === 'home' &&
   (proto.page === i.page || Boolean(i.prefix && proto.page.startsWith(i.prefix)))
+
+const favs = computed(() =>
+  favorites.ids.map((id) => TEMPLATES.find((t) => t.id === id)).filter((t) => t !== undefined)
+)
 
 const ART = [portraitSeaside, lakeFog, portraitWindow, portraitGrass, hillsFog]
 const projects = computed(() => PROJECTS.map((p, i) => ({ ...p, art: ART[i % ART.length]! })))
@@ -240,6 +245,28 @@ function newChat(): void {
           @click="toast(`Open “${r}”`)"
         >
           <MessageSquare :size="16" /><span v-if="open" class="flex-1 truncate">{{ r }}</span>
+        </button>
+      </template>
+
+      <!-- Favorites: what you starred, one click away, right under the
+           libraries they come from. -->
+      <template v-if="proto.mode === 'create' && favs.length">
+        <div class="mar-side-label">
+          <span v-if="open">Favorites</span><span v-else class="mar-side-sep" />
+        </div>
+        <button
+          v-for="f in favs"
+          :key="f.id"
+          type="button"
+          class="mar-side-row"
+          :title="open ? undefined : f.title"
+          @click="openDetail('template', f.id)"
+        >
+          <img :src="thumb(f.id)" alt="" class="mar-side-thumb" /><span
+            v-if="open"
+            class="truncate"
+            >{{ f.title }}</span
+          >
         </button>
       </template>
 
