@@ -252,7 +252,7 @@ const recent = computed(() =>
 .mar-prompt-slot {
   position: relative;
   z-index: 5;
-  height: 58px;
+  height: 66px;
 }
 .mar-prompt-slot > .mar-prompt {
   position: absolute;
@@ -263,8 +263,8 @@ const recent = computed(() =>
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   column-gap: 10px;
-  padding: 10px 10px 10px 20px;
-  border-radius: 24px;
+  padding: 14px 12px 14px 22px;
+  border-radius: 28px;
 }
 .mar-prompt > :deep(:first-child:not(.relative)) {
   grid-column: 1 / -1;
@@ -285,7 +285,7 @@ const recent = computed(() =>
   max-height: 6lh;
   transition: min-height 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.mar-prompt:focus-within :deep(textarea) {
+.mar-prompt :deep(textarea:focus) {
   min-height: 3lh;
 }
 .mar-prompt > :deep(.mt-1\.5) {

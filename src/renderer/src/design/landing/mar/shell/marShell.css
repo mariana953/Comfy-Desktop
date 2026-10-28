@@ -314,7 +314,13 @@
   border-color: transparent;
   border-radius: 14px;
   padding: 6px;
-  background-color: color-mix(in oklch, var(--color-content-background) 74%, transparent);
+  /* A step lighter than the page (the card colour lifted a little), so a
+     menu reads over dark photos and light ones alike. */
+  background-color: color-mix(
+    in oklch,
+    color-mix(in oklch, var(--color-base-foreground) 6%, var(--color-card-background)) 86%,
+    transparent
+  );
   backdrop-filter: blur(28px) saturate(1.3);
   box-shadow:
     0 20px 60px -20px rgb(0 0 0 / 0.7),

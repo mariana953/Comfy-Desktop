@@ -11,10 +11,10 @@ import { homeBackground, marNav, type HomeBackground, type MarNav } from './shel
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
  *  then the knobs, applied live. */
 const NAVS: { value: MarNav; label: string }[] = [
+  { value: 'classic', label: 'Classic' },
   { value: 'sidebar', label: 'Sidebar' },
   { value: 'floating', label: 'Floating' },
-  { value: 'dock', label: 'Dock' },
-  { value: 'classic', label: 'Classic' }
+  { value: 'dock', label: 'Dock' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom' },
