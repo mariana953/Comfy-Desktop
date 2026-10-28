@@ -797,14 +797,15 @@
   }
 }
 
-/* Who's in a space: on translucent cards a solid ring reads as a dark
-   line, so the faces sit side by side with a small gap instead. */
-:root[data-mar-ui='on'] .proto-main .-space-x-1:has(> .rounded-full) {
-  gap: 3px;
-}
+/* Who's in a space: the faces overlap, each cut out by a ring in the
+   card's own colour (a translucent card over the page), so the ring
+   doesn't read as a dark line. */
 :root[data-mar-ui='on'] .proto-main .-space-x-1:has(> .rounded-full) > * {
-  margin-inline: 0 !important;
-  --tw-ring-color: transparent;
+  --tw-ring-color: color-mix(
+    in oklch,
+    var(--color-card-background) 72%,
+    var(--color-content-background)
+  );
 }
 
 /* The page's photo or background melts into the page instead of ending
