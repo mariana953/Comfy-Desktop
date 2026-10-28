@@ -13,9 +13,11 @@ menu switches to Pablo's at that milestone. What changed and why is in
 - Home: one Create button top right; Open ComfyUI and Deploy are its menu.
 - Builds on Home are tiles: where it runs and its state on top, name and
   place below.
-- Workflow cards show a meta line with a value on the right (size, build,
-  when).
-- One photo series (Magnific stock, `assets/`) for every card.
+- Greeting and prompt box sit higher; the prompt box is two lines tall.
+- Example workflows are Pablo's hand of cards (interactive), in the same
+  column as the prompt and the builds.
+- Recent workflows are cards with a meta line and a value on the right
+  (build, when), with one photo series (Magnific stock, `assets/`).
 - The Agent lens uses a chat bubble icon.
 
 ## How it stays apart

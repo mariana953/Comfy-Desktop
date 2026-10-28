@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import Greeting from '../parts/Greeting.vue'
 import PromptBox from '../parts/PromptBox.vue'
 import StartPaths from '../parts/StartPaths.vue'
+import StarterCards from '../parts/StarterCards.vue'
 import LaunchesRow from '../parts/LaunchesRow.vue'
 import SpacesRow from '../parts/space/SpacesRow.vue'
 import Button from '../ui/Button.vue'
@@ -12,22 +13,9 @@ import BuildTile from './BuildTile.vue'
 import CreateMenu from './CreateMenu.vue'
 import WorkflowCard from './WorkflowCard.vue'
 import { allWorkflows } from '../gallery'
-import {
-  go,
-  hostActions,
-  instanceById,
-  instances,
-  openDetail,
-  proto,
-  recentInstances
-} from '../useProto'
+import { go, hostActions, instanceById, instances, proto, recentInstances } from '../useProto'
 import { can } from '../milestones'
 import { TEMPLATES } from '../mock'
-import portraitGarden from './assets/portrait-garden.jpg'
-import lakeFog from './assets/lake-fog.jpg'
-import portraitSun from './assets/portrait-sun.jpg'
-import hillsSunset from './assets/hills-sunset.jpg'
-import portraitSmile from './assets/portrait-smile.jpg'
 import portraitSeaside from './assets/portrait-seaside.jpg'
 import forestFog from './assets/forest-fog.jpg'
 import portraitGrass from './assets/portrait-grass.jpg'
@@ -39,30 +27,15 @@ import portraitWindow from './assets/portrait-window.jpg'
  * prompt box, examples, recent) with:
  *   - one Create button top right; ComfyUI and Deploy are its menu
  *   - builds as tiles (state on top, name and place below)
- *   - workflow cards with a meta line and a value on the right
+ *   - examples as Pablo's hand of cards (interactive, his thumbnails)
+ *   - recent workflows as cards with a meta line and a value on the right
  *   - one photo series (Magnific stock) so the page reads as a whole
  */
-const EXAMPLE_ART = [portraitGarden, lakeFog, portraitSun, hillsSunset, portraitSmile]
 const RECENT_ART = [portraitSeaside, forestFog, portraitGrass, hillsFog, portraitWindow]
-const CATEGORY = { image: 'Image', video: 'Video', '3d': '3D', audio: 'Audio' } as const
 
 const noLocal = computed(() => !instances.value.some((i) => i.kind === 'local'))
 const builds = computed(() => recentInstances.value.slice(0, 3))
 
-// "Qwen Image Edit 2511: Multiple Angles" → title + what it does.
-const examples = computed(() => {
-  const list = TEMPLATES.filter((t) => t.kind === 'graph')
-  return list.map((t, i) => {
-    const [title, what] = t.title.split(':').map((s) => s.trim())
-    return {
-      id: t.id,
-      src: EXAMPLE_ART[i % EXAMPLE_ART.length]!,
-      title: title!,
-      meta: what ?? CATEGORY[t.category],
-      right: t.runs === 'cloud' ? 'Cloud' : t.vram
-    }
-  })
-})
 const exampleCount = computed(() => TEMPLATES.length)
 
 const recent = computed(() =>
@@ -84,12 +57,12 @@ const recent = computed(() =>
 <template>
   <div class="absolute top-3.5 right-4 z-10"><CreateMenu /></div>
   <div :class="['mx-auto w-full max-w-300 px-10', noLocal ? 'h-full overflow-hidden' : 'pb-16']">
-    <section :class="['flex flex-col', noLocal ? 'h-full' : 'pt-12 pb-4']">
-      <div class="flex flex-1 flex-col justify-center pt-10">
+    <section :class="['flex flex-col', noLocal ? 'h-full' : 'pt-14 pb-4']">
+      <div :class="['flex flex-1 flex-col', noLocal ? 'justify-center pt-10' : '']">
         <StartPaths v-if="noLocal" />
         <template v-else>
-          <Greeting />
-          <PromptBox v-if="can.agent" target />
+          <Greeting class="mb-4! pt-0!" />
+          <PromptBox v-if="can.agent" target class="mar-prompt" />
           <div class="mx-auto mt-8 w-full max-w-180">
             <div class="mb-2.5 flex items-center justify-between px-1">
               <span class="text-ui text-muted-foreground">Or launch ComfyUI</span>
@@ -104,7 +77,7 @@ const recent = computed(() =>
     </section>
 
     <div v-if="!noLocal">
-      <section class="mt-6">
+      <section class="mx-auto mt-8 w-full max-w-180">
         <SectionHeader
           title="Example workflows"
           :link="can.explore ? 'Explore all' : undefined"
@@ -117,17 +90,7 @@ const recent = computed(() =>
             >
           </template>
         </SectionHeader>
-        <ScrollRow :columns="5">
-          <WorkflowCard
-            v-for="e in examples"
-            :key="e.id"
-            :src="e.src"
-            :title="e.title"
-            :meta="e.meta"
-            :right="e.right"
-            @open="openDetail('template', e.id)"
-          />
-        </ScrollRow>
+        <StarterCards />
       </section>
 
       <section v-if="recent.length" class="mt-10">
@@ -162,3 +125,10 @@ const recent = computed(() =>
     class="pointer-events-none sticky bottom-0 -mt-32 h-32 bg-[linear-gradient(to_top,var(--color-content-background)_15%,transparent)]"
   />
 </template>
+
+<style scoped>
+/* A shorter prompt box (two lines) so the page starts higher. */
+.mar-prompt :deep(textarea) {
+  height: calc(2lh + 4px);
+}
+</style>
