@@ -163,12 +163,12 @@ function newChat(): void {
       </div>
       <button
         type="button"
-        class="mar-side-icon mar-side-well"
+        class="mar-side-icon"
         :aria-label="open ? 'Collapse sidebar' : 'Expand sidebar'"
         :title="open ? 'Collapse' : 'Expand'"
         @click="marNav.collapsed = !marNav.collapsed"
       >
-        <PanelLeftClose v-if="open" :size="16" /><PanelLeftOpen v-else :size="16" />
+        <PanelLeftClose v-if="open" :size="15" /><PanelLeftOpen v-else :size="15" />
       </button>
     </div>
 
@@ -394,14 +394,19 @@ function newChat(): void {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  color: var(--color-muted-foreground);
+  border-radius: 8px;
+  color: var(--color-subtle-foreground);
+  opacity: 0.7;
+  transition:
+    opacity 150ms ease,
+    color 150ms ease;
 }
 .mar-side-well {
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
 .mar-side-icon:hover {
   color: var(--color-base-foreground);
+  opacity: 1;
 }
 .mar-side-lens {
   display: flex;
