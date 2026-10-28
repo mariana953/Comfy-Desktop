@@ -480,7 +480,10 @@
   width: auto;
   align-self: flex-start;
 }
-:root .proto-ui.proto-ui.proto-ui .mar-side-lens:not(.is-rail) .mar-side-lens-btn[aria-pressed='true'] {
+:root
+  .proto-ui.proto-ui.proto-ui
+  .mar-side-lens:not(.is-rail)
+  .mar-side-lens-btn[aria-pressed='true'] {
   flex: none;
   padding: 0 12px 0 10px;
 }
@@ -513,4 +516,10 @@
 /* The page's background runs behind the sidebar too. */
 :root[data-mar-side] .mar-backdrop.mar-backdrop {
   left: 0;
+}
+
+/* Space cards: the who's-in line fits on one line, a size down. */
+:root[data-mar-ui='on'] .mar-space-meta {
+  font-size: 12px;
+  white-space: nowrap;
 }
