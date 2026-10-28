@@ -5,11 +5,15 @@ import { DIRECTIONS, look } from '../look'
 import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
 import { isMariana, proposal, PROPOSALS } from './proposal'
 import { SURFACES, surface } from './shell/surface'
-import { homeBackground, type HomeBackground } from './shell/marShell'
+import { homeBackground, marNav, type HomeBackground, type MarNav } from './shell/marShell'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
  *  then the knobs, applied live. */
+const NAVS: { value: MarNav; label: string }[] = [
+  { value: 'sidebar', label: 'Sidebar' },
+  { value: 'dock', label: 'Ambient dock' }
+]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom' },
   { value: 'photo', label: 'Photo' }
@@ -76,6 +80,27 @@ function set(key: keyof Tuning, value: string): void {
     </div>
 
     <div v-if="isMariana" class="flex flex-col gap-1.5">
+      <span class="text-ui text-subtle-foreground">Navigation</span>
+      <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+        <button
+          v-for="n in NAVS"
+          :key="n.value"
+          type="button"
+          :aria-pressed="marNav.id === n.value"
+          :class="[
+            'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+            marNav.id === n.value
+              ? 'bg-secondary-background-hover font-medium text-base-foreground'
+              : 'text-muted-foreground hover:text-base-foreground'
+          ]"
+          @click="marNav.id = n.value"
+        >
+          {{ n.label }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="isMariana" class="flex flex-col gap-1.5">
       <span class="text-ui text-subtle-foreground">Home background</span>
       <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
         <button
@@ -96,7 +121,7 @@ function set(key: keyof Tuning, value: string): void {
       </div>
     </div>
 
-    <div class="flex flex-col gap-1.5">
+    <div v-if="DIRECTIONS.length > 1" class="flex flex-col gap-1.5">
       <span class="text-ui text-subtle-foreground">UI</span>
       <div class="flex flex-wrap gap-1">
         <button

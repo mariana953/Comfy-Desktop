@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import MarCloudBar from './MarCloudBar.vue'
 import MarDock from './MarDock.vue'
+import MarSidebar from './MarSidebar.vue'
 import { onCloud } from './surface'
 import MarBloom from './MarBloom.vue'
-import { bloomOn, heroImage, marDockOn } from './marShell'
+import { bloomOn, heroImage, marDockOn, marSideOn } from './marShell'
 import './marShell.css'
 import '../motion/motion.css'
 import '../motion/tabSlide'
@@ -21,6 +22,7 @@ import '../motion/tabSlide'
     <img :src="heroImage" alt="" />
   </div>
   <MarDock v-if="marDockOn" />
+  <MarSidebar v-if="marSideOn" />
   <MarCloudBar v-if="onCloud" />
 </template>
 

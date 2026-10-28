@@ -198,13 +198,13 @@
 
 /* Home under the dock (Exploration 17): a tall photo, a large greeting
    centred on it, recent work rising over its lower edge. */
-:root[data-mar-dock='on'] .mar-backdrop.mar-backdrop {
+:root:is([data-mar-dock='on'], [data-mar-side]) .mar-backdrop.mar-backdrop {
   height: 640px;
 }
-:root[data-mar-dock='on'] .mar-home > section:first-child {
+:root:is([data-mar-dock='on'], [data-mar-side]) .mar-home > section:first-child {
   padding-top: 64px;
 }
-:root[data-mar-dock='on'] .mar-home h1 {
+:root:is([data-mar-dock='on'], [data-mar-side]) .mar-home h1 {
   margin-bottom: 28px;
   font-size: 64px;
   line-height: 1.05;
@@ -302,7 +302,7 @@
   font-weight: 600;
   text-shadow: 0 2px 24px color-mix(in oklch, var(--color-content-background) 55%, transparent);
 }
-:root[data-mar-dock='on'] .mar-home h1.mar-greeting {
+:root:is([data-mar-dock='on'], [data-mar-side]) .mar-home h1.mar-greeting {
   font-size: 56px;
   letter-spacing: -0.035em;
 }
@@ -357,4 +357,93 @@
    The dock draws the fade at the window's edge (MarDock.vue). */
 :root[data-mar-dock='on'] .mar-home + [aria-hidden='true'] {
   display: none;
+}
+
+/* Mar's sidebar (MarSidebar.vue): Pablo's sidebar goes; the content takes
+   the window and leaves room for the panel or its rail. */
+:root[data-mar-side] .proto-sidebar {
+  display: none;
+}
+:root[data-mar-side] .proto-main.proto-main {
+  margin: 0;
+  border-radius: 0;
+  padding-left: 276px;
+  transition: padding-left 320ms cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+:root[data-mar-side='rail'] .proto-main.proto-main {
+  padding-left: 80px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-mar-side] .proto-main.proto-main {
+    transition: none;
+  }
+}
+:root
+  .proto-ui.proto-ui.proto-ui
+  :is(.mar-side-row, .mar-side-search, .mar-side-credits, .mar-side-ws) {
+  margin: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-row {
+  height: 34px;
+  padding: 0 10px;
+}
+:root .proto-ui.proto-ui.proto-ui .is-rail .mar-side-row {
+  width: 40px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens-btn {
+  height: 30px;
+  padding: 0 8px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-search {
+  height: 34px;
+  padding: 0 10px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-search.is-rail {
+  width: 40px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-credits {
+  height: 38px;
+  padding: 0 12px;
+}
+:root .proto-ui.proto-ui.proto-ui .is-rail .mar-side-credits {
+  width: 40px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-ws {
+  padding: 4px;
+}
+
+/* Browser preview: the title bar is translucent and floats over the page,
+   so the page's photo or bloom runs under it. (In the app the title bar is
+   its own window and can't show the page behind it.) */
+:root[data-mar-ui='on']:not([data-mar-surface='cloud']) .proto-ui > .glass-titlebar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 45;
+  background: color-mix(in oklch, var(--color-titlebar-background) 45%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+:root[data-mar-ui='on']:not([data-mar-surface='cloud'])
+  .proto-ui:has(> .glass-titlebar)
+  .proto-main.proto-main {
+  padding-top: 44px;
+}
+
+:root[data-mar-ui='on']:not([data-mar-surface='cloud'])
+  .proto-ui:has(> .glass-titlebar)
+  .mar-top-actions {
+  top: 58px;
+}
+/* Sidebar lens tabs fit three names on one line. */
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens-btn {
+  padding: 0 4px;
+  gap: 5px;
+  font-size: 12.5px;
 }

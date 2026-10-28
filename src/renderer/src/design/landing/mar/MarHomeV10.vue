@@ -107,7 +107,7 @@ const recent = computed(() =>
 </script>
 
 <template>
-  <div class="absolute top-3.5 right-4 z-10 flex items-center gap-2">
+  <div class="mar-top-actions absolute top-3.5 right-4 z-10 flex items-center gap-2">
     <CreateMenu v-if="parts.actions === 'mar'" />
     <template v-else>
       <Button v-for="a in actions" :key="a.label" @click="a.run()">

@@ -4,6 +4,9 @@ import { ArrowUpRight } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import SectionHeader from '../ui/SectionHeader.vue'
 import { toast } from '../useProto'
+import hillsSunset from './assets/hills-sunset.jpg'
+import portraitSun from './assets/portrait-sun.jpg'
+import forestFog from './assets/forest-fog.jpg'
 
 /**
  * Mar's What's new: one full-width branded banner at a time (direction C in
@@ -18,6 +21,8 @@ interface Slide {
   cta: string
   gradient: string
   video?: string
+  /** A photo from the Magnific series, slowly drifting, until a loop exists. */
+  image?: string
 }
 
 const SLIDES: Slide[] = [
@@ -25,6 +30,7 @@ const SLIDES: Slide[] = [
     id: 'cloud',
     title: 'Comfy Cloud is here.\nRun any workflow without a GPU.',
     cta: 'Try it',
+    image: hillsSunset,
     gradient:
       'radial-gradient(60% 90% at 18% 30%, #3b82f6 0%, transparent 60%), radial-gradient(50% 80% at 85% 70%, #60a5fa 0%, transparent 65%), linear-gradient(120deg, #0b1b3f, #1e3a8a 45%, #0f2a5f)'
   },
@@ -32,6 +38,7 @@ const SLIDES: Slide[] = [
     id: 'wan',
     title: 'Wan 2.5 is in ComfyUI.\nA still becomes a scene.',
     cta: 'Try it now',
+    image: portraitSun,
     gradient:
       'radial-gradient(55% 90% at 20% 70%, #f97316 0%, transparent 60%), radial-gradient(55% 85% at 80% 25%, #db2777 0%, transparent 62%), linear-gradient(120deg, #2a0f1f, #6b1d3a 50%, #3a1208)'
   },
@@ -39,6 +46,7 @@ const SLIDES: Slide[] = [
     id: 'apps',
     title: 'Apps are here.\nTurn any workflow into a form.',
     cta: 'See how',
+    image: forestFog,
     gradient:
       'radial-gradient(60% 90% at 80% 35%, #10b981 0%, transparent 60%), radial-gradient(50% 80% at 15% 75%, #a3e635 0%, transparent 60%), linear-gradient(120deg, #06231b, #0f4d3a 50%, #0b2a12)'
   }
@@ -79,6 +87,14 @@ onBeforeUnmount(() => clearInterval(timer))
             playsinline
             class="absolute inset-0 size-full object-cover"
           />
+          <template v-else-if="slide.image">
+            <img
+              :src="slide.image"
+              alt=""
+              class="banner-drift absolute inset-0 size-full object-cover"
+            />
+            <span class="banner-veil absolute inset-0" aria-hidden="true" />
+          </template>
           <div
             v-else
             class="banner-gradient absolute inset-0"
@@ -134,6 +150,29 @@ onBeforeUnmount(() => clearInterval(timer))
 </template>
 
 <style scoped>
+/* Photo slides drift slowly (Ken Burns) under a veil that keeps the
+   centred message readable. */
+.banner-drift {
+  animation: banner-drift 14s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+}
+.banner-veil {
+  background:
+    radial-gradient(70% 90% at 50% 50%, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.2)),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.35));
+}
+@keyframes banner-drift {
+  from {
+    transform: scale(1.04) translate3d(-1%, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(1.5%, -1%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .banner-drift {
+    animation: none;
+  }
+}
 .banner-gradient {
   background-size: 140% 140%;
   animation: banner-drift 18s ease-in-out infinite alternate;
