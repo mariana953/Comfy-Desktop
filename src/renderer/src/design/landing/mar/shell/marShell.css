@@ -278,3 +278,17 @@
     transparent
   );
 }
+
+/* Latent bloom needs no veil: only a fade into the page at the bottom,
+   and a softer top so it still meets the title bar. */
+:root[data-mar-ui='on'] .mar-backdrop.is-bloom::after {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 55%,
+    var(--color-content-background) 100%
+  );
+}
+:root[data-mar-ui='on'] .mar-backdrop.is-bloom::before {
+  height: 90px;
+}

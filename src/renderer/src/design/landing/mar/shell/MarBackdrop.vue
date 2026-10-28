@@ -2,7 +2,8 @@
 import MarCloudBar from './MarCloudBar.vue'
 import MarDock from './MarDock.vue'
 import { onCloud } from './surface'
-import { heroImage, marDockOn } from './marShell'
+import MarBloom from './MarBloom.vue'
+import { bloomOn, heroImage, marDockOn } from './marShell'
 import './marShell.css'
 import '../motion/motion.css'
 import '../motion/tabSlide'
@@ -15,7 +16,8 @@ import '../motion/tabSlide'
 </script>
 
 <template>
-  <div v-if="heroImage" class="mar-backdrop" aria-hidden="true">
+  <div v-if="bloomOn" class="mar-backdrop is-bloom" aria-hidden="true"><MarBloom /></div>
+  <div v-else-if="heroImage" class="mar-backdrop" aria-hidden="true">
     <img :src="heroImage" alt="" />
   </div>
   <MarDock v-if="marDockOn" />

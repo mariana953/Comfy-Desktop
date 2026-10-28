@@ -103,3 +103,31 @@ export const heroImage = computed<string | undefined>(() => {
   if (page.startsWith('space:')) return portraitWindow
   return HERO[page]
 })
+
+/** Home's background: Latent bloom (default) or the photo
+ *  (Proposal and UI › Home background). */
+export type HomeBackground = 'bloom' | 'photo'
+const BG_KEY = 'comfy.design.mar.homeBackground'
+function loadBackground(): HomeBackground {
+  try {
+    return localStorage.getItem(BG_KEY) === 'photo' ? 'photo' : 'bloom'
+  } catch {
+    return 'bloom'
+  }
+}
+export const homeBackground = reactive<{ id: HomeBackground }>({ id: loadBackground() })
+watch(
+  () => homeBackground.id,
+  (id) => {
+    try {
+      localStorage.setItem(BG_KEY, id)
+    } catch {
+      // Storage blocked: the pick lasts for this window only.
+    }
+  }
+)
+
+/** Latent bloom is on screen: Home, Mar's proposal, bloom picked. */
+export const bloomOn = computed(
+  () => isMariana.value && proto.page === 'overview' && homeBackground.id === 'bloom'
+)

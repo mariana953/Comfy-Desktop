@@ -5,10 +5,16 @@ import { DIRECTIONS, look } from '../look'
 import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
 import { isMariana, proposal, PROPOSALS } from './proposal'
 import { SURFACES, surface } from './shell/surface'
+import { homeBackground, type HomeBackground } from './shell/marShell'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
  *  then the knobs, applied live. */
+const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
+  { value: 'bloom', label: 'Latent bloom' },
+  { value: 'photo', label: 'Photo' }
+]
+
 function set(key: keyof Tuning, value: string): void {
   ;(tuning as Record<string, string>)[key] = value
 }
@@ -65,6 +71,27 @@ function set(key: keyof Tuning, value: string): void {
           @click="surface.id = sf.value"
         >
           {{ sf.label }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="isMariana" class="flex flex-col gap-1.5">
+      <span class="text-ui text-subtle-foreground">Home background</span>
+      <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+        <button
+          v-for="b in BACKGROUNDS"
+          :key="b.value"
+          type="button"
+          :aria-pressed="homeBackground.id === b.value"
+          :class="[
+            'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+            homeBackground.id === b.value
+              ? 'bg-secondary-background-hover font-medium text-base-foreground'
+              : 'text-muted-foreground hover:text-base-foreground'
+          ]"
+          @click="homeBackground.id = b.value"
+        >
+          {{ b.label }}
         </button>
       </div>
     </div>
