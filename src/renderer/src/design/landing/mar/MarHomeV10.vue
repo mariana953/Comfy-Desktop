@@ -8,7 +8,7 @@ import LaunchBanner from './LaunchBanner.vue'
 import LaunchesRow from '../parts/LaunchesRow.vue'
 import QuickLaunch from '../parts/QuickLaunch.vue'
 import RecentWork from '../parts/RecentWork.vue'
-import StartPaths from '../parts/StartPaths.vue'
+import MarStart from './MarStart.vue'
 import StarterCards from '../parts/StarterCards.vue'
 import TemplatesRow from '../parts/TemplatesRow.vue'
 import MarSpacesRow from './MarSpacesRow.vue'
@@ -126,15 +126,10 @@ const recent = computed(() =>
       </Button>
     </template>
   </div>
-  <div
-    :class="[
-      'mar-home mx-auto w-full max-w-300 px-10',
-      noLocal ? 'h-full overflow-hidden' : 'pb-16'
-    ]"
-  >
+  <div :class="['mar-home mx-auto w-full max-w-300 px-10', noLocal ? 'pb-10' : 'pb-16']">
     <section :class="['flex flex-col', noLocal ? 'h-full' : tight ? 'pt-14 pb-4' : 'pt-12 pb-4']">
       <div :class="['flex flex-1 flex-col', noLocal || !tight ? 'justify-center pt-10' : '']">
-        <StartPaths v-if="noLocal" />
+        <MarStart v-if="noLocal" />
         <template v-else>
           <Greeting
             text="Hi Mar. Let's create"
@@ -244,61 +239,3 @@ const recent = computed(() =>
     class="pointer-events-none sticky bottom-0 -mt-32 h-32 bg-[linear-gradient(to_top,var(--color-content-background)_15%,transparent)]"
   />
 </template>
-
-<style scoped>
-/* The prompt box: one line, the build picker, the mic and send on the
-   same line. Focused, it opens to three lines (up to six as you type) over
-   the content below, which never moves. */
-.mar-prompt-slot {
-  position: relative;
-  z-index: 5;
-  height: 66px;
-}
-.mar-prompt-slot > .mar-prompt {
-  position: absolute;
-  inset: 0 0 auto;
-}
-.mar-prompt {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  column-gap: 10px;
-  padding: 14px 12px 14px 22px;
-  border-radius: 28px;
-}
-.mar-prompt > :deep(:first-child:not(.relative)) {
-  grid-column: 1 / -1;
-}
-.mar-prompt > :deep(.relative) {
-  align-self: center;
-  padding-top: 0;
-}
-.mar-prompt :deep(.relative > div[aria-hidden]) {
-  padding-top: 0;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.mar-prompt :deep(textarea) {
-  height: 1lh;
-  min-height: 1lh;
-  field-sizing: content;
-  max-height: 6lh;
-  transition: min-height 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.mar-prompt :deep(textarea:focus) {
-  min-height: 3lh;
-}
-.mar-prompt > :deep(.mt-1\.5) {
-  margin-top: 0;
-  gap: 6px;
-}
-/* The build picker: the build itself, no "Run on" label. */
-.mar-prompt :deep(.mt-1\.5 button > .text-subtle-foreground:not(:last-child)) {
-  display: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .mar-prompt :deep(textarea) {
-    transition: none;
-  }
-}
-</style>
