@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import { DIRECTIONS, look } from '../look'
@@ -34,6 +35,11 @@ const THEMES = [
   { value: 'dark', label: 'Dark' },
   { value: 'light', label: 'Light' }
 ] as const
+const zoomOptions = ZOOMS.map((z) => ({ value: String(z), label: `${Math.round(z * 100)}%` }))
+const zoomPick = computed({
+  get: () => String(screen.zoom),
+  set: (v: string) => (screen.zoom = Number(v))
+})
 const screenOptions = SCREENS.map((sc) => ({
   value: sc.id,
   label: sc.note,
@@ -106,23 +112,9 @@ function set(key: keyof Tuning, value: string): void {
 
       <div class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Screen</span>
-        <Select v-model="screen.id" :options="screenOptions" class="w-full" />
-        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
-          <button
-            v-for="z in ZOOMS"
-            :key="z"
-            type="button"
-            :aria-pressed="screen.zoom === z"
-            :class="[
-              'h-7 flex-1 rounded-[7px] px-2 text-ui tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              screen.zoom === z
-                ? 'bg-secondary-background-hover font-medium text-base-foreground'
-                : 'text-muted-foreground hover:text-base-foreground'
-            ]"
-            @click="screen.zoom = z"
-          >
-            {{ Math.round(z * 100) }}%
-          </button>
+        <div class="flex gap-1.5">
+          <Select v-model="screen.id" :options="screenOptions" class="min-w-0 flex-1" />
+          <Select v-model="zoomPick" :options="zoomOptions" class="w-22 shrink-0" />
         </div>
       </div>
 
