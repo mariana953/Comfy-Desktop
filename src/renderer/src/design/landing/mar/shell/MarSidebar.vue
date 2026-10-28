@@ -354,8 +354,19 @@ function newChat(): void {
       >
     </button>
 
-    <!-- Workspace, at the foot like Pablo's sidebar. -->
+    <!-- Workspace, always last at the foot like Pablo's; credits above it. -->
     <div class="mar-side-foot" :class="open && creditsStyle.id === 'meter' && 'is-meter'">
+      <button
+        v-if="open && creditsStyle.id === 'meter'"
+        type="button"
+        class="mar-side-meter"
+        @click="go('billing')"
+      >
+        <span class="flex items-center justify-between">
+          <span>{{ USER.credits }} credits</span><span class="text-subtle-foreground">Top up</span>
+        </span>
+        <span class="mar-side-bar"><span :style="{ width: '62%' }" /></span>
+      </button>
       <MarWorkspaceMenu :side="open ? 'top' : 'right'">
         <button type="button" class="mar-side-ws" :title="open ? undefined : workspace.name">
           <span class="mar-side-avatar">{{ workspace.name.charAt(0) }}</span>
@@ -370,17 +381,6 @@ function newChat(): void {
           </template>
         </button>
       </MarWorkspaceMenu>
-      <button
-        v-if="open && creditsStyle.id === 'meter'"
-        type="button"
-        class="mar-side-meter"
-        @click="go('billing')"
-      >
-        <span class="flex items-center justify-between">
-          <span>{{ USER.credits }} credits</span><span class="text-subtle-foreground">Top up</span>
-        </span>
-        <span class="mar-side-bar"><span :style="{ width: '62%' }" /></span>
-      </button>
     </div>
   </aside>
 </template>

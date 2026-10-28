@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AssetViewMenu from '../mar/assets/AssetViewMenu.vue'
+import { isMariana } from '../mar/proposal'
 import { computed, ref } from 'vue'
 import { Cloud, Download, FolderInput, Images, Laptop, Trash2, X } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
@@ -175,6 +177,7 @@ function addFolder(path: string): void {
         <div class="ml-auto flex items-center gap-2">
           <SearchInput v-model="q" placeholder="Search assets" class="w-52" />
           <Select v-model="sort" label="Sort" :options="sorts" class="w-35" />
+          <AssetViewMenu v-if="isMariana" />
         </div>
       </template>
       <template v-else>
@@ -227,7 +230,7 @@ function addFolder(path: string): void {
       </p>
       <div
         v-if="list.length"
-        class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] gap-3.5"
+        class="mar-asset-grid mt-3 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] gap-3.5"
       >
         <AssetTile
           v-for="a in list"

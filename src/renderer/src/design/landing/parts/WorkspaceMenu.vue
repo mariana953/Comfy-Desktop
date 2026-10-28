@@ -42,7 +42,7 @@ function signOut(): void {
   <SignInCard v-if="!proto.signedIn" />
   <div v-else class="flex flex-col gap-1">
     <!-- Mar's proposal: credits as a chip or meter instead (mar/). -->
-    <MarCredits v-if="isMariana && creditsStyle.id === 'chip'" />
+    <MarCredits v-if="isMariana && creditsStyle.id !== 'row'" />
     <Button
       v-if="shownCredits && !(isMariana && creditsStyle.id !== 'row')"
       variant="ghost"
@@ -69,7 +69,6 @@ function signOut(): void {
         <ChevronsUpDown :size="14" class="text-subtle-foreground" />
       </Button>
     </MarWorkspaceMenu>
-    <MarCredits v-if="isMariana && creditsStyle.id === 'meter'" />
     <DropdownMenuRoot v-else :modal="false">
       <DropdownMenuTrigger as-child>
         <Button

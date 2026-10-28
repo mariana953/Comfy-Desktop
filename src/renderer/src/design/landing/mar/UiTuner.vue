@@ -178,27 +178,6 @@ function set(key: keyof Tuning, value: string): void {
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">Graph editor</span>
-        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
-          <button
-            v-for="g in GRAPH_STYLES"
-            :key="g.value"
-            type="button"
-            :aria-pressed="graphStyle.id === g.value"
-            :class="[
-              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              graphStyle.id === g.value
-                ? 'bg-secondary-background-hover font-medium text-base-foreground'
-                : 'text-muted-foreground hover:text-base-foreground'
-            ]"
-            @click="graphStyle.id = g.value"
-          >
-            {{ g.label }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Workflow cover</span>
         <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
           <button
@@ -263,6 +242,31 @@ function set(key: keyof Tuning, value: string): void {
           >
             {{ o.label }}
           </button>
+        </div>
+      </div>
+
+      <!-- The graph editor is its own thing, below the Home and app tweaks. -->
+      <div v-if="isMariana" class="mt-2 flex flex-col gap-3 border-t border-border-default pt-4">
+        <span class="text-ui font-medium text-base-foreground">Graph editor</span>
+        <div v-if="isMariana" class="flex flex-col gap-1.5">
+          <span class="text-ui text-subtle-foreground">Look</span>
+          <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+            <button
+              v-for="g in GRAPH_STYLES"
+              :key="g.value"
+              type="button"
+              :aria-pressed="graphStyle.id === g.value"
+              :class="[
+                'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+                graphStyle.id === g.value
+                  ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                  : 'text-muted-foreground hover:text-base-foreground'
+              ]"
+              @click="graphStyle.id = g.value"
+            >
+              {{ g.label }}
+            </button>
+          </div>
         </div>
       </div>
 

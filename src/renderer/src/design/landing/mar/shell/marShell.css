@@ -969,10 +969,61 @@
   background-color: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
 }
 
-/* Assets and other picture grids: bigger tiles, more air. */
-:root[data-mar-ui='on'] .proto-main .grid[class*='minmax(176px'] {
-  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+/* Assets (View menu, mar/assets): size, layout and details. */
+:root[data-mar-ui='on'] .proto-main .mar-asset-grid.mar-asset-grid {
+  grid-template-columns: repeat(auto-fill, minmax(var(--mar-tile, 232px), 1fr));
   gap: 18px;
+}
+:root[data-mar-asset-size='s'] {
+  --mar-tile: 168px;
+}
+:root[data-mar-asset-size='l'] {
+  --mar-tile: 320px;
+}
+/* Grid: each picture in its own shape (no square crop). */
+:root[data-mar-ui='on'][data-mar-asset-layout='grid'] .mar-asset-grid [style*='aspect-ratio'] {
+  aspect-ratio: 4 / 5 !important;
+}
+:root[data-mar-ui='on'][data-mar-asset-details='off']
+  .mar-asset-grid
+  [role='button']
+  > div:last-child {
+  display: none;
+}
+/* List: one row each, thumbnail, name and details side by side. */
+:root[data-mar-ui='on'][data-mar-asset-layout='list'] .proto-main .mar-asset-grid.mar-asset-grid {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+:root[data-mar-ui='on'][data-mar-asset-layout='list'] .mar-asset-grid [role='button'] {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+}
+:root[data-mar-ui='on'][data-mar-asset-layout='list']
+  .mar-asset-grid
+  [role='button']
+  > div:first-child {
+  width: 56px;
+  flex-shrink: 0;
+}
+:root[data-mar-ui='on'][data-mar-asset-layout='list']
+  .mar-asset-grid
+  [role='button']
+  > div:last-child {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 8px;
+}
+:root[data-mar-ui='on'][data-mar-asset-layout='list']
+  .mar-asset-grid
+  [role='button']
+  > div:first-child
+  > div:not(:first-child) {
+  display: none;
 }
 /* When a page has many filters, the search gives way first. */
 :root[data-mar-ui='on'] .proto-main label:has(> input[type='search'], > input:not([type])) {
