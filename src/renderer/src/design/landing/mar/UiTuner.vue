@@ -23,7 +23,8 @@ import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 const NAVS: { value: MarNav; label: string }[] = [
   { value: 'classic', label: 'Original' },
   { value: 'floating', label: 'Floating · a card' },
-  { value: 'tabs', label: '08 · Tabs · a bar on top' }
+  { value: 'tabs', label: '08 · Tabs · a bar on top' },
+  { value: 'panels', label: 'Panels · sidebar and page as two cards' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'spotlight', label: 'Spotlight · soft light and film grain' },

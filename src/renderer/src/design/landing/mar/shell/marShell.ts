@@ -62,7 +62,7 @@ watch(
  *  to the window or floating (MarSidebar.vue), the dock at the bottom
  *  (MarDock.vue), or Classic: Pablo's sidebar and layout as they are.
  *  Same places in all. */
-export type MarNav = 'sidebar' | 'floating' | 'dock' | 'classic' | 'tabs'
+export type MarNav = 'sidebar' | 'floating' | 'dock' | 'classic' | 'tabs' | 'panels'
 // v2: Classic (Pablo's sidebar) is the default. The dock is no longer
 // offered (it read unclear); a stored pick of it falls back to Classic.
 const NAV_KEY = 'comfy.design.mar.nav.v2'
@@ -70,7 +70,7 @@ function loadNav(): { id: MarNav; collapsed: boolean } {
   try {
     const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? '{}')
     // Classic (Pablo's sidebar) is the default; a stored dock falls back to it.
-    const id: MarNav = ['floating', 'classic', 'tabs'].includes(v.id) ? v.id : 'classic'
+    const id: MarNav = ['floating', 'classic', 'tabs', 'panels'].includes(v.id) ? v.id : 'classic'
     return { id, collapsed: Boolean(v.collapsed) }
   } catch {
     return { id: 'classic', collapsed: false }
@@ -141,8 +141,10 @@ watch(
 watch(
   () => [isMariana.value, marNav.id] as const,
   ([m, id]) => {
-    // Classic and Tabs (08) each have their own frame.
-    if (m && (id === 'classic' || id === 'tabs')) document.documentElement.dataset.marNav = id
+    // Classic, Tabs (08) and Panels each have their own frame. Panels is
+    // Pablo's sidebar framed as two cards (panelsNav.css).
+    if (m && (id === 'classic' || id === 'tabs' || id === 'panels'))
+      document.documentElement.dataset.marNav = id
     else delete document.documentElement.dataset.marNav
   },
   { immediate: true }

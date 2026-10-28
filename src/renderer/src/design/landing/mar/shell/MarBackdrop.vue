@@ -14,6 +14,7 @@ import { isMariana } from '../proposal'
 import { altBackground, bloomOn, heroImage, marDockOn, marNav, marSideOn } from './marShell'
 import lastOutput from '../assets/portrait-seaside.jpg'
 import './marShell.css'
+import './panelsNav.css'
 import '../motion/motion.css'
 import '../motion/tabSlide'
 

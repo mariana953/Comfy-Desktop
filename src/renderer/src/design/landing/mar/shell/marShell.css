@@ -1154,3 +1154,13 @@
 :root[data-mar-ui='on'] .proto-main .mar-prompt.mar-prompt:has(textarea:focus) {
   border-radius: 20px;
 }
+
+/* Nested corners: an option inside a track is the track's radius minus
+   the track's padding, so the curves run parallel. UI Playground tracks:
+   10px outside, 8px inside. */
+:root .proto-ui.proto-ui.proto-ui[aria-label='UI tuner'] .mar-seg {
+  border-radius: 10px;
+}
+:root .proto-ui.proto-ui.proto-ui[aria-label='UI tuner'] .mar-seg > :is(button, .mar-tab-pill) {
+  border-radius: 8px !important;
+}

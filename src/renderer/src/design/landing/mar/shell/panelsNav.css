@@ -1,0 +1,50 @@
+/*
+ * Navigation › Panels (marShell.ts): Pablo's sidebar and page framed as
+ * two rounded cards on a darker window, after Magnific. 8px around and
+ * between them, no hairline. Only the framing changes; the items are
+ * Pablo's.
+ */
+:root[data-mar-nav='panels'] {
+  --mar-panels-window: color-mix(in oklch, var(--color-titlebar-background) 82%, black);
+  --mar-panels-side: color-mix(in oklch, var(--color-titlebar-background) 94%, white);
+  --mar-panels-radius: 18px;
+}
+:root[data-mar-nav='panels'][data-ds-theme='light'] {
+  --mar-panels-window: color-mix(in oklch, var(--color-titlebar-background) 92%, black);
+  --mar-panels-side: color-mix(in oklch, var(--color-titlebar-background) 60%, white);
+}
+
+/* The window: one darker colour, title bar included. */
+:root[data-mar-nav='panels'][data-mar-ui='on'] .proto-shell,
+:root[data-mar-nav='panels'][data-mar-ui='on'] .proto-ui > .glass-titlebar.glass-titlebar {
+  background: var(--mar-panels-window);
+}
+
+/* Keep the title bar solid and in the flow, like Classic (the floating,
+   translucent bar in marShell.css skips Classic only). */
+:root[data-mar-nav='panels'][data-mar-ui='on'] .proto-ui > .glass-titlebar.glass-titlebar {
+  position: relative;
+  inset: auto;
+  backdrop-filter: none;
+}
+:root[data-mar-nav='panels'][data-mar-ui='on'] .proto-ui .proto-main.proto-main {
+  padding-top: 0;
+}
+:root[data-mar-nav='panels'][data-mar-ui='on'] .proto-ui .mar-top-actions.mar-top-actions {
+  top: 14px;
+}
+
+/* The sidebar card: a shade lighter than the window. */
+:root[data-mar-nav='panels'] .proto-ui .proto-sidebar {
+  border-radius: var(--mar-panels-radius);
+  background: var(--mar-panels-side);
+  --glyph-ring: var(--mar-panels-side);
+}
+
+/* The content card: its own surface, same radius, 8px from everything. */
+:root[data-mar-nav='panels'] .proto-ui .proto-main.proto-main {
+  margin: 8px;
+  border-radius: var(--mar-panels-radius);
+  box-shadow: none;
+  outline: none;
+}

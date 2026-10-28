@@ -31,6 +31,11 @@ function place(group: HTMLElement): void {
   }
   pill.style.width = `${picked.offsetWidth}px`
   pill.style.height = `${picked.offsetHeight}px`
+  // The pill takes the picked option's own corners: round in a round
+  // track, soft in a soft one, so it never sits square in a pill.
+  const own = getComputedStyle(picked).borderRadius
+  const track = getComputedStyle(pill.parentElement!).borderRadius
+  pill.style.borderRadius = parseFloat(own) > 0 ? own : parseFloat(track) >= 99 ? '999px' : ''
   pill.style.transform = `translate(${picked.offsetLeft}px, ${picked.offsetTop}px)`
   if (pill.style.transition === 'none') {
     void pill.offsetWidth
