@@ -29,11 +29,22 @@ import {
   Search,
   Settings,
   Square,
+  Tag,
   Workflow,
   X
 } from 'lucide-vue-next'
 import portrait from '../assets/portrait-sun.jpg'
-import { graphStyle } from './graphStyle'
+import { graphMode, graphStyle } from './graphStyle'
+import CanvasNode from './CanvasNode.vue'
+import AssetsPanel from './AssetsPanel.vue'
+import {
+  CANVAS_GEOMETRY,
+  CANVAS_LINKS,
+  SOCKETS,
+  canvasNodeHeight,
+  createCanvas,
+  socketY
+} from './canvasData'
 import {
   GEOMETRY,
   GROUPS,
@@ -44,27 +55,57 @@ import {
   portY,
   rows,
   widgetHeight,
-  widgetsTop,
-  type GNode
+  widgetsTop
 } from './graphData'
 
 /**
  * ComfyUI's graph editor as a mock, in Mar's proposal (a build's tab). Two
- * looks over one graph: Glass, the Home's language (translucent borderless
- * nodes on a calm dot grid, a floating bar with Run), and Current, ComfyUI
- * as it looks today (frontend v1) in the same new structure. The canvas
- * pans (drag the background), zooms (wheel, the zoom pill) and nodes move
- * by their title, so it reads as the real thing.
+ * modes: Canvas, a simpler layer over ComfyUI (Node Banana's approach: few
+ * nodes, results on the nodes, workflows as nodes), and Nodes, the raw
+ * ComfyUI graph. Two looks over both: Glass, the Home's language
+ * (translucent borderless nodes on a calm dot grid, a floating bar with
+ * Run), and Current, ComfyUI as it looks today (frontend v1) in the same
+ * new structure. The canvas pans (drag the background), zooms (wheel, the
+ * zoom pill) and nodes move by their title, so it reads as the real thing.
  */
 const { workflow = 'portrait-sun' } = defineProps<{ workflow?: string }>()
 
 const current = computed(() => graphStyle.id === 'current')
+const isCanvas = computed(() => graphMode.id === 'canvas')
 const g = computed(() => GEOMETRY[graphStyle.id])
+const cg = computed(() => CANVAS_GEOMETRY[graphStyle.id])
 const nodes = reactive(createNodes())
+const sNodes = reactive(createCanvas())
 const byId = computed(() => Object.fromEntries(nodes.map((n) => [n.id, n])))
+const sById = computed(() => Object.fromEntries(sNodes.map((n) => [n.id, n])))
 const selected = ref('')
+const labels = ref(false)
 
-const links = computed(() =>
+/** Every node's box in the mode on screen: the world, minimap, dragging. */
+const boxes = computed(() =>
+  isCanvas.value
+    ? sNodes.map((n) => ({ node: n, h: canvasNodeHeight(n, cg.value) }))
+    : nodes.map((n) => ({ node: n, h: nodeHeight(n, g.value) }))
+)
+
+const canvasLinks = computed(() =>
+  CANVAS_LINKS.map(([a, ai, b, bi]) => {
+    const from = sById.value[a]!
+    const to = sById.value[b]!
+    const x1 = from.x + from.w + 5
+    const y1 = socketY(from, ai, cg.value)
+    const x2 = to.x - 5
+    const y2 = socketY(to, bi, cg.value)
+    const dx = Math.max(50, Math.abs(x2 - x1) * 0.45)
+    return {
+      d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`,
+      color: SOCKETS[from.outs[ai]!.type]!,
+      live: b === 'relight'
+    }
+  })
+)
+
+const graphLinks = computed(() =>
   LINKS.map(([a, ai, b, bi]) => {
     const from = byId.value[a]!
     const to = byId.value[b]!
@@ -80,6 +121,7 @@ const links = computed(() =>
     }
   })
 )
+const links = computed(() => (isCanvas.value ? canvasLinks.value : graphLinks.value))
 
 const groups = computed(() =>
   GROUPS.map((gr) => {
@@ -94,8 +136,8 @@ const groups = computed(() =>
 
 // The world: big enough for every node, with a margin.
 const world = computed(() => ({
-  w: Math.max(...nodes.map((n) => n.x + n.w)) + 40,
-  h: Math.max(...nodes.map((n) => n.y + nodeHeight(n, g.value))) + 40
+  w: Math.max(...boxes.value.map((b) => b.node.x + b.node.w)) + 40,
+  h: Math.max(...boxes.value.map((b) => b.node.y + b.h)) + 40
 }))
 
 // The view: pan (x, y) and zoom (k), in the canvas's CSS pixels.
@@ -180,7 +222,7 @@ function onMove(e: PointerEvent): void {
     view.x += dx
     view.y += dy
   } else {
-    const n = byId.value[drag.id!]!
+    const n = (isCanvas.value ? sById.value : byId.value)[drag.id!]!
     n.x += dx / view.k
     n.y += dy / view.k
   }
@@ -221,11 +263,18 @@ onMounted(() => {
 })
 onBeforeUnmount(() => ro?.disconnect())
 
-// Switching look changes the geometry and the layout: frame it again.
+// Switching look or mode changes the geometry and the layout: frame it
+// again.
 watch(
-  () => graphStyle.id,
+  () => [graphStyle.id, graphMode.id],
   () => nextTick(fit)
 )
+const assets = ref(false)
+
+const MODES = [
+  { id: 'canvas', label: 'Canvas' },
+  { id: 'nodes', label: 'Nodes' }
+] as const
 
 const RAIL: { icon: Component; label: string }[] = [
   { icon: History, label: 'Queue' },
@@ -235,8 +284,6 @@ const RAIL: { icon: Component; label: string }[] = [
   { icon: LayoutTemplate, label: 'Templates' },
   { icon: FolderOpen, label: 'Assets' }
 ]
-
-const ext = (n: GNode): number => nodeHeight(n, g.value)
 </script>
 
 <template>
@@ -247,6 +294,19 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
       <span class="mg-tab is-on">{{ workflow }}<X :size="12" /></span>
       <span class="mg-tab">Untitled<X :size="12" /></span>
       <Plus :size="14" class="mg-tab-add" />
+      <span class="mg-mode" role="group" aria-label="Canvas mode">
+        <button
+          v-for="m in MODES"
+          :key="m.id"
+          type="button"
+          class="mg-mode-btn"
+          :class="graphMode.id === m.id && 'is-on'"
+          :aria-pressed="graphMode.id === m.id"
+          @click="graphMode.id = m.id"
+        >
+          {{ m.label }}
+        </button>
+      </span>
     </div>
 
     <!-- ComfyUI's rail: its own panels, not the app's navigation. -->
@@ -256,8 +316,10 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
         :key="r.label"
         type="button"
         class="mg-rail-btn"
+        :class="r.label === 'Assets' && assets && 'is-on'"
         :title="r.label"
         :aria-label="r.label"
+        @click="r.label === 'Assets' && (assets = !assets)"
       >
         <component :is="r.icon" :size="current ? 18 : 17" :stroke-width="1.75" />
         <span v-if="current" class="mg-rail-label">{{ r.label }}</span>
@@ -296,7 +358,7 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
         }"
       >
         <div
-          v-for="gr in groups"
+          v-for="gr in isCanvas ? [] : groups"
           :key="gr.title"
           class="mg-group"
           :style="{ left: `${gr.x}px`, top: `${gr.y}px`, width: `${gr.w}px`, height: `${gr.h}px` }"
@@ -319,12 +381,17 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
         </svg>
 
         <section
-          v-for="n in nodes"
+          v-for="n in isCanvas ? [] : nodes"
           :key="n.id"
           class="mg-node"
           :class="[n.state && `is-${n.state}`, selected === n.id && 'is-selected']"
           :data-node="n.id"
-          :style="{ left: `${n.x}px`, top: `${n.y}px`, width: `${n.w}px`, height: `${ext(n)}px` }"
+          :style="{
+            left: `${n.x}px`,
+            top: `${n.y}px`,
+            width: `${n.w}px`,
+            height: `${nodeHeight(n, g)}px`
+          }"
           :aria-label="n.title"
         >
           <header class="mg-head" :data-node-head="n.id" :style="{ height: `${g.head}px` }">
@@ -395,11 +462,40 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
             </p>
           </div>
         </section>
+
+        <template v-if="isCanvas">
+          <CanvasNode
+            v-for="(n, i) in sNodes"
+            :key="n.id"
+            :node="n"
+            :g="cg"
+            :current="current"
+            :labels="labels"
+            :selected="selected === n.id"
+            :style="{ '--sg-delay': `${-i * 1.3}s` }"
+          />
+        </template>
       </div>
     </div>
 
+    <AssetsPanel v-if="assets" @close="assets = false" />
+
     <!-- Run: a floating bar in Glass, ComfyUI's action bar in Current. -->
     <div v-if="!current" class="mg-bar">
+      <span class="mg-mode" role="group" aria-label="Canvas mode">
+        <button
+          v-for="m in MODES"
+          :key="m.id"
+          type="button"
+          class="mg-mode-btn"
+          :class="graphMode.id === m.id && 'is-on'"
+          :aria-pressed="graphMode.id === m.id"
+          @click="graphMode.id = m.id"
+        >
+          {{ m.label }}
+        </button>
+      </span>
+      <span class="mg-bar-sep" />
       <button type="button" class="mg-bar-name">{{ workflow }}<ChevronDown :size="14" /></button>
       <span class="mg-bar-sep" />
       <span class="mg-bar-queue">
@@ -407,7 +503,8 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
           <circle cx="8" cy="8" r="6.5" />
           <circle cx="8" cy="8" r="6.5" pathLength="100" stroke-dasharray="50 100" />
         </svg>
-        <span><b>Running</b> · 14 of 28</span>
+        <span v-if="isCanvas"><b>Relight</b> · 9 of 20</span>
+        <span v-else><b>Running</b> · 14 of 28</span>
         <span class="mg-bar-dim">3 queued</span>
       </span>
       <span class="mg-run-group">
@@ -442,12 +539,12 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
       >
         <svg :viewBox="`0 0 ${world.w} ${world.h}`" preserveAspectRatio="none">
           <rect
-            v-for="n in nodes"
-            :key="n.id"
-            :x="n.x"
-            :y="n.y"
-            :width="n.w"
-            :height="ext(n)"
+            v-for="b in boxes"
+            :key="b.node.id"
+            :x="b.node.x"
+            :y="b.node.y"
+            :width="b.node.w"
+            :height="b.h"
             :rx="current ? 6 : 14"
           />
           <rect
@@ -478,6 +575,17 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
           @click="tool = 'hand'"
         >
           <Hand :size="14" />
+        </button>
+        <button
+          v-if="isCanvas"
+          type="button"
+          class="mg-tool"
+          :class="labels && 'is-on'"
+          aria-label="Socket labels"
+          title="Socket labels"
+          @click="labels = !labels"
+        >
+          <Tag :size="14" />
         </button>
         <span class="mg-tools-sep" />
         <button type="button" class="mg-tool" aria-label="Zoom out" @click="zoomAt(view.k / 1.2)">
@@ -855,6 +963,7 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
   background: transparent;
   color: var(--mg-muted);
 }
+:root .proto-ui.proto-ui.proto-ui .mg-rail-btn.is-on,
 :root .proto-ui.proto-ui.proto-ui .mg-rail-btn:hover {
   background: var(--mg-hover);
   color: var(--mg-text);
@@ -890,6 +999,38 @@ const ext = (n: GNode): number => nodeHeight(n, g.value)
 }
 :root .proto-ui.proto-ui.proto-ui .mg-bar-name:hover {
   background: var(--mg-hover);
+}
+.mg-mode {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--mg-well);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-mode-btn {
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-mode-btn.is-on {
+  background: var(--mg-hover);
+  color: var(--mg-text);
+}
+.mg-bar > .mg-mode {
+  margin-left: 0;
+}
+.mg-topbar > .mg-mode {
+  align-self: center;
+  margin-left: auto;
+  border-radius: 6px;
+  background: var(--mg-chrome-2);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-topbar .mg-mode-btn {
+  height: 24px;
+  border-radius: 4px;
 }
 .mg-bar-name svg {
   color: var(--mg-dim);
