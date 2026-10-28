@@ -51,10 +51,11 @@ import { isMariana } from '../mar/proposal'
       </button>
     </template>
     <span class="ml-auto flex items-center gap-3.5 text-muted-foreground">
-      <MarProtoMenu v-if="isMariana" />
       <Bell :size="15" />
       <MessageSquarePlus :size="15" />
       <Download :size="15" />
+      <!-- Mar's proposal: the prototype controls, left of the app menu. -->
+      <MarProtoMenu v-if="isMariana" />
       <button
         v-if="can.breadcrumb"
         type="button"

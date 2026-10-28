@@ -458,3 +458,59 @@
 :root .proto-ui.proto-ui.proto-ui .mar-side-lens.is-rail {
   width: auto;
 }
+
+/* Expanded sidebar: the picked lens shows its name and takes the room;
+   the others are icon-only cells. */
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens:not(.is-rail) .mar-side-lens-btn {
+  flex: none;
+  width: 38px;
+}
+:root
+  .proto-ui.proto-ui.proto-ui
+  .mar-side-lens:not(.is-rail)
+  .mar-side-lens-btn[aria-pressed='true'] {
+  flex: 1;
+  width: auto;
+  gap: 6px;
+  font-size: var(--text-ui);
+}
+
+/* The lens switch hugs its tabs instead of spanning the sidebar. */
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens:not(.is-rail) {
+  width: auto;
+  align-self: flex-start;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens:not(.is-rail) .mar-side-lens-btn[aria-pressed='true'] {
+  flex: none;
+  padding: 0 12px 0 10px;
+}
+
+/* Integrated sidebar (like Pablo's, attached to the window): no floating
+   card. It runs from the title bar to the bottom edge, translucent with a
+   blur so the page's background passes behind it, and a faint line sets
+   it apart from the content. */
+:root[data-mar-side] .mar-side.mar-side {
+  top: 44px;
+  bottom: 0;
+  left: 0;
+  width: 248px;
+  border-radius: 0;
+  padding: 12px 12px 14px;
+  background: color-mix(in oklch, var(--color-content-background) 38%, transparent);
+  backdrop-filter: blur(28px) saturate(1.2);
+  box-shadow: inset -1px 0 0 color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+:root[data-mar-side] .mar-side.mar-side.is-rail {
+  width: 60px;
+  padding: 12px 8px 14px;
+}
+:root[data-mar-side='open'] .proto-main.proto-main {
+  padding-left: 248px;
+}
+:root[data-mar-side='rail'] .proto-main.proto-main {
+  padding-left: 60px;
+}
+/* The page's background runs behind the sidebar too. */
+:root[data-mar-side] .mar-backdrop.mar-backdrop {
+  left: 0;
+}
