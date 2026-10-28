@@ -4,6 +4,8 @@ import Badge from '../ui/Badge.vue'
 import MediaCard from '../ui/MediaCard.vue'
 import { openDetail } from '../useProto'
 import { thumb, type Template } from '../mock'
+import CategoryChip from '../mar/CategoryChip.vue'
+import { isMariana } from '../mar/proposal'
 
 const { t } = defineProps<{ t: Template }>()
 </script>
@@ -15,7 +17,10 @@ const { t } = defineProps<{ t: Template }>()
     @keydown.enter="openDetail('template', t.id)"
   >
     <template #top-left>
+      <!-- Mar's proposal: the real category, named on hover (mar/). -->
+      <CategoryChip v-if="isMariana" :category="t.category" />
       <Badge
+        v-else
         variant="overlay"
         size="md"
         :aria-label="t.kind === 'graph' ? 'Node graph' : 'App'"

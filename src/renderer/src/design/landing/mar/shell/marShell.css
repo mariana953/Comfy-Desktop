@@ -262,3 +262,19 @@
 :root[data-mar-ui='on'] .mar-backdrop ~ div .bg-secondary-background input {
   background-color: transparent;
 }
+
+/* The title bar flows into the page: the photo behind a page starts in
+   the title bar's colour and opens up below it, instead of a hard band. */
+:root[data-mar-ui='on'] .mar-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 180px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-titlebar-background),
+    color-mix(in oklch, var(--color-titlebar-background) 40%, transparent) 55%,
+    transparent
+  );
+}
