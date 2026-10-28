@@ -7,6 +7,7 @@ import DropdownMenuContent from '../ui/DropdownMenuContent.vue'
 import DropdownMenuItem from '../ui/DropdownMenuItem.vue'
 import { activeInstance, deployEnv, hostActions, instances, proto } from '../useProto'
 import { can } from '../milestones'
+import { onCloud } from './shell/surface'
 
 /** One Create button, top right; what used to be separate buttons (open
  *  ComfyUI, deploy) are its menu. Deploy shows once the Builder exists and
@@ -16,6 +17,13 @@ const deployable = computed(
     can.value.builder &&
     proto.signedIn &&
     instances.value.find((i) => !i.deployment && i.kind === 'local')
+)
+
+// In a browser (Comfy Cloud) ComfyUI opens on a cloud build.
+const target = computed(() =>
+  onCloud.value
+    ? (instances.value.find((i) => i.kind === 'cloud') ?? activeInstance.value)
+    : activeInstance.value
 )
 
 function deploy(): void {
@@ -36,10 +44,10 @@ function deploy(): void {
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-60">
-      <DropdownMenuItem @select="hostActions.launch(activeInstance)">
+      <DropdownMenuItem @select="hostActions.launch(target)">
         <Play :size="14" />
-        <span class="flex-1">Open ComfyUI</span>
-        <span class="text-subtle-foreground">{{ activeInstance.name }}</span>
+        <span class="flex-1">{{ onCloud ? 'Open ComfyUI ↗' : 'Open ComfyUI' }}</span>
+        <span class="text-subtle-foreground">{{ target.name }}</span>
       </DropdownMenuItem>
       <DropdownMenuItem v-if="deployable" @select="deploy">
         <Rocket :size="14" />Deploy as an API

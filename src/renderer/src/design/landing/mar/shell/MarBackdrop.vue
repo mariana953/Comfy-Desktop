@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import MarCloudBar from './MarCloudBar.vue'
 import MarDock from './MarDock.vue'
+import { onCloud } from './surface'
 import { heroImage, marDockOn } from './marShell'
 import './marShell.css'
 import '../motion/motion.css'
@@ -17,6 +19,7 @@ import '../motion/tabSlide'
     <img :src="heroImage" alt="" />
   </div>
   <MarDock v-if="marDockOn" />
+  <MarCloudBar v-if="onCloud" />
 </template>
 
 <style scoped>

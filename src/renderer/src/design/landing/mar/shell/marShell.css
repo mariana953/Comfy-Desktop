@@ -226,3 +226,12 @@
 :root .proto-ui.proto-ui.proto-ui .mar-flyout-row {
   padding: 6px 8px;
 }
+
+/* Surface: Comfy Cloud (surface.ts). The app's title bar gives way to the
+   browser's bars (MarCloudBar.vue); the page starts below them. */
+:root[data-mar-surface='cloud'] .glass-titlebar {
+  display: none;
+}
+:root[data-mar-surface='cloud'] .proto-shell {
+  padding-top: 122px;
+}

@@ -34,6 +34,7 @@ import { can, landingPage } from '../../milestones'
 import { PROJECTS } from '../../mock'
 import { SPACES } from '../../spaces'
 import { envKind } from '../../parts/env/env'
+import { onCloud } from './surface'
 
 /**
  * Mar's Ambient dock (Figma "Exploration 17 · Ambient dock"): the sidebar
@@ -85,7 +86,10 @@ function open(i: Item): void {
   go(i.page)
 }
 
-const builds = computed(() => recentInstances.value.slice(0, 3))
+// In a browser (Comfy Cloud) only cloud builds can open.
+const builds = computed(() =>
+  recentInstances.value.filter((i) => !onCloud.value || i.kind === 'cloud').slice(0, 3)
+)
 const live = (id: string): boolean => {
   const i = builds.value.find((b) => b.id === id)
   return Boolean(i && (i.state === 'running' || envKind(i) === 'managed'))

@@ -3,7 +3,8 @@ import { X } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import { DIRECTIONS, look } from '../look'
 import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
-import { proposal, PROPOSALS } from './proposal'
+import { isMariana, proposal, PROPOSALS } from './proposal'
+import { SURFACES, surface } from './shell/surface'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
@@ -43,6 +44,27 @@ function set(key: keyof Tuning, value: string): void {
           @click="proposal.id = p.value"
         >
           {{ p.label }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="isMariana" class="flex flex-col gap-1.5">
+      <span class="text-ui text-subtle-foreground">Surface</span>
+      <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+        <button
+          v-for="sf in SURFACES"
+          :key="sf.value"
+          type="button"
+          :aria-pressed="surface.id === sf.value"
+          :class="[
+            'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+            surface.id === sf.value
+              ? 'bg-secondary-background-hover font-medium text-base-foreground'
+              : 'text-muted-foreground hover:text-base-foreground'
+          ]"
+          @click="surface.id = sf.value"
+        >
+          {{ sf.label }}
         </button>
       </div>
     </div>
