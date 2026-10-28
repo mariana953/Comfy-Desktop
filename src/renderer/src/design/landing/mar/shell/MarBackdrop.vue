@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { heroImage } from './marShell'
 import './marShell.css'
+import '../motion/motion.css'
+import '../motion/tabSlide'
 
 /**
  * The blurred photo behind the top of a page. It scrolls away with the

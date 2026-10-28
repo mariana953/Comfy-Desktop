@@ -28,7 +28,7 @@ function set(key: keyof Tuning, value: string): void {
 
     <div class="flex flex-col gap-1.5">
       <span class="text-ui text-subtle-foreground">Proposal</span>
-      <div class="flex gap-1 rounded-control bg-secondary-background p-0.5">
+      <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
         <button
           v-for="p in PROPOSALS"
           :key="p.value"
@@ -70,7 +70,7 @@ function set(key: keyof Tuning, value: string): void {
 
     <div v-for="k in KNOBS" :key="k.key" class="flex flex-col gap-1.5">
       <span class="text-ui text-subtle-foreground">{{ k.label }}</span>
-      <div class="flex gap-1 rounded-control bg-secondary-background p-0.5">
+      <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
         <button
           v-for="o in k.options"
           :key="o.value"

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowUpRight, Box, Sparkles } from 'lucide-vue-next'
-import Badge from '../ui/Badge.vue'
+import { ArrowRight, ArrowUpRight, Box, Sparkles } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import Card from '../ui/Card.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
@@ -60,9 +59,14 @@ const list = computed(() => (tab.value === 'model' ? LAUNCHES : [...LAUNCHES].re
           class="absolute top-1/2 left-4 -translate-y-1/2 text-[22px] font-bold drop-shadow-lg"
           >{{ l.title }}</span
         >
-        <Badge variant="solid" size="sm" class="absolute bottom-3 left-3 font-semibold"
-          >Try it now</Badge
-        >
+        <!-- A real button, not a chip: control height and radius, an arrow,
+             and it brightens with the card's hover. -->
+        <span
+          class="absolute bottom-3 left-3 inline-flex h-8 items-center gap-1.5 rounded-control bg-inverted-background px-3 text-ui font-medium text-inverted-foreground shadow-[0_6px_20px_-8px_rgb(0_0_0/0.6)] transition-[background-color,transform] duration-200 group-hover:bg-inverted-background-hover group-active:scale-[0.98]"
+          >Try it now<ArrowRight
+            :size="14"
+            class="transition-transform duration-200 group-hover:translate-x-0.5"
+        /></span>
       </Card>
     </ScrollRow>
   </section>

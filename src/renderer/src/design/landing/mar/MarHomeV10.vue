@@ -98,7 +98,12 @@ const recent = computed(() =>
       </Button>
     </template>
   </div>
-  <div :class="['mx-auto w-full max-w-300 px-10', noLocal ? 'h-full overflow-hidden' : 'pb-16']">
+  <div
+    :class="[
+      'mar-home mx-auto w-full max-w-300 px-10',
+      noLocal ? 'h-full overflow-hidden' : 'pb-16'
+    ]"
+  >
     <section :class="['flex flex-col', noLocal ? 'h-full' : tight ? 'pt-14 pb-4' : 'pt-12 pb-4']">
       <div :class="['flex flex-1 flex-col', noLocal || !tight ? 'justify-center pt-10' : '']">
         <StartPaths v-if="noLocal" />
