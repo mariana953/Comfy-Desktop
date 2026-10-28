@@ -621,3 +621,46 @@
 :root[data-mar-shadows='off'] .proto-ui .shadow-elev:hover {
   box-shadow: none !important;
 }
+
+/* Borders: None hides the divider inside cards, so it gives back the
+   padding under it too (no blank band, e.g. "Not in a space"). */
+:root[data-mar-ui='on']:not([data-mar-borders='hairline'])
+  .edge-shine
+  .border-t.border-border-default {
+  padding-top: 0;
+}
+
+/* Screen simulator (screen.ts): the app laid out at the picked size, then
+   scaled to fit this window, on a dark surround with its name on top. */
+:root[data-mar-screen] body {
+  background: #050506;
+}
+:root[data-mar-screen] #app {
+  position: fixed;
+  top: var(--scr-y);
+  left: var(--scr-x);
+  width: var(--scr-w);
+  height: var(--scr-h);
+  overflow: hidden;
+  transform: scale(var(--scr-s));
+  transform-origin: 0 0;
+}
+:root[data-mar-screen='framed'] #app {
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 30px 80px rgb(0 0 0 / 0.6);
+}
+:root[data-mar-screen='framed'] body::before {
+  content: var(--scr-label);
+  position: fixed;
+  top: 22px;
+  right: 0;
+  left: 0;
+  color: rgb(255 255 255 / 0.55);
+  font:
+    500 12px / 1 Inter,
+    system-ui,
+    sans-serif;
+  text-align: center;
+}
