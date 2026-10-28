@@ -119,11 +119,15 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
   },
   contrast: {
     low: {
+      '--mar-surface-a': '0.03',
+      '--mar-surface-hover-a': '0.05',
       '--color-card-background': 'oklch(0.2 0.006 285)',
       '--color-card-background-hover': 'oklch(0.225 0.007 285)',
       '--color-secondary-background': 'oklch(1 0 0 / 0.04)'
     },
     high: {
+      '--mar-surface-a': '0.09',
+      '--mar-surface-hover-a': '0.13',
       '--color-card-background': 'oklch(0.255 0.008 285)',
       '--color-card-background-hover': 'oklch(0.29 0.009 285)',
       '--color-secondary-background': 'oklch(1 0 0 / 0.09)',
@@ -145,7 +149,10 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
     }
   },
   chip: {
-    'grey-blur': { '--color-media-overlay': 'oklch(0.22 0.004 285 / 0.6)' }
+    'grey-blur': {
+      '--color-media-overlay': 'oklch(0.22 0.004 285 / 0.6)',
+      '--mar-chip-bg': 'oklch(0.22 0.004 285 / 0.6)'
+    }
   },
   focus: {
     blue: { '--color-border-focus': 'oklch(0.68 0.15 250)' },

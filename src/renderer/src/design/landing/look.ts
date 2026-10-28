@@ -9,12 +9,10 @@ import { reactive, watch } from 'vue'
  * title bar and its popups (separate renderers) follow, live.
  */
 
-export const DIRECTIONS = [
-  { value: 'original', label: 'Void' },
-  { value: 'a', label: 'A' },
-  { value: 'b', label: 'B' },
-  { value: 'c', label: 'C' }
-] as const
+// Only looks with values in ui/looks/ are listed: an empty direction
+// would look exactly like Void. Add { value: 'a', label: '…' } back once
+// direction-a.css has its values.
+export const DIRECTIONS = [{ value: 'original', label: 'Void' }] as const
 
 export const THEMES = [
   { value: 'dark', label: 'Dark' },

@@ -5,9 +5,16 @@
  * Pablo's proposal has neither.
  */
 
-/* One flat, dark page: no glass mesh behind the content. */
-:root[data-mar-ui='on'] .proto-shell {
-  background: var(--color-content-background);
+/* One flat, dark page: no glass mesh behind the content. The title bar
+   and the area around the content share one colour, so the top of the
+   window never reads as a separate band. */
+:root[data-mar-ui='on'] .proto-shell,
+:root[data-mar-ui='on'] .glass-titlebar {
+  background: var(--color-titlebar-background);
+}
+:root[data-mar-ui='on'] .glass-titlebar {
+  border-bottom-color: transparent;
+  backdrop-filter: none;
 }
 :root[data-mar-ui='on'] .proto-main::before {
   display: none;
@@ -89,16 +96,28 @@
    tiles show what is behind them, with a blur, and stay translucent on
    hover instead of turning into a flat grey. */
 :root[data-mar-ui='on'] .proto-main .bg-card-background {
-  background-color: rgb(255 255 255 / 0.05);
+  background-color: rgb(255 255 255 / var(--mar-surface-a, 0.05));
   backdrop-filter: blur(24px);
 }
 :root[data-mar-ui='on'] .proto-main .hover\:bg-card-background-hover:hover {
-  background-color: rgb(255 255 255 / 0.08);
+  background-color: rgb(255 255 255 / var(--mar-surface-hover-a, 0.08));
 }
 :root[data-mar-ui='on'] .proto-main .bg-card-background\/60 {
-  background-color: rgb(255 255 255 / 0.04);
+  background-color: rgb(255 255 255 / var(--mar-surface-a, 0.04));
   backdrop-filter: blur(24px);
 }
 :root[data-mar-ui='on'] .proto-main .hover\:bg-card-background:hover {
-  background-color: rgb(255 255 255 / 0.08);
+  background-color: rgb(255 255 255 / var(--mar-surface-hover-a, 0.08));
+}
+
+/* Focus and progress colour (Tune the UI): the prompt box being typed in
+   and anything in progress pick it up. */
+:root[data-mar-ui='on'] .proto-main :is(textarea, input):focus-visible {
+  outline: none;
+}
+:root[data-mar-ui='on'] .proto-main div:has(> div > textarea:focus),
+:root[data-mar-ui='on'] .proto-main form:has(textarea:focus) {
+  box-shadow:
+    0 0 0 1px var(--color-border-focus),
+    0 18px 48px -20px rgb(0 0 0 / 0.7);
 }
