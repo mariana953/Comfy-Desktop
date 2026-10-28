@@ -19,9 +19,9 @@ const { t } = defineProps<{ t: Template }>()
     @click="openDetail('template', t.id)"
     @keydown.enter="openDetail('template', t.id)"
   >
-    <!-- Mar's proposal: templates as Comfy posters (mar/brand/). -->
-    <template v-if="isMariana && templateStyle.id === 'branded'" #media
-      ><BrandedThumb :t="t"
+    <!-- Mar's proposal: the picture with a small brand touch (mar/brand/). -->
+    <template v-if="isMariana && templateStyle.id !== 'photo'" #media
+      ><BrandedThumb :t="t" :kind="templateStyle.id"
     /></template>
     <template #top-left>
       <!-- Mar's proposal: the real category, named on hover (mar/). -->

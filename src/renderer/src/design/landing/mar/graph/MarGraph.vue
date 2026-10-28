@@ -32,6 +32,7 @@ import {
   Workflow,
   X
 } from 'lucide-vue-next'
+import { onCloud } from '../shell/surface'
 import { graphStyle } from './graphStyle'
 import CanvasNode from './CanvasNode.vue'
 import AssetsPanel from './AssetsPanel.vue'
@@ -93,7 +94,8 @@ const view = reactive({ x: 0, y: 0, k: 0.9 })
 const host = ref<HTMLElement>()
 const canvas = ref<HTMLElement>()
 const size = reactive({ w: 0, h: 0 })
-/** How much of the tab sits under the title bar, so nothing hides there. */
+/** How much of the tab sits under what is drawn above it (the title bar,
+ *  or the browser's bar on Comfy Cloud), so nothing hides there. */
 const top = ref(0)
 /** The screen simulator scales the whole app; pointer maths undoes it. */
 let screenScale = 1
@@ -104,9 +106,12 @@ function measure(): void {
   if (!el || !cv) return
   const r = el.getBoundingClientRect()
   screenScale = r.height / (el.offsetHeight || 1) || 1
-  const bar = document.querySelector('.proto-ui > .glass-titlebar')
-  const under = bar ? (bar.getBoundingClientRect().bottom - r.top) / screenScale : 0
-  top.value = Math.max(0, Math.round(under))
+  let under = 0
+  for (const bar of document.querySelectorAll('.proto-ui > .glass-titlebar, .mar-cloud-bar')) {
+    const b = bar.getBoundingClientRect()
+    if (b.height) under = Math.max(under, (b.bottom - r.top) / screenScale)
+  }
+  top.value = Math.round(under)
   size.w = cv.offsetWidth
   size.h = cv.offsetHeight
 }
@@ -200,7 +205,9 @@ function onMap(e: MouseEvent): void {
 }
 
 let ro: ResizeObserver | undefined
-onMounted(() => {
+onMounted(async () => {
+  // The browser's bar on Cloud mounts beside the graph: measure after it.
+  await nextTick()
   fit()
   // On a narrow window the minimap would sit over the graph: start closed.
   showMap.value = size.w >= 1200
@@ -213,9 +220,10 @@ onMounted(() => {
 })
 onBeforeUnmount(() => ro?.disconnect())
 
-// Switching look changes the geometry and the layout: frame it again.
+// Switching look changes the geometry and the layout; switching surface
+// adds or drops the browser's bar: frame it again.
 watch(
-  () => graphStyle.id,
+  () => [graphStyle.id, onCloud.value],
   () => nextTick(fit)
 )
 const assets = ref(false)
