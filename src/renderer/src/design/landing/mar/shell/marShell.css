@@ -235,3 +235,12 @@
 :root[data-mar-surface='cloud'] .proto-shell {
   padding-top: 122px;
 }
+
+/* With the title bar's tabs on, the agent opens from the title bar, so the
+   dock's lens switch keeps Create and Build, each with its name. */
+:root .proto-ui.proto-ui.proto-ui .mar-lens-btn.is-named {
+  width: auto;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: var(--text-ui);
+}

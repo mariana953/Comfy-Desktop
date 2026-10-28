@@ -35,6 +35,7 @@ import { PROJECTS } from '../../mock'
 import { SPACES } from '../../spaces'
 import { envKind } from '../../parts/env/env'
 import { onCloud } from './surface'
+import { marTabsOn } from './titleTabs'
 
 /**
  * Mar's Ambient dock (Figma "Exploration 17 · Ambient dock"): the sidebar
@@ -219,7 +220,7 @@ function lens(m: Mode): void {
       <!-- Lens switch, like Figma's mode switch. -->
       <div v-if="can.builder" class="mar-seg mar-lens" role="radiogroup" aria-label="Mode">
         <button
-          v-for="l in LENSES.filter((x) => x.value !== 'agent' || can.agent)"
+          v-for="l in LENSES.filter((x) => x.value !== 'agent' || (can.agent && !marTabsOn))"
           :key="l.value"
           type="button"
           role="radio"
@@ -227,10 +228,10 @@ function lens(m: Mode): void {
           :aria-pressed="proto.mode === l.value"
           :aria-label="l.label"
           :title="l.label"
-          class="mar-lens-btn"
+          :class="['mar-lens-btn', marTabsOn && 'is-named']"
           @click="lens(l.value)"
         >
-          <component :is="l.icon" :size="17" />
+          <component :is="l.icon" :size="17" /><span v-if="marTabsOn">{{ l.label }}</span>
         </button>
       </div>
     </nav>
