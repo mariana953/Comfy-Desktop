@@ -27,7 +27,7 @@
   margin: 0;
   z-index: 20;
   border-radius: 18px;
-  background: rgb(0 0 0 / 0.55);
+  background: color-mix(in oklch, var(--color-content-background) 62%, transparent);
   backdrop-filter: blur(40px) saturate(1.2);
   box-shadow: 0 24px 64px rgb(0 0 0 / 0.45);
 }
@@ -64,11 +64,6 @@
   display: none;
 }
 
-/* Glass is for backgrounds only: no shiny glass edge on borders. */
-:root[data-mar-ui='on'] .edge-shine::after {
-  display: none;
-}
-
 /* Credits and the workspace switcher stay pinned at the foot of the
    sidebar; the rows above scroll if the window is short. */
 :root[data-mar-shell='on'] .proto-sidebar .mt-auto {
@@ -78,7 +73,11 @@
   margin-inline: -8px;
   margin-bottom: -8px;
   padding: 12px 8px 8px;
-  background: linear-gradient(to bottom, transparent, rgb(12 12 14 / 0.92) 14px);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklch, var(--color-content-background) 92%, transparent) 14px
+  );
 }
 
 /* Short windows (laptops, low-resolution screens): tighter rows so the
@@ -96,18 +95,34 @@
    tiles show what is behind them, with a blur, and stay translucent on
    hover instead of turning into a flat grey. */
 :root[data-mar-ui='on'] .proto-main .bg-card-background {
-  background-color: rgb(255 255 255 / var(--mar-surface-a, 0.05));
+  background-color: color-mix(
+    in oklch,
+    var(--color-base-foreground) calc(var(--mar-surface-a, 0.05) * 100%),
+    transparent
+  );
   backdrop-filter: blur(24px);
 }
 :root[data-mar-ui='on'] .proto-main .hover\:bg-card-background-hover:hover {
-  background-color: rgb(255 255 255 / var(--mar-surface-hover-a, 0.08));
+  background-color: color-mix(
+    in oklch,
+    var(--color-base-foreground) calc(var(--mar-surface-hover-a, 0.08) * 100%),
+    transparent
+  );
 }
 :root[data-mar-ui='on'] .proto-main .bg-card-background\/60 {
-  background-color: rgb(255 255 255 / var(--mar-surface-a, 0.04));
+  background-color: color-mix(
+    in oklch,
+    var(--color-base-foreground) calc(var(--mar-surface-a, 0.04) * 100%),
+    transparent
+  );
   backdrop-filter: blur(24px);
 }
 :root[data-mar-ui='on'] .proto-main .hover\:bg-card-background:hover {
-  background-color: rgb(255 255 255 / var(--mar-surface-hover-a, 0.08));
+  background-color: color-mix(
+    in oklch,
+    var(--color-base-foreground) calc(var(--mar-surface-hover-a, 0.08) * 100%),
+    transparent
+  );
 }
 
 /* Focus and progress colour (Tune the UI): the prompt box being typed in
@@ -120,4 +135,52 @@
   box-shadow:
     0 0 0 1px var(--color-border-focus),
     0 18px 48px -20px rgb(0 0 0 / 0.7);
+}
+
+/* Mar's own surfaces (build pills, wells): the page colour's foreground
+   at low opacity, so they work in dark and light, plus a blur. */
+:root[data-mar-ui='on'] .mar-surface {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+  backdrop-filter: blur(24px);
+}
+:root[data-mar-ui='on'] .mar-surface:hover {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+}
+:root[data-mar-ui='on'] .mar-well {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+
+/* Chips on images: always dark grey at 60% over a blur (DS · Mar). */
+:root[data-mar-ui='on'] {
+  --color-media-overlay: oklch(0.22 0.004 285 / 0.6);
+}
+
+/* Borders (Tune the UI): None hides every line; Hairline draws a faint
+   uniform line; Glass edge keeps only the soft highlight along the top. */
+:root[data-mar-ui='on']:not([data-mar-borders='glass']) .edge-shine::after {
+  display: none;
+}
+:root[data-mar-ui='on'][data-mar-borders='hairline']
+  :is(.mar-surface, .mar-composer, .mar-card, .mar-bubble) {
+  box-shadow: inset 0 0 0 1px var(--color-border-default);
+}
+:root[data-mar-ui='on'][data-mar-borders='glass']
+  :is(.mar-surface, .mar-composer, .mar-card, .mar-bubble) {
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+}
+
+/* Tabs and switches: a track behind every option, the picked one lighter. */
+:root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) {
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-control);
+  background-color: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+}
+
+/* The prompt box stays nearly opaque: it is where you type, so what is
+   behind it should only show faintly. */
+:root[data-mar-ui='on'] .proto-main .mar-prompt.bg-card-background,
+:root[data-mar-ui='on'] .proto-main .mar-composer {
+  background-color: color-mix(in oklch, var(--color-card-background) 90%, transparent);
+  backdrop-filter: blur(32px) saturate(1.2);
 }

@@ -22,6 +22,7 @@ const list = computed(() => (tab.value === 'model' ? LAUNCHES : [...LAUNCHES].re
     <div class="mb-3.5 flex items-center gap-3">
       <SegmentedControl
         v-model="tab"
+        variant="contained"
         :options="[
           { value: 'model', label: 'Latest models', icon: Box },
           { value: 'feature', label: 'New features', icon: Sparkles }

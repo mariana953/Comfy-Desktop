@@ -37,8 +37,8 @@ import './marShell.css'
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgb(0 0 0 / 0.45),
-    rgb(0 0 0 / 0.2) 35%,
+    color-mix(in oklch, var(--color-content-background) 45%, transparent),
+    color-mix(in oklch, var(--color-content-background) 20%, transparent) 35%,
     var(--color-content-background) 100%
   );
 }

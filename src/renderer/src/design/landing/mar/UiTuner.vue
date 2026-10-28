@@ -1,24 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import { DIRECTIONS, look } from '../look'
 import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
-import { PART_KNOBS, parts, resetParts, type Parts } from './marParts'
-import { isMariana, proposal, PROPOSALS } from './proposal'
+import { proposal, PROPOSALS } from './proposal'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
- *  and the UI to start from, then the knobs, applied live; then, in Mar's
- *  proposal, her changes on Pablo's v10, one switch each. */
+ *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
+ *  then the knobs, applied live. */
 function set(key: keyof Tuning, value: string): void {
   ;(tuning as Record<string, string>)[key] = value
-}
-// Pablo's v10 keeps all his parts: only the Home pick shows there.
-const shownParts = computed(() =>
-  parts.home === 'draft' ? PART_KNOBS : PART_KNOBS.filter((k) => k.key === 'home')
-)
-function setPart(key: keyof Parts, value: string): void {
-  ;(parts as Record<string, string>)[key] = value
 }
 </script>
 
@@ -99,42 +90,5 @@ function setPart(key: keyof Parts, value: string): void {
     </div>
 
     <Button variant="ghost" size="sm" class="self-start" @click="resetTuning">Reset</Button>
-
-    <!-- Mar's changes on Pablo's v10: his part or hers, one by one. -->
-    <template v-if="isMariana">
-      <h2 class="border-t border-border-default pt-4 text-ui font-semibold">Mar's changes</h2>
-      <div v-for="k in shownParts" :key="k.key" class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">{{ k.label }}</span>
-        <div class="flex gap-1 rounded-control bg-secondary-background p-0.5">
-          <button
-            v-for="o in k.options"
-            :key="o.value"
-            type="button"
-            :aria-pressed="parts[k.key] === o.value"
-            :class="[
-              'h-7 flex-1 truncate rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              parts[k.key] === o.value
-                ? 'bg-secondary-background-hover font-medium text-base-foreground'
-                : 'text-muted-foreground hover:text-base-foreground'
-            ]"
-            @click="setPart(k.key, o.value)"
-          >
-            {{ o.label }}
-          </button>
-        </div>
-      </div>
-      <p v-if="parts.home !== 'draft'" class="text-ui text-subtle-foreground">
-        Pablo's content, layout and sidebar; only the UI is Mar's. Pick Mar draft to switch her
-        changes one by one.
-      </p>
-      <Button
-        v-if="parts.home === 'draft'"
-        variant="ghost"
-        size="sm"
-        class="self-start"
-        @click="resetParts"
-        >Reset</Button
-      >
-    </template>
   </aside>
 </template>

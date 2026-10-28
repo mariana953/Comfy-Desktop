@@ -316,13 +316,13 @@ const ARTIFACT_LABEL: Record<string, string> = {
   gap: 10px;
   border-radius: 20px;
   padding: 14px 12px 10px 16px;
-  background: rgb(255 255 255 / 0.06);
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   backdrop-filter: blur(28px) saturate(1.2);
   box-shadow: 0 18px 48px -20px rgb(0 0 0 / 0.7);
   transition: background-color 200ms ease;
 }
 .mar-composer:focus-within {
-  background: rgb(255 255 255 / 0.085);
+  background: color-mix(in oklch, var(--color-base-foreground) 8.5%, transparent);
 }
 .mar-send {
   display: inline-flex;
@@ -347,7 +347,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
   max-width: 80%;
   border-radius: 18px 18px 6px 18px;
   padding: 10px 14px;
-  background: rgb(255 255 255 / 0.08);
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
   backdrop-filter: blur(20px);
   font-size: var(--text-ui);
   line-height: 1.55;
@@ -361,7 +361,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.06);
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-muted-foreground);
 }
 .mar-steps {
@@ -370,7 +370,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
   gap: 6px;
   border-radius: 14px;
   padding: 10px 12px;
-  background: rgb(255 255 255 / 0.035);
+  background: color-mix(in oklch, var(--color-base-foreground) 3.5%, transparent);
 }
 .mar-steps li {
   display: flex;
@@ -392,7 +392,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  border: 1.5px solid rgb(255 255 255 / 0.25);
+  border: 1.5px solid color-mix(in oklch, var(--color-base-foreground) 25%, transparent);
   border-top-color: var(--color-border-focus);
   animation: mar-spin 700ms linear infinite;
 }
@@ -400,7 +400,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
 .mar-card {
   overflow: hidden;
   border-radius: 14px;
-  background: rgb(255 255 255 / 0.05);
+  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
   backdrop-filter: blur(24px);
   animation: mar-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -424,14 +424,14 @@ const ARTIFACT_LABEL: Record<string, string> = {
 .mar-field {
   border-radius: 999px;
   padding: 3px 10px;
-  background: rgb(255 255 255 / 0.06);
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-muted-foreground);
   font-size: 12px;
 }
 .mar-chip {
   border-radius: 999px;
   padding: 6px 12px;
-  background: rgb(255 255 255 / 0.05);
+  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
   color: var(--color-muted-foreground);
   font-size: var(--text-ui);
   transition:
@@ -439,7 +439,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
     color 150ms ease;
 }
 .mar-chip:hover {
-  background: rgb(255 255 255 / 0.09);
+  background: color-mix(in oklch, var(--color-base-foreground) 9%, transparent);
   color: var(--color-base-foreground);
 }
 .mar-dock {

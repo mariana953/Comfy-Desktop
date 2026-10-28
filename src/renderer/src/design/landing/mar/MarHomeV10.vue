@@ -15,7 +15,7 @@ import SpacesRow from '../parts/space/SpacesRow.vue'
 import Button from '../ui/Button.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
 import SectionHeader from '../ui/SectionHeader.vue'
-import BuildTile from './BuildTile.vue'
+import BuildPill from './BuildPill.vue'
 import CreateMenu from './CreateMenu.vue'
 import WorkflowCard from './WorkflowCard.vue'
 import { active as parts } from './marParts'
@@ -104,14 +104,14 @@ const recent = computed(() =>
         <StartPaths v-if="noLocal" />
         <template v-else>
           <Greeting :class="tight ? 'mb-4! pt-0!' : ''" />
-          <PromptBox v-if="can.agent" target :class="tight ? 'mar-prompt' : ''" />
-          <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-180">
+          <PromptBox v-if="can.agent" target class="mar-prompt" />
+          <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-210">
             <div class="mb-2.5 flex items-center justify-between px-1">
               <span class="text-ui text-muted-foreground">Or launch ComfyUI</span>
               <Button variant="link" size="sm" @click="go('environments')">All builds</Button>
             </div>
-            <div class="grid grid-cols-3 gap-2.5">
-              <BuildTile v-for="i in builds" :key="i.id" :inst="i" />
+            <div class="grid grid-cols-3 gap-2">
+              <BuildPill v-for="i in builds" :key="i.id" :inst="i" />
             </div>
           </div>
           <QuickLaunch v-else />
@@ -142,7 +142,14 @@ const recent = computed(() =>
       />
 
       <section v-if="parts.recent === 'mar' && recent.length" class="mt-10">
-        <SectionHeader title="Recently used" />
+        <SectionHeader title="Recently used">
+          <template #controls>
+            <span
+              class="inline-flex h-5 items-center rounded-full bg-secondary-background px-2 text-ui text-muted-foreground"
+              >{{ recent.length }}</span
+            >
+          </template>
+        </SectionHeader>
         <ScrollRow :columns="5">
           <WorkflowCard
             v-for="r in recent"
@@ -173,8 +180,18 @@ const recent = computed(() =>
 </template>
 
 <style scoped>
-/* A shorter prompt box (two lines) so the page starts higher. */
+/* A compact prompt box: one line to type in, tighter padding, so the page
+   starts higher. It grows as the text does. */
+.mar-prompt {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
 .mar-prompt :deep(textarea) {
-  height: calc(2lh + 4px);
+  height: calc(1lh + 6px);
+  field-sizing: content;
+  max-height: 6lh;
+}
+.mar-prompt :deep(.mt-1\.5) {
+  margin-top: 2px;
 }
 </style>

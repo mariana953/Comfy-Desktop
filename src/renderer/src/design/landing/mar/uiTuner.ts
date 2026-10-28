@@ -17,9 +17,8 @@ export interface Tuning {
   radius: 'sharp' | 'default' | 'soft'
   text: 'small' | 'default' | 'large'
   contrast: 'low' | 'default' | 'high'
-  borders: 'none' | 'default' | 'strong'
+  borders: 'none' | 'hairline' | 'glass'
   shadows: 'off' | 'default'
-  chip: 'default' | 'grey-blur'
   focus: 'white' | 'blue' | 'violet'
 }
 
@@ -27,9 +26,8 @@ const DEFAULTS: Tuning = {
   radius: 'default',
   text: 'default',
   contrast: 'default',
-  borders: 'default',
+  borders: 'none',
   shadows: 'default',
-  chip: 'default',
   focus: 'white'
 }
 
@@ -66,8 +64,8 @@ export const KNOBS: Knob[] = [
     label: 'Borders',
     options: [
       { value: 'none', label: 'None' },
-      { value: 'default', label: 'Subtle' },
-      { value: 'strong', label: 'Strong' }
+      { value: 'hairline', label: 'Hairline' },
+      { value: 'glass', label: 'Glass' }
     ]
   },
   {
@@ -76,14 +74,6 @@ export const KNOBS: Knob[] = [
     options: [
       { value: 'off', label: 'Off' },
       { value: 'default', label: 'On' }
-    ]
-  },
-  {
-    key: 'chip',
-    label: 'Chips on images',
-    options: [
-      { value: 'default', label: 'Black' },
-      { value: 'grey-blur', label: 'Grey + blur' }
     ]
   },
   {
@@ -134,12 +124,15 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
       '--color-content-background': 'oklch(0.125 0.005 285)'
     }
   },
+  // None: no borders at all. Hairline: a uniform, faint line all round.
+  // Glass edge: only a soft highlight along the top, like Pablo's cards.
   borders: {
     none: { '--color-border-default': 'transparent', '--color-border-strong': 'transparent' },
-    strong: {
-      '--color-border-default': 'oklch(1 0 0 / 0.14)',
-      '--color-border-strong': 'oklch(1 0 0 / 0.22)'
-    }
+    hairline: {
+      '--color-border-default': 'color-mix(in oklch, var(--color-base-foreground) 9%, transparent)',
+      '--color-border-strong': 'color-mix(in oklch, var(--color-base-foreground) 14%, transparent)'
+    },
+    glass: { '--color-border-default': 'transparent', '--color-border-strong': 'transparent' }
   },
   shadows: {
     off: {
@@ -148,20 +141,14 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
       '--shadow-highlight': 'none'
     }
   },
-  chip: {
-    'grey-blur': {
-      '--color-media-overlay': 'oklch(0.22 0.004 285 / 0.6)',
-      '--mar-chip-bg': 'oklch(0.22 0.004 285 / 0.6)'
-    }
-  },
   focus: {
     blue: { '--color-border-focus': 'oklch(0.68 0.15 250)' },
     violet: { '--color-border-focus': 'oklch(0.66 0.16 295)' }
   }
 }
 
-// v2: back to neutral defaults (earlier picks were saved per browser).
-const KEY = 'comfy.design.uiTuning.v2'
+// v3: borders default to none; chips are always grey with a blur.
+const KEY = 'comfy.design.uiTuning.v3'
 
 function load(): Tuning {
   try {
@@ -192,6 +179,7 @@ watch(
         applied.add(name)
       }
     }
+    document.documentElement.dataset.marBorders = t.borders
     try {
       localStorage.setItem(KEY, JSON.stringify(t))
     } catch {
