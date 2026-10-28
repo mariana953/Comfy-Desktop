@@ -56,13 +56,29 @@ const index = ref(0)
 const paused = ref(false)
 const slide = computed(() => SLIDES[index.value]!)
 
-let timer: ReturnType<typeof setInterval> | undefined
+// How far the current slide is through its time (0 to 1); it fills the
+// active dot below, stops while the pointer is over the banner, and moves
+// to the next slide when it is full. Picking a dot starts that slide over.
+const progress = ref(0)
+let raf = 0
+let last = 0
+function tick(now: number): void {
+  if (last && !paused.value) progress.value += (now - last) / INTERVAL
+  last = now
+  if (progress.value >= 1) {
+    progress.value = 0
+    index.value = (index.value + 1) % SLIDES.length
+  }
+  raf = requestAnimationFrame(tick)
+}
+function pick(i: number): void {
+  index.value = i
+  progress.value = 0
+}
 onMounted(() => {
-  timer = setInterval(() => {
-    if (!paused.value) index.value = (index.value + 1) % SLIDES.length
-  }, INTERVAL)
+  raf = requestAnimationFrame(tick)
 })
-onBeforeUnmount(() => clearInterval(timer))
+onBeforeUnmount(() => cancelAnimationFrame(raf))
 </script>
 
 <template>
@@ -141,13 +157,19 @@ onBeforeUnmount(() => clearInterval(timer))
         :aria-selected="i === index"
         :aria-label="`Slide ${i + 1}`"
         :class="[
-          'h-1.5 rounded-full transition-[width,background-color] duration-300',
+          'relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300',
           i === index
-            ? 'w-6 bg-base-foreground'
+            ? 'w-8 bg-muted-foreground/30'
             : 'w-1.5 bg-muted-foreground/40 hover:bg-muted-foreground'
         ]"
-        @click="index = i"
-      />
+        @click="pick(i)"
+      >
+        <span
+          v-if="i === index"
+          class="absolute inset-y-0 left-0 rounded-full bg-base-foreground"
+          :style="{ width: `${Math.min(progress, 1) * 100}%` }"
+        />
+      </button>
     </div>
   </section>
 </template>

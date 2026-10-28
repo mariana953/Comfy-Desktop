@@ -89,7 +89,18 @@ const exampleRows = computed(() =>
     })
 )
 
-const RECENT_ART = [portraitSeaside, forestFog, portraitGrass, hillsFog, portraitWindow]
+const RECENT_ART = [
+  portraitSeaside,
+  forestFog,
+  portraitGrass,
+  hillsFog,
+  portraitWindow,
+  portraitGarden,
+  lakeFog,
+  portraitSun,
+  hillsSunset,
+  portraitSmile
+]
 const recent = computed(() =>
   [...allWorkflows.value]
     .sort((a, b) => a.age - b.age)

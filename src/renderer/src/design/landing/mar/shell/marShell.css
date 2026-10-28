@@ -447,3 +447,14 @@
   gap: 5px;
   font-size: 12.5px;
 }
+
+/* Rail: the lens switch stacks, each icon in its own 40×32 cell. */
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens.is-rail .mar-side-lens-btn {
+  flex: none;
+  width: 40px;
+  height: 32px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens.is-rail {
+  width: auto;
+}

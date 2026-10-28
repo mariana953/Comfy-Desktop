@@ -14,7 +14,8 @@ import {
   KeyRound,
   LayoutDashboard,
   LayoutGrid,
-  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   MessageCircle,
   Palette,
   Plus,
@@ -131,7 +132,7 @@ const open = computed(() => !marNav.collapsed)
         :title="open ? 'Collapse' : 'Expand'"
         @click="marNav.collapsed = !marNav.collapsed"
       >
-        <Menu :size="16" />
+        <PanelLeftClose v-if="open" :size="16" /><PanelLeftOpen v-else :size="16" />
       </button>
     </div>
 
