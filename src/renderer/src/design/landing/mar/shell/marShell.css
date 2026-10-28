@@ -228,12 +228,12 @@
 }
 
 /* Surface: Comfy Cloud (surface.ts). The app's title bar gives way to the
-   browser's bars (MarCloudBar.vue); the page starts below them. */
+   browser's tab and address bar (MarCloudBar.vue); the page starts below. */
 :root[data-mar-surface='cloud'] .glass-titlebar {
   display: none;
 }
 :root[data-mar-surface='cloud'] .proto-shell {
-  padding-top: 122px;
+  padding-top: 78px;
 }
 
 /* With the title bar's tabs on, the agent opens from the title bar, so the
@@ -270,11 +270,10 @@
   position: absolute;
   inset: 0 0 auto;
   z-index: 1;
-  height: 180px;
+  height: 140px;
   background: linear-gradient(
     to bottom,
-    var(--color-titlebar-background),
-    color-mix(in oklch, var(--color-titlebar-background) 40%, transparent) 55%,
+    color-mix(in oklch, var(--color-titlebar-background) 55%, transparent),
     transparent
   );
 }

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Bell, ChevronLeft, ChevronRight, Lock, Plus, RotateCw, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Lock, Plus, RotateCw, X } from 'lucide-vue-next'
 import ComfyCLogo from '../../../../components/icons/ComfyCLogo.vue'
-import { proto, workspace } from '../../useProto'
+import { proto } from '../../useProto'
 
 /**
- * Comfy Cloud in a browser (Surface: Comfy Cloud): the browser's tab and
- * address bar on top, then the app's own bar one level below, where the
- * desktop app has its title bar. A stand-in for the preview only.
+ * Comfy Cloud in a browser (Surface: Comfy Cloud): only the browser's tab
+ * and address bar on top. The tab already says where you are and the dock
+ * holds Home and the workspace, so the app adds no bar of its own. A
+ * stand-in for the preview only.
  */
 const TITLES: Record<string, string> = {
   overview: 'Home',
@@ -49,17 +50,6 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
           path
         }}</span></span
       >
-    </div>
-    <!-- The app's bar, one level below the browser's. -->
-    <div class="mar-cloud-app">
-      <ComfyCLogo class="size-5" />
-      <span class="text-ui font-medium">Comfy Cloud</span>
-      <span class="text-ui text-subtle-foreground">/ {{ title }}</span>
-      <span class="ml-auto flex items-center gap-3 text-muted-foreground">
-        <span class="text-ui">13,853 credits</span>
-        <Bell :size="15" />
-        <span class="mar-cloud-avatar">{{ workspace.name.charAt(0) }}</span>
-      </span>
     </div>
   </div>
 </template>
@@ -112,25 +102,5 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-subtle-foreground);
   font-size: 12px;
-}
-.mar-cloud-app {
-  display: flex;
-  height: 44px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  border-bottom: 1px solid color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
-}
-.mar-cloud-avatar {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: color-mix(in oklch, var(--color-base-foreground) 14%, transparent);
-  color: var(--color-base-foreground);
-  font-size: 12px;
-  font-weight: 600;
 }
 </style>
