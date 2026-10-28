@@ -1122,3 +1122,23 @@
   --shadow-elev: 0 1px 2px oklch(0 0 0 / 0.05), 0 6px 16px -6px oklch(0 0 0 / 0.08);
   --shadow-elev-hover: 0 2px 4px oklch(0 0 0 / 0.06), 0 10px 22px -8px oklch(0 0 0 / 0.1);
 }
+
+/* Light mode in Mar's proposal: the window and sidebar sit just off white,
+   not grey; the content is white; the title bar matches the window. */
+:root[data-mar-ui='on'][data-ds-theme='light'] {
+  --color-app-background: oklch(0.982 0.002 285);
+  --color-titlebar-background: oklch(0.975 0.002 285);
+  --color-content-background: oklch(1 0 0);
+  --color-card-background-hover: oklch(0.985 0.002 285);
+  --color-secondary-background: oklch(0 0 0 / 0.04);
+  --color-secondary-background-hover: oklch(0 0 0 / 0.065);
+}
+/* Workflow graph thumbnails are drawn dark; in light they sit on a light
+   board instead of a black hole. */
+:root[data-mar-ui='on'][data-ds-theme='light'] .proto-main [class*='graph-preview'],
+:root[data-mar-ui='on'][data-ds-theme='light'] .proto-main .gp {
+  filter: invert(0.92) hue-rotate(180deg);
+}
+:root[data-mar-ui='on'][data-ds-theme='light'] .proto-main :is([class*='graph-preview'], .gp) img {
+  filter: invert(1) hue-rotate(180deg);
+}
