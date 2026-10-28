@@ -7,6 +7,7 @@ import { isMariana, proposal, PROPOSALS } from './proposal'
 import { SURFACES, surface } from './shell/surface'
 import { homeBackground, marNav, type HomeBackground, type MarNav } from './shell/marShell'
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
+import Select from '../ui/Select.vue'
 import { COVERS, cover } from './cover'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 
@@ -23,6 +24,17 @@ const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom' },
   { value: 'photo', label: 'Photo' }
 ]
+
+const THEMES = [
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' }
+] as const
+const screenOptions = SCREENS.map((sc) => ({
+  value: sc.id,
+  label: sc.note,
+  hint: sc.w ? sc.label : undefined
+}))
+const displayOptions = DISPLAYS.map((d) => ({ value: d.id, label: `${d.label} · ${d.note}` }))
 
 function set(key: keyof Tuning, value: string): void {
   ;(tuning as Record<string, string>)[key] = value
@@ -66,25 +78,29 @@ function set(key: keyof Tuning, value: string): void {
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">Screen</span>
-        <div class="flex flex-col gap-px">
+        <span class="text-ui text-subtle-foreground">Theme</span>
+        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
           <button
-            v-for="sc in SCREENS"
-            :key="sc.id"
+            v-for="t in THEMES"
+            :key="t.value"
             type="button"
-            :aria-pressed="screen.id === sc.id"
+            :aria-pressed="look.theme === t.value"
             :class="[
-              'flex h-7 items-center justify-between gap-2 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              screen.id === sc.id
-                ? 'bg-secondary-background-hover text-base-foreground'
-                : 'text-muted-foreground hover:bg-secondary-background hover:text-base-foreground'
+              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              look.theme === t.value
+                ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                : 'text-muted-foreground hover:text-base-foreground'
             ]"
-            @click="screen.id = sc.id"
+            @click="look.theme = t.value"
           >
-            <span class="tabular-nums">{{ sc.label }}</span
-            ><span class="truncate text-subtle-foreground">{{ sc.note }}</span>
+            {{ t.label }}
           </button>
         </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Screen</span>
+        <Select v-model="screen.id" :options="screenOptions" class="w-full" />
         <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
           <button
             v-for="z in ZOOMS"
@@ -102,26 +118,11 @@ function set(key: keyof Tuning, value: string): void {
             {{ Math.round(z * 100) }}%
           </button>
         </div>
-        <span class="mt-1.5 text-ui text-subtle-foreground">Colour</span>
-        <div class="flex flex-col gap-px">
-          <button
-            v-for="d in DISPLAYS"
-            :key="d.id"
-            type="button"
-            :aria-pressed="screen.display === d.id"
-            :title="d.note"
-            :class="[
-              'flex h-7 items-center justify-between gap-2 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              screen.display === d.id
-                ? 'bg-secondary-background-hover text-base-foreground'
-                : 'text-muted-foreground hover:bg-secondary-background hover:text-base-foreground'
-            ]"
-            @click="screen.display = d.id"
-          >
-            <span class="shrink-0">{{ d.label }}</span
-            ><span class="truncate text-subtle-foreground">{{ d.note }}</span>
-          </button>
-        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Colour</span>
+        <Select v-model="screen.display" :options="displayOptions" class="w-full" />
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

@@ -18,14 +18,14 @@ export interface ScreenPreset {
 }
 
 export const SCREENS: ScreenPreset[] = [
-  { id: 'fit', label: 'This window', note: 'No simulation', w: 0, h: 0 },
+  { id: 'fit', label: 'This window', note: 'This window', w: 0, h: 0 },
   { id: 'min', label: '1024 × 640', note: 'Smallest app window', w: 1024, h: 640 },
   { id: 'win-hd', label: '1366 × 768', note: 'Budget Windows laptop', w: 1366, h: 768 },
   { id: 'mba', label: '1440 × 900', note: 'MacBook Air 13″', w: 1440, h: 900 },
   { id: 'mbp14', label: '1512 × 982', note: 'MacBook Pro 14″', w: 1512, h: 982 },
-  { id: 'win-125', label: '1536 × 864', note: 'Windows 1080p at 125%', w: 1536, h: 864 },
+  { id: 'win-125', label: '1536 × 864', note: 'Windows at 125%', w: 1536, h: 864 },
   { id: 'fhd', label: '1920 × 1080', note: '1080p monitor', w: 1920, h: 1080 },
-  { id: 'qhd', label: '2560 × 1440', note: '1440p monitor or 4K at 150%', w: 2560, h: 1440 }
+  { id: 'qhd', label: '2560 × 1440', note: '1440p or 4K at 150%', w: 2560, h: 1440 }
 ]
 
 export const ZOOMS = [0.9, 1, 1.1, 1.25]
@@ -37,20 +37,20 @@ export const DISPLAYS: { id: string; label: string; note: string; filter: string
   {
     id: 'washed',
     label: 'Washed out',
-    note: 'Cheap laptop panel: greyish blacks, low contrast',
+    note: 'Cheap laptop panel',
     filter: 'contrast(0.82) brightness(1.1)'
   },
   {
     id: 'punchy',
     label: 'Punchy',
-    note: 'Glossy or OLED: deep blacks, saturated',
+    note: 'Glossy or OLED',
     filter: 'contrast(1.18) saturate(1.2)'
   },
   { id: 'dim', label: 'Dim', note: 'Brightness turned down', filter: 'brightness(0.75)' },
   {
     id: 'warm',
     label: 'Night Shift',
-    note: 'Warm night mode (macOS, Windows)',
+    note: 'Warm night mode',
     filter: 'sepia(0.3) saturate(1.15) hue-rotate(-12deg)'
   }
 ]
