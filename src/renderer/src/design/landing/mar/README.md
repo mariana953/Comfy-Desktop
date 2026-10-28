@@ -1,13 +1,14 @@
 # Mariana's proposal
 
-Lives apart from Pablo's prototype. Pick a version in the Prototype menu
-(Proposal: Mariana v1, Mariana v2) or open the preview with
-`?proposal=mariana-v1` (`?proposal=mariana` opens the latest).
+Lives apart from Pablo's prototype. Switch with the **Pablo | Mar** tabs at
+the top of the window, or open the preview with `?proposal=mariana`.
 
-Each version is frozen once the next one exists. What changed and why is in
+Mar's proposal always shows Pablo's latest milestone (first run included,
+which keeps his example cards). Picking another milestone in the Prototype
+menu switches to Pablo's at that milestone. What changed and why is in
 [DECISIONS.md](DECISIONS.md).
 
-## What v1 changes
+## What it changes
 
 - Home: one Create button top right; Open ComfyUI and Deploy are its menu.
 - Builds on Home are tiles: where it runs and its state on top, name and
@@ -19,9 +20,9 @@ Each version is frozen once the next one exists. What changed and why is in
 
 ## How it stays apart
 
-Everything new is in this folder. Pablo's files only gain the switch:
+Everything new is in this folder. Pablo's files only gain three hooks:
 
-- `prototypeOptions.ts`: the Proposal group.
+- `LandingPrototypes.vue`: mounts the Pablo | Mar tabs.
 - `pages/modes/ModePages.vue`: Home goes through `HomeEntry.vue`.
 - `variants/VariantModes.vue`: the Agent icon comes from `proposal.ts`.
 

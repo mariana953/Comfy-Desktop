@@ -1,58 +1,78 @@
 import { computed, reactive, watch } from 'vue'
 import { MessageCircle, Sparkles } from 'lucide-vue-next'
+import { proto } from '../useProto'
+import { MILESTONES } from '../milestones'
 
 /**
- * Which proposal the prototype shows (Prototype menu): Pablo's, as it is on
- * his branch, or one of Mariana's versions, which live in this folder only.
- * Everything that differs is in mar/; Pablo's files only gain the switch
- * that picks between them, so his daily changes merge in cleanly.
+ * Which proposal the prototype shows (the Pablo | Mar tabs at the top):
+ * Pablo's, as it is on his branch, or Mar's, which lives in this folder
+ * only. Pablo's files only gain the hooks that pick between them, so his
+ * daily changes merge in cleanly.
  *
- * Versions are frozen once a newer one exists, so they can be compared and
- * the decisions behind each one stay visible (DECISIONS.md). The last one
- * is the version being worked on.
+ * Mar's proposal is always on Pablo's latest milestone; switching back
+ * restores the milestone Pablo's was on, and picking another milestone
+ * switches to Pablo's.
  */
 
 export const PROPOSALS = [
   { value: 'pablo', label: 'Pablo' },
-  { value: 'mariana-v1', label: 'Mariana v1' },
-  { value: 'mariana-v2', label: 'Mariana v2 (in progress)' }
+  { value: 'mariana', label: 'Mar' }
 ] as const
 
 export type Proposal = (typeof PROPOSALS)[number]['value']
 
 const KEY = 'comfy.design.proposal'
+const LATEST_MILESTONE = Number(MILESTONES.at(-1)!.value)
 
-function isProposal(v: unknown): v is Proposal {
-  return PROPOSALS.some((p) => p.value === v)
+// Links and picks from before there was one Mar proposal.
+function normalize(v: string | null): Proposal | undefined {
+  if (v?.startsWith('mariana')) return 'mariana'
+  if (v === 'pablo') return 'pablo'
+  return undefined
 }
 
-// `mariana` alone means her latest version (links shared before versions).
-const LATEST: Proposal = PROPOSALS.at(-1)!.value
-
-/** URL overrides storage (`?proposal=mariana-v1`), for screenshots and links. */
+/** URL overrides storage (`?proposal=mariana`), for screenshots and links. */
 function load(): Proposal {
-  const fromUrl = new URLSearchParams(location.search).get('proposal')
-  if (fromUrl === 'mariana') return LATEST
-  if (isProposal(fromUrl)) return fromUrl
+  const fromUrl = normalize(new URLSearchParams(location.search).get('proposal'))
+  if (fromUrl) return fromUrl
   try {
-    const stored = localStorage.getItem(KEY)
-    if (stored === 'mariana') return LATEST
-    if (isProposal(stored)) return stored
+    return normalize(localStorage.getItem(KEY)) ?? 'pablo'
   } catch {
     // Storage blocked: fall back to Pablo's.
+    return 'pablo'
   }
-  return 'pablo'
 }
 
 export const proposal = reactive<{ id: Proposal }>({ id: load() })
 
+export const isMariana = computed(() => proposal.id === 'mariana')
+
+let pabloMilestone = proto.milestone
 watch(
   () => proposal.id,
-  (id) => {
+  (id, before) => {
     try {
       localStorage.setItem(KEY, id)
     } catch {
       // Storage blocked: the pick lasts for this window only.
+    }
+    if (id === 'mariana') {
+      if (before === 'pablo') pabloMilestone = proto.milestone
+      proto.milestone = LATEST_MILESTONE
+    } else if (before === 'mariana') {
+      proto.milestone = pabloMilestone
+    }
+  },
+  { immediate: true }
+)
+
+// Picking a milestone while on Mar's means looking at Pablo's scope for it.
+watch(
+  () => proto.milestone,
+  (m) => {
+    if (isMariana.value && m !== LATEST_MILESTONE) {
+      pabloMilestone = m
+      proposal.id = 'pablo'
     }
   }
 )
@@ -61,12 +81,5 @@ window.addEventListener('storage', (e) => {
   if (e.key === KEY) proposal.id = load()
 })
 
-export const isMariana = computed(() => proposal.id.startsWith('mariana'))
-
-/** Mariana's version number (1, 2, …), or 0 on Pablo's proposal. */
-export const marVersion = computed(() =>
-  isMariana.value ? Number(proposal.id.replace('mariana-v', '')) : 0
-)
-
-/** The Agent lens icon: a chat bubble in Mariana's proposal. */
+/** The Agent lens icon: a chat bubble in Mar's proposal. */
 export const agentIcon = computed(() => (isMariana.value ? MessageCircle : Sparkles))

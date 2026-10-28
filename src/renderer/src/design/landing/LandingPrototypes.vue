@@ -11,6 +11,7 @@ import ClassicDashboard from './parts/milestones/ClassicDashboard.vue'
 import ClientPortal from './portal/ClientPortal.vue'
 import ViewToggle from './parts/space/ViewToggle.vue'
 import AppTab from './parts/apps/AppTab.vue'
+import ProposalTabs from './mar/ProposalTabs.vue'
 import { appsProto } from './appFlow'
 import { hostActions, proto, toast } from './useProto'
 import { can } from './milestones'
@@ -167,6 +168,12 @@ watch(
         v-if="toggleSpace"
         :space-id="toggleSpace"
         class="fixed top-1.5 left-1/2 z-40 -translate-x-1/2 shadow-popover"
+      />
+      <!-- Pablo | Mar (mar/): whose prototype is on screen. -->
+      <ProposalTabs
+        v-if="!toggleSpace"
+        class="fixed left-1/2 z-40 -translate-x-1/2"
+        :class="standalone ? 'top-1.5' : 'top-3'"
       />
       <!-- The breadcrumb's build switcher, just under the stand-in bar. -->
       <SwitcherMenu v-if="standalone && can.breadcrumb" :top="44" />
