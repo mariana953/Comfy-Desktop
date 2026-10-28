@@ -491,7 +491,7 @@
    blur so the page's background passes behind it, and a faint line sets
    it apart from the content. */
 :root[data-mar-side-style='integrated'][data-mar-side] .mar-side.mar-side {
-  top: 44px;
+  top: var(--mar-chrome, 0px);
   bottom: 0;
   left: 0;
   width: 248px;
@@ -604,13 +604,14 @@
     0 10px 26px oklch(0 0 0 / 0.34);
 }
 
-/* Comfy Cloud: the sidebar starts below the browser's tab and address bar. */
-:root[data-mar-surface='cloud'][data-mar-side] .mar-side.mar-side {
-  top: 86px;
+/* What sits above the page: the title bar when it is part of the page
+   (browser preview; in the app it is its own window, so nothing), or the
+   browser's tab and address bar on Comfy Cloud. The sidebar starts below. */
+:root:has(.proto-ui > .glass-titlebar) {
+  --mar-chrome: 44px;
 }
-:root[data-mar-surface='cloud'][data-mar-side-style='integrated'][data-mar-side]
-  .mar-side.mar-side {
-  top: 78px;
+:root[data-mar-surface='cloud']:has(.proto-ui) {
+  --mar-chrome: 78px;
 }
 
 /* Shadows: Off (Tune the UI) flattens every raised surface. */

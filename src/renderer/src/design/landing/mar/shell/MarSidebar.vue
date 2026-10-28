@@ -320,7 +320,7 @@ function newChat(): void {
 <style scoped>
 .mar-side {
   position: fixed;
-  top: 52px;
+  top: calc(var(--mar-chrome, 0px) + 8px);
   bottom: 8px;
   left: 8px;
   z-index: 40;
