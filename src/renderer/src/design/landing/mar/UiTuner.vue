@@ -48,8 +48,9 @@ function set(key: keyof Tuning, value: string): void {
 </script>
 
 <template>
-  <!-- On <body>, outside the app, so the screen simulator never scales it. -->
-  <Teleport to="body">
+  <!-- In the app's root (its theme applies) but outside the prototype's
+       frame, so the screen simulator never scales it. -->
+  <Teleport to="#app">
     <aside
       v-if="tuner.open"
       aria-label="UI tuner"

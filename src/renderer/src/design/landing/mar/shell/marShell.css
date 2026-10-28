@@ -166,7 +166,7 @@
 }
 :root[data-mar-ui='on'][data-mar-borders='glass']
   :is(.mar-surface, .mar-composer, .mar-card, .mar-bubble) {
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-foreground) 4%, transparent);
 }
 
 /* Tabs and switches: a track behind every option, the picked one lighter. */
@@ -630,28 +630,30 @@
   padding-top: 0;
 }
 
-/* Screen simulator (screen.ts): the app laid out at the picked size, then
-   scaled to fit this window, on a dark surround with its name on top. */
-:root[data-mar-screen] body {
+/* Screen simulator (screen.ts): the prototype laid out at the picked
+   size, then scaled to fit this window, on a dark surround with its name
+   on top. The tuner sits outside it, unscaled. */
+:root[data-mar-screen] #app {
   background: #050506;
 }
-:root[data-mar-screen] #app {
+:root[data-mar-screen] div.proto-ui.relative {
   position: fixed;
   top: var(--scr-y);
   left: var(--scr-x);
   width: var(--scr-w);
   height: var(--scr-h);
+  flex: none;
   overflow: hidden;
   transform: scale(var(--scr-s));
   transform-origin: 0 0;
 }
-:root[data-mar-screen='framed'] #app {
+:root[data-mar-screen='framed'] div.proto-ui.relative {
   border-radius: 10px;
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.08),
     0 30px 80px rgb(0 0 0 / 0.6);
 }
-:root[data-mar-screen='framed'] body::before {
+:root[data-mar-screen='framed'] #app::before {
   content: var(--scr-label);
   position: fixed;
   top: 22px;
@@ -666,7 +668,7 @@
 }
 
 /* Screen simulator › colour: the picked panel's look over the whole app. */
-:root #app {
+:root div.proto-ui.relative {
   filter: var(--scr-filter, none);
 }
 
@@ -793,4 +795,29 @@
   :root[data-mar-ui='on'] .mar-backdrop.is-aurora .mar-bg {
     animation: none;
   }
+}
+
+/* Who's in a space: on translucent cards a solid ring reads as a dark
+   line, so the faces sit side by side with a small gap instead. */
+:root[data-mar-ui='on'] .proto-main .-space-x-1:has(> .rounded-full) {
+  gap: 3px;
+}
+:root[data-mar-ui='on'] .proto-main .-space-x-1:has(> .rounded-full) > * {
+  margin-inline: 0 !important;
+  --tw-ring-color: transparent;
+}
+
+/* The page's photo or background melts into the page instead of ending
+   on a line: the whole layer fades out towards its bottom. */
+:root[data-mar-ui='on'] .mar-backdrop.mar-backdrop {
+  height: 560px;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+}
+
+/* Borders: Glass is a whisper of light along the top edge, not a line. */
+:root[data-mar-ui='on'][data-mar-borders='glass'] .edge-shine {
+  --shine: 0.05;
+}
+:root[data-mar-ui='on'][data-mar-borders='glass'] .edge-shine:hover {
+  --shine: 0.08;
 }
