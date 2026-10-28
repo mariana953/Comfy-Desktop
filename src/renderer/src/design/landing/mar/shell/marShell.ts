@@ -61,13 +61,14 @@ watch(
 /** Mar's navigation (Proposal and UI › Navigation): the Ambient dock at
  *  the bottom (MarDock.vue) or a floating sidebar that collapses to a rail
  *  (MarSidebar.vue). Same places in both. */
-export type MarNav = 'dock' | 'sidebar'
+export type MarNav = 'sidebar' | 'floating' | 'dock'
 // v2: the sidebar is the default; the dock is the alternative.
 const NAV_KEY = 'comfy.design.mar.nav.v2'
 function loadNav(): { id: MarNav; collapsed: boolean } {
   try {
     const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? '{}')
-    return { id: v.id === 'dock' ? 'dock' : 'sidebar', collapsed: Boolean(v.collapsed) }
+    const id: MarNav = v.id === 'dock' || v.id === 'floating' ? v.id : 'sidebar'
+    return { id, collapsed: Boolean(v.collapsed) }
   } catch {
     return { id: 'sidebar', collapsed: false }
   }
@@ -91,14 +92,20 @@ export const marDockOn = computed(
 
 /** Mar's floating sidebar (MarSidebar.vue), expanded or as a rail. */
 export const marSideOn = computed(
-  () => isMariana.value && active.value.shell === 'dock' && marNav.id === 'sidebar'
+  () => isMariana.value && active.value.shell === 'dock' && marNav.id !== 'dock'
 )
 watch(
-  () => [marSideOn.value, marNav.collapsed] as const,
+  () => [marSideOn.value, marNav.collapsed, marNav.id] as const,
   ([on, rail]) => {
     const d = document.documentElement.dataset
-    if (on) d.marSide = rail ? 'rail' : 'open'
-    else delete d.marSide
+    if (on) {
+      d.marSide = rail ? 'rail' : 'open'
+      // Integrated (attached to the window) or floating (a card).
+      d.marSideStyle = marNav.id === 'floating' ? 'floating' : 'integrated'
+    } else {
+      delete d.marSide
+      delete d.marSideStyle
+    }
   },
   { immediate: true }
 )

@@ -3,7 +3,7 @@ import { computed, type Component } from 'vue'
 import {
   AppWindow,
   Boxes,
-  ChevronDown,
+  ChevronsUpDown,
   Circle,
   Code,
   Coins,
@@ -21,7 +21,6 @@ import {
   Plus,
   Rocket,
   ScrollText,
-  Search,
   Server,
   Workflow
 } from 'lucide-vue-next'
@@ -38,9 +37,9 @@ import portraitGrass from '../assets/portrait-grass.jpg'
 import hillsFog from '../assets/hills-fog.jpg'
 
 /**
- * Mar's sidebar (Navigation: Sidebar): a floating, smoked panel with the
- * workspace on top, the lens switch, search, the pages, projects with a
- * photo each, spaces and credits. Collapses to a rail of icons. Same
+ * Mar's sidebar (Navigation: Sidebar or Floating): the lens switch and the
+ * collapse button on top, the pages, projects with a photo each,
+ * spaces, and credits and the workspace at the foot, like Pablo's. Collapses to a rail of icons. Same
  * places as the dock (MarDock.vue); only the shape changes.
  */
 interface Item {
@@ -118,13 +117,32 @@ const open = computed(() => !marNav.collapsed)
 
 <template>
   <aside class="mar-side" :class="!open && 'is-rail'" aria-label="Navigation">
-    <!-- Workspace and collapse. -->
-    <div class="mar-side-head">
-      <button v-if="open" type="button" class="mar-side-ws" @click="toast('Switch workspace')">
-        <span class="mar-side-avatar">{{ workspace.name.charAt(0) }}</span>
-        <span class="min-w-0 flex-1 truncate text-left">{{ workspace.name }}</span>
-        <ChevronDown :size="14" class="text-subtle-foreground" />
-      </button>
+    <!-- Lens switch and collapse, on one line (stacked on the rail). -->
+    <div class="mar-side-head" :class="!open && 'is-rail'">
+      <div
+        v-if="can.builder"
+        class="mar-seg mar-side-lens"
+        :class="!open && 'is-rail'"
+        role="radiogroup"
+        aria-label="Mode"
+      >
+        <button
+          v-for="l in lenses"
+          :key="l.value"
+          type="button"
+          role="radio"
+          :aria-checked="proto.mode === l.value"
+          :aria-pressed="proto.mode === l.value"
+          :aria-label="l.label"
+          :title="l.label"
+          class="mar-side-lens-btn"
+          @click="lens(l.value)"
+        >
+          <component :is="l.icon" :size="15" /><span v-if="open && proto.mode === l.value">{{
+            l.label
+          }}</span>
+        </button>
+      </div>
       <button
         type="button"
         class="mar-side-icon mar-side-well"
@@ -135,43 +153,6 @@ const open = computed(() => !marNav.collapsed)
         <PanelLeftClose v-if="open" :size="16" /><PanelLeftOpen v-else :size="16" />
       </button>
     </div>
-
-    <!-- Lens switch. -->
-    <div
-      v-if="can.builder"
-      class="mar-seg mar-side-lens"
-      :class="!open && 'is-rail'"
-      role="radiogroup"
-      aria-label="Mode"
-    >
-      <button
-        v-for="l in lenses"
-        :key="l.value"
-        type="button"
-        role="radio"
-        :aria-checked="proto.mode === l.value"
-        :aria-pressed="proto.mode === l.value"
-        :aria-label="l.label"
-        :title="l.label"
-        class="mar-side-lens-btn"
-        @click="lens(l.value)"
-      >
-        <component :is="l.icon" :size="16" /><span v-if="open && proto.mode === l.value">{{
-          l.label
-        }}</span>
-      </button>
-    </div>
-
-    <button
-      type="button"
-      class="mar-side-search"
-      :class="!open && 'is-rail'"
-      @click="toast('Search · ⌘K')"
-    >
-      <Search :size="15" /><template v-if="open"
-        ><span class="flex-1 text-left">Search</span><kbd class="mar-side-kbd">⌘K</kbd></template
-      >
-    </button>
 
     <nav class="mar-side-scroll">
       <template v-for="(g, gi) in groups" :key="gi">
@@ -261,6 +242,25 @@ const open = computed(() => !marNav.collapsed)
         ><span class="flex-1 text-left">Credits</span><span>{{ USER.credits }}</span></template
       >
     </button>
+
+    <!-- Workspace, at the foot like Pablo's sidebar. -->
+    <button
+      type="button"
+      class="mar-side-ws"
+      :title="open ? undefined : workspace.name"
+      @click="toast('Switch workspace')"
+    >
+      <span class="mar-side-avatar">{{ workspace.name.charAt(0) }}</span>
+      <template v-if="open">
+        <span class="flex min-w-0 flex-1 flex-col text-left leading-tight">
+          <span class="truncate">{{ workspace.name }}</span>
+          <span v-if="workspace.plan" class="truncate font-normal text-subtle-foreground">{{
+            workspace.plan
+          }}</span>
+        </span>
+        <ChevronsUpDown :size="14" class="text-subtle-foreground" />
+      </template>
+    </button>
   </aside>
 </template>
 
@@ -299,12 +299,18 @@ const open = computed(() => !marNav.collapsed)
   display: flex;
   width: 100%;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
+}
+.mar-side-head.is-rail {
+  flex-direction: column-reverse;
+  gap: 8px;
 }
 .mar-side-ws {
   display: flex;
+  width: 100%;
   min-width: 0;
-  flex: 1;
+  flex: none;
   align-items: center;
   gap: 10px;
   border-radius: 10px;
@@ -317,14 +323,14 @@ const open = computed(() => !marNav.collapsed)
 }
 .mar-side-avatar {
   display: inline-flex;
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  background: var(--color-inverted-background);
-  color: var(--color-inverted-foreground);
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+  color: var(--color-base-foreground);
   font-size: 12px;
   font-weight: 600;
 }
@@ -370,30 +376,6 @@ const open = computed(() => !marNav.collapsed)
 .mar-side-lens-btn[aria-pressed='true'],
 .mar-side-lens-btn:hover {
   color: var(--color-base-foreground);
-}
-.mar-side-search {
-  display: flex;
-  width: 100%;
-  height: 34px;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px;
-  border-radius: 10px;
-  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
-  color: var(--color-subtle-foreground);
-  font-size: var(--text-ui);
-}
-.mar-side-search.is-rail {
-  width: 40px;
-  justify-content: center;
-  padding: 0;
-}
-.mar-side-kbd {
-  border-radius: 6px;
-  padding: 1px 6px;
-  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
-  font-family: inherit;
-  font-size: 11px;
 }
 .mar-side-scroll {
   display: flex;
@@ -471,9 +453,9 @@ const open = computed(() => !marNav.collapsed)
   gap: 10px;
   padding: 0 12px;
   border-radius: 12px;
-  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
   color: var(--color-base-foreground);
   font-size: var(--text-ui);
+  font-weight: 500;
 }
 .is-rail .mar-side-credits {
   width: 40px;

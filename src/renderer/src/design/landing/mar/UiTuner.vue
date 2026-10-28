@@ -12,7 +12,8 @@ import { homeBackground, marNav, type HomeBackground, type MarNav } from './shel
  *  then the knobs, applied live. */
 const NAVS: { value: MarNav; label: string }[] = [
   { value: 'sidebar', label: 'Sidebar' },
-  { value: 'dock', label: 'Ambient dock' }
+  { value: 'floating', label: 'Floating' },
+  { value: 'dock', label: 'Dock' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom' },

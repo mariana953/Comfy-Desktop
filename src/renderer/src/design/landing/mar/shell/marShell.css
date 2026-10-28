@@ -378,9 +378,7 @@
     transition: none;
   }
 }
-:root
-  .proto-ui.proto-ui.proto-ui
-  :is(.mar-side-row, .mar-side-search, .mar-side-credits, .mar-side-ws) {
+:root .proto-ui.proto-ui.proto-ui :is(.mar-side-row, .mar-side-credits, .mar-side-ws) {
   margin: 0;
 }
 :root .proto-ui.proto-ui.proto-ui .mar-side-row {
@@ -399,14 +397,6 @@
 :root .proto-ui.proto-ui.proto-ui .mar-side-lens-btn {
   height: 30px;
   padding: 0 8px;
-}
-:root .proto-ui.proto-ui.proto-ui .mar-side-search {
-  height: 34px;
-  padding: 0 10px;
-}
-:root .proto-ui.proto-ui.proto-ui .mar-side-search.is-rail {
-  width: 40px;
-  padding: 0;
 }
 :root .proto-ui.proto-ui.proto-ui .mar-side-credits {
   height: 38px;
@@ -492,7 +482,7 @@
    card. It runs from the title bar to the bottom edge, translucent with a
    blur so the page's background passes behind it, and a faint line sets
    it apart from the content. */
-:root[data-mar-side] .mar-side.mar-side {
+:root[data-mar-side-style='integrated'][data-mar-side] .mar-side.mar-side {
   top: 44px;
   bottom: 0;
   left: 0;
@@ -503,18 +493,18 @@
   backdrop-filter: blur(28px) saturate(1.2);
   box-shadow: inset -1px 0 0 color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
-:root[data-mar-side] .mar-side.mar-side.is-rail {
+:root[data-mar-side-style='integrated'][data-mar-side] .mar-side.mar-side.is-rail {
   width: 60px;
   padding: 12px 8px 14px;
 }
-:root[data-mar-side='open'] .proto-main.proto-main {
+:root[data-mar-side-style='integrated'][data-mar-side='open'] .proto-main.proto-main {
   padding-left: 248px;
 }
-:root[data-mar-side='rail'] .proto-main.proto-main {
+:root[data-mar-side-style='integrated'][data-mar-side='rail'] .proto-main.proto-main {
   padding-left: 60px;
 }
 /* The page's background runs behind the sidebar too. */
-:root[data-mar-side] .mar-backdrop.mar-backdrop {
+:root[data-mar-side-style='integrated'][data-mar-side] .mar-backdrop.mar-backdrop {
   left: 0;
 }
 
@@ -522,4 +512,86 @@
 :root[data-mar-ui='on'] .mar-space-meta {
   font-size: 12px;
   white-space: nowrap;
+}
+
+/* Sidebar items: Pablo's sizes (13px rows of 32, 15px icons, 12px corners,
+   28px lens tabs), so both proposals read the same. */
+:root .proto-ui.proto-ui.proto-ui .mar-side-row {
+  height: 32px;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+:root .proto-ui.proto-ui.proto-ui .is-rail .mar-side-row {
+  width: 40px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-row > :is(svg, img) {
+  width: 15px;
+  height: 15px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-credits {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-credits.is-rail,
+:root .proto-ui.proto-ui.proto-ui .is-rail .mar-side-credits {
+  width: 40px;
+  padding: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-label {
+  padding: 14px 12px 6px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens-btn {
+  height: 28px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens:not(.is-rail) .mar-side-lens-btn {
+  width: 32px;
+}
+:root
+  .proto-ui.proto-ui.proto-ui
+  .mar-side-lens:not(.is-rail)
+  .mar-side-lens-btn[aria-pressed='true'] {
+  width: auto;
+  padding: 0 10px 0 8px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-lens {
+  border-radius: 10px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-icon {
+  width: 32px;
+  height: 32px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-ws {
+  height: 52px;
+  padding: 6px;
+  gap: 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+:root .proto-ui.proto-ui.proto-ui .is-rail .mar-side-ws {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+/* Borders: None and Hairline drop the card's lit top edge too (it lives in
+   the elevation shadow, not only in edge-shine). */
+:root[data-mar-ui='on']:not([data-mar-borders='glass']) .edge-shine.shadow-elev {
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.35),
+    0 6px 18px oklch(0 0 0 / 0.28);
+}
+:root[data-mar-ui='on']:not([data-mar-borders='glass']) .edge-shine.shadow-elev:hover {
+  box-shadow:
+    0 2px 4px oklch(0 0 0 / 0.35),
+    0 10px 26px oklch(0 0 0 / 0.34);
 }
