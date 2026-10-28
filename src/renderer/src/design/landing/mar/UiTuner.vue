@@ -34,6 +34,11 @@ const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'output', label: 'Your latest · your last output, blurred' }
 ]
 
+function reset(): void {
+  resetTuning()
+  marNav.id = 'classic'
+}
+
 const THEMES = [
   { value: 'dark', label: 'Dark' },
   { value: 'light', label: 'Light' }
@@ -278,7 +283,7 @@ function set(key: keyof Tuning, value: string): void {
         </div>
       </div>
 
-      <Button variant="ghost" size="sm" class="self-start" @click="resetTuning">Reset</Button>
+      <Button variant="ghost" size="sm" class="self-start" @click="reset">Reset</Button>
     </aside>
   </Teleport>
 </template>

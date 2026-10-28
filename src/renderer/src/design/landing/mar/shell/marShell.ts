@@ -69,10 +69,11 @@ const NAV_KEY = 'comfy.design.mar.nav.v2'
 function loadNav(): { id: MarNav; collapsed: boolean } {
   try {
     const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? '{}')
-    const id: MarNav = ['floating', 'classic', 'tabs'].includes(v.id) ? v.id : 'sidebar'
+    // Classic (Pablo's sidebar) is the default; a stored dock falls back to it.
+    const id: MarNav = ['sidebar', 'floating', 'classic', 'tabs'].includes(v.id) ? v.id : 'classic'
     return { id, collapsed: Boolean(v.collapsed) }
   } catch {
-    return { id: 'sidebar', collapsed: false }
+    return { id: 'classic', collapsed: false }
   }
 }
 export const marNav = reactive(loadNav())
