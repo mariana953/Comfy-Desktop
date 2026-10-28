@@ -110,6 +110,8 @@ function lens(m: Mode): void {
 </script>
 
 <template>
+  <!-- The page fades out at the window's edge, behind the dock. -->
+  <div class="mar-dock-fade" aria-hidden="true" />
   <div class="mar-dock-wrap" @keydown.escape="flyout = false">
     <!-- Projects and spaces, above the dock. -->
     <div v-if="flyout" class="mar-flyout" role="dialog" aria-label="Projects and spaces">
@@ -239,6 +241,14 @@ function lens(m: Mode): void {
 </template>
 
 <style scoped>
+.mar-dock-fade {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 39;
+  height: 112px;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--color-content-background) 25%, transparent);
+}
 .mar-dock-wrap {
   position: fixed;
   bottom: 16px;

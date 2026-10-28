@@ -43,10 +43,12 @@ function deploy(): void {
         />
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" class="w-60">
+    <DropdownMenuContent align="end" class="min-w-64">
       <DropdownMenuItem @select="hostActions.launch(target)">
         <Play :size="14" />
-        <span class="flex-1">{{ onCloud ? 'Open ComfyUI ↗' : 'Open ComfyUI' }}</span>
+        <span class="flex-1 whitespace-nowrap">{{
+          onCloud ? 'Open ComfyUI ↗' : 'Open ComfyUI'
+        }}</span>
         <span class="text-subtle-foreground">{{ target.name }}</span>
       </DropdownMenuItem>
       <DropdownMenuItem v-if="deployable" @select="deploy">

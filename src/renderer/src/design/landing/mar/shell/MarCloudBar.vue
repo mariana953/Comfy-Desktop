@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ChevronLeft, ChevronRight, Lock, Plus, RotateCw, X } from 'lucide-vue-next'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Plus,
+  RotateCw,
+  SlidersHorizontal,
+  X
+} from 'lucide-vue-next'
 import ComfyCLogo from '../../../../components/icons/ComfyCLogo.vue'
 import { proto } from '../../useProto'
+import { tuner } from '../uiTuner'
 
 /**
  * Comfy Cloud in a browser (Surface: Comfy Cloud): only the browser's tab
@@ -50,6 +59,16 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
           path
         }}</span></span
       >
+      <!-- The prototype's controls: the way back to the desktop app. -->
+      <button
+        type="button"
+        class="mar-cloud-tune"
+        aria-label="Proposal and UI"
+        title="Proposal and UI (switch back to Desktop app)"
+        @click="tuner.open = !tuner.open"
+      >
+        <SlidersHorizontal :size="14" />
+      </button>
     </div>
   </div>
 </template>
@@ -102,5 +121,19 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-subtle-foreground);
   font-size: 12px;
+}
+.mar-cloud-tune {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--color-muted-foreground);
+  transition: background-color 150ms ease;
+}
+.mar-cloud-tune:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  color: var(--color-base-foreground);
 }
 </style>

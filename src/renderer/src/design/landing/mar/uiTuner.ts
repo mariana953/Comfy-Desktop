@@ -14,14 +14,14 @@ export interface Knob {
 }
 
 export interface Tuning {
-  radius: 'sharp' | 'default' | 'soft'
+  radius: 'default' | 'soft'
   contrast: 'low' | 'default' | 'high'
   borders: 'none' | 'hairline' | 'glass'
   shadows: 'off' | 'default'
 }
 
 const DEFAULTS: Tuning = {
-  radius: 'default',
+  radius: 'soft',
   contrast: 'default',
   borders: 'none',
   shadows: 'default'
@@ -32,7 +32,6 @@ export const KNOBS: Knob[] = [
     key: 'radius',
     label: 'Corners',
     options: [
-      { value: 'sharp', label: 'Sharp' },
       { value: 'default', label: 'Default' },
       { value: 'soft', label: 'Soft' }
     ]
@@ -68,12 +67,6 @@ export const KNOBS: Knob[] = [
 /** Token overrides per knob value. Missing = keep the UI's own value. */
 const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, string>>> } = {
   radius: {
-    sharp: {
-      '--radius-panel': '10px',
-      '--radius-card': '6px',
-      '--radius-control': '5px',
-      '--radius-min': '3px'
-    },
     soft: {
       '--radius-panel': '22px',
       '--radius-card': '18px',
@@ -117,8 +110,8 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
   }
 }
 
-// v3: borders default to none; chips are always grey with a blur.
-const KEY = 'comfy.design.uiTuning.v3'
+// v4: corners default to soft (no sharp); borders default to none.
+const KEY = 'comfy.design.uiTuning.v4'
 
 function load(): Tuning {
   try {
