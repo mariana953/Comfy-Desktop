@@ -22,6 +22,7 @@ import {
   Plus,
   Rocket,
   ScrollText,
+  Search,
   Server,
   Workflow
 } from 'lucide-vue-next'
@@ -33,6 +34,7 @@ import { INSTANCES, PROJECTS, USER } from '../../mock'
 import { SPACES } from '../../spaces'
 import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
+import { search } from '../search/search'
 import portraitSeaside from '../assets/portrait-seaside.jpg'
 import lakeFog from '../assets/lake-fog.jpg'
 import portraitWindow from '../assets/portrait-window.jpg'
@@ -173,6 +175,16 @@ function newChat(): void {
     </div>
 
     <nav class="mar-side-scroll">
+      <button
+        type="button"
+        class="mar-side-row"
+        :title="open ? undefined : 'Search · ⌘K'"
+        @click="search.open = true"
+      >
+        <Search :size="16" /><template v-if="open"
+          ><span class="flex-1">Search</span><kbd class="mar-side-kbd">⌘K</kbd></template
+        >
+      </button>
       <template v-for="(g, gi) in groups" :key="gi">
         <div v-if="g.title" class="mar-side-label">
           <span v-if="open">{{ g.title }}</span
@@ -495,6 +507,14 @@ function newChat(): void {
 .mar-side-row.is-on {
   background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
   color: var(--color-base-foreground);
+}
+.mar-side-kbd {
+  border-radius: 5px;
+  padding: 1px 5px;
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  color: var(--color-subtle-foreground);
+  font-family: inherit;
+  font-size: 11px;
 }
 .mar-side-thumb {
   width: 20px;

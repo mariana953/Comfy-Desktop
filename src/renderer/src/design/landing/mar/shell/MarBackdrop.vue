@@ -4,6 +4,7 @@ import MarDock from './MarDock.vue'
 import MarSidebar from './MarSidebar.vue'
 import { onCloud } from './surface'
 import MarBloom from './MarBloom.vue'
+import MarSearch from '../search/MarSearch.vue'
 import { bloomOn, heroImage, marDockOn, marSideOn } from './marShell'
 import './marShell.css'
 import '../motion/motion.css'
@@ -24,6 +25,7 @@ import '../motion/tabSlide'
   <MarDock v-if="marDockOn" />
   <MarSidebar v-if="marSideOn" />
   <MarCloudBar v-if="onCloud" />
+  <MarSearch />
 </template>
 
 <style scoped>
