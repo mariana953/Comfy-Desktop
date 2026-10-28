@@ -7,6 +7,8 @@ import { closeTab, instanceById, proto } from '../useProto'
 import { buildState } from '../buildTabs'
 import { isMariana } from '../mar/proposal'
 import MarGraph from '../mar/graph/MarGraph.vue'
+import MarCloudBar from '../mar/shell/MarCloudBar.vue'
+import { onCloud } from '../mar/shell/surface'
 
 /**
  * A build's tab, under its ComfyUI. In the app with your real builds, main
@@ -21,6 +23,9 @@ const real = computed(() => proto.live && !!inst.value?.source)
 </script>
 
 <template>
+  <!-- Mar's proposal on Comfy Cloud: the browser bar stays, with its way
+       back to Home (mar/shell). -->
+  <MarCloudBar v-if="isMariana && onCloud" />
   <!-- Mar's proposal: a mock of ComfyUI's graph editor (mar/graph). -->
   <MarGraph
     v-if="isMariana && tab && inst && !real && state?.kind !== 'error'"

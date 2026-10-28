@@ -29,8 +29,22 @@ const TITLES: Record<string, string> = {
   agent: 'Agent',
   'build-overview': 'Build'
 }
-const title = computed(() => TITLES[proto.page] ?? 'Comfy Cloud')
-const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.replace(':', '/')))
+const inGraph = computed(() => proto.activeTab !== 'home')
+const tab = computed(() => proto.tabs.find((t) => t.id === proto.activeTab))
+const title = computed(() =>
+  inGraph.value ? (tab.value?.workflow ?? 'Workflow') : (TITLES[proto.page] ?? 'Comfy Cloud')
+)
+/** Back, the logo and Home all lead home from a workflow, as on the web. */
+function home(): void {
+  proto.activeTab = 'home'
+}
+const path = computed(() =>
+  inGraph.value
+    ? `workflow/${(tab.value?.workflow ?? 'untitled').replace(/\.json$/, '')}`
+    : proto.page === 'overview'
+      ? 'home'
+      : proto.page.replace(':', '/')
+)
 </script>
 
 <template>
@@ -43,7 +57,9 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
         /><span class="size-3 rounded-full bg-[#28c840]" />
       </span>
       <span class="mar-cloud-tab">
-        <ComfyCLogo class="size-3.5" />
+        <button type="button" class="mar-cloud-nav" aria-label="Home" @click="home">
+          <ComfyCLogo class="size-3.5" />
+        </button>
         <span class="truncate">{{ title }} · Comfy Cloud</span>
         <X :size="12" class="ml-auto text-subtle-foreground" />
       </span>
@@ -51,9 +67,15 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
     </div>
     <!-- Address bar. -->
     <div class="mar-cloud-url">
-      <ChevronLeft :size="15" /><ChevronRight :size="15" class="opacity-50" /><RotateCw
-        :size="13"
-      />
+      <button
+        type="button"
+        class="mar-cloud-nav"
+        :disabled="!inGraph"
+        aria-label="Back to Home"
+        @click="home"
+      >
+        <ChevronLeft :size="15" /></button
+      ><ChevronRight :size="15" class="opacity-50" /><RotateCw :size="13" />
       <span class="mar-cloud-field"
         ><Lock :size="11" />cloud.comfy.org/<span class="text-base-foreground">{{
           path
@@ -135,5 +157,15 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
 .mar-cloud-tune:hover {
   background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
   color: var(--color-base-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-cloud-nav {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  padding: 0;
+  color: inherit;
+}
+.mar-cloud-nav:disabled {
+  opacity: 0.5;
 }
 </style>

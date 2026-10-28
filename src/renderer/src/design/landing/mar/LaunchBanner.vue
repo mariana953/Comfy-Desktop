@@ -4,7 +4,8 @@ import Button from '../ui/Button.vue'
 import { toast } from '../useProto'
 import hillsSunset from './assets/hills-sunset.jpg'
 import portraitSun from './assets/portrait-sun.jpg'
-import forestFog from './assets/forest-fog.jpg'
+import appsLoop from './assets/apps.mp4'
+import appsPoster from './assets/apps.jpg'
 
 /**
  * Mar's What's new: one full-width branded banner at a time (direction C in
@@ -19,7 +20,8 @@ interface Slide {
   cta: string
   gradient: string
   video?: string
-  /** A photo from the Magnific series, slowly drifting, until a loop exists. */
+  /** A photo from the Magnific series, slowly drifting, until a loop exists;
+   *  with a video, its poster and the reduced-motion still. */
   image?: string
 }
 
@@ -44,13 +46,15 @@ const SLIDES: Slide[] = [
     id: 'apps',
     title: 'Apps are here.\nTurn any workflow into a form.',
     cta: 'See how',
-    image: forestFog,
+    video: appsLoop,
+    image: appsPoster,
     gradient:
       'radial-gradient(60% 90% at 80% 35%, #10b981 0%, transparent 60%), radial-gradient(50% 80% at 15% 75%, #a3e635 0%, transparent 60%), linear-gradient(120deg, #06231b, #0f4d3a 50%, #0b2a12)'
   }
 ]
 
 const INTERVAL = 7000
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const index = ref(0)
 const paused = ref(false)
 const slide = computed(() => SLIDES[index.value]!)
@@ -90,15 +94,18 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
     >
       <Transition name="banner-fade">
         <div :key="slide.id" class="absolute inset-0">
-          <video
-            v-if="slide.video"
-            :src="slide.video"
-            autoplay
-            muted
-            loop
-            playsinline
-            class="absolute inset-0 size-full object-cover"
-          />
+          <template v-if="slide.video && !reduced">
+            <video
+              :src="slide.video"
+              :poster="slide.image"
+              autoplay
+              muted
+              loop
+              playsinline
+              class="absolute inset-0 size-full object-cover"
+            />
+            <span class="banner-veil absolute inset-0" aria-hidden="true" />
+          </template>
           <template v-else-if="slide.image">
             <img
               :src="slide.image"
