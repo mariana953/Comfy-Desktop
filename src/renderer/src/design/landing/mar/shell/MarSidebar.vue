@@ -32,6 +32,8 @@ import { flow, resetFlow } from '../../appFlow'
 import { can, landingPage } from '../../milestones'
 import { INSTANCES, PROJECTS, TEMPLATES, USER, thumb } from '../../mock'
 import { favorites } from '../favorites'
+import { creditsStyle } from '../credits'
+import MarWorkspaceMenu from '../MarWorkspaceMenu.vue'
 import { SPACES } from '../../spaces'
 import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
@@ -123,6 +125,10 @@ function lens(m: Mode): void {
   goIn(m, m === 'build' ? 'build-overview' : m === 'agent' ? 'agent' : landingPage())
 }
 const open = computed(() => !marNav.collapsed)
+const shortCredits = computed(() => {
+  const n = Number(USER.credits.replace(/,/g, ''))
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
+})
 
 // Agent lens: a new chat and the recent ones, as in Pablo's AgentNav.
 const currentChat = computed(
@@ -168,6 +174,15 @@ function newChat(): void {
           }}</span>
         </button>
       </div>
+      <button
+        v-if="open && creditsStyle.id === 'chip'"
+        type="button"
+        class="mar-side-chip"
+        :title="`${USER.credits} credits`"
+        @click="go('billing')"
+      >
+        <Coins :size="13" />{{ shortCredits }}
+      </button>
       <button
         type="button"
         class="mar-side-icon"
@@ -325,6 +340,7 @@ function newChat(): void {
     </nav>
 
     <button
+      v-if="creditsStyle.id === 'row' || (!open && creditsStyle.id !== 'meter')"
       type="button"
       class="mar-side-credits"
       :title="open ? undefined : 'Credits'"
@@ -336,23 +352,33 @@ function newChat(): void {
     </button>
 
     <!-- Workspace, at the foot like Pablo's sidebar. -->
-    <button
-      type="button"
-      class="mar-side-ws"
-      :title="open ? undefined : workspace.name"
-      @click="toast('Switch workspace')"
-    >
-      <span class="mar-side-avatar">{{ workspace.name.charAt(0) }}</span>
-      <template v-if="open">
-        <span class="flex min-w-0 flex-1 flex-col text-left leading-tight">
-          <span class="truncate">{{ workspace.name }}</span>
-          <span v-if="workspace.plan" class="truncate font-normal text-subtle-foreground">{{
-            workspace.plan
-          }}</span>
+    <div class="mar-side-foot" :class="open && creditsStyle.id === 'meter' && 'is-meter'">
+      <MarWorkspaceMenu :side="open ? 'top' : 'right'">
+        <button type="button" class="mar-side-ws" :title="open ? undefined : workspace.name">
+          <span class="mar-side-avatar">{{ workspace.name.charAt(0) }}</span>
+          <template v-if="open">
+            <span class="flex min-w-0 flex-1 flex-col text-left leading-tight">
+              <span class="truncate">{{ workspace.name }}</span>
+              <span v-if="workspace.plan" class="truncate font-normal text-subtle-foreground">{{
+                workspace.plan
+              }}</span>
+            </span>
+            <ChevronsUpDown :size="14" class="text-subtle-foreground" />
+          </template>
+        </button>
+      </MarWorkspaceMenu>
+      <button
+        v-if="open && creditsStyle.id === 'meter'"
+        type="button"
+        class="mar-side-meter"
+        @click="go('billing')"
+      >
+        <span class="flex items-center justify-between">
+          <span>{{ USER.credits }} credits</span><span class="text-subtle-foreground">Top up</span>
         </span>
-        <ChevronsUpDown :size="14" class="text-subtle-foreground" />
-      </template>
-    </button>
+        <span class="mar-side-bar"><span :style="{ width: '62%' }" /></span>
+      </button>
+    </div>
   </aside>
 </template>
 
@@ -534,6 +560,51 @@ function newChat(): void {
 .mar-side-row.is-on {
   background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
   color: var(--color-base-foreground);
+}
+.mar-side-foot {
+  width: 100%;
+  border-radius: 14px;
+}
+.mar-side-foot.is-meter {
+  padding: 4px 4px 10px;
+  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+}
+.mar-side-meter {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 8px 0;
+  color: var(--color-base-foreground);
+  font-size: 12px;
+  text-align: left;
+}
+.mar-side-bar {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+}
+.mar-side-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-base-foreground);
+}
+.mar-side-chip {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  color: var(--color-base-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 .mar-side-kbd {
   border-radius: 5px;

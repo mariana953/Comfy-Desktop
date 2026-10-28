@@ -9,6 +9,7 @@ import { homeBackground, marNav, type HomeBackground, type MarNav } from './shel
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 import Select from '../ui/Select.vue'
 import { COVERS, cover } from './cover'
+import { CREDITS_STYLES, creditsStyle } from './credits'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
@@ -149,6 +150,11 @@ function set(key: keyof Tuning, value: string): void {
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Navigation</span>
         <Select v-model="marNav.id" :options="NAVS" class="w-full" />
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Credits</span>
+        <Select v-model="creditsStyle.id" :options="CREDITS_STYLES" class="w-full" />
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

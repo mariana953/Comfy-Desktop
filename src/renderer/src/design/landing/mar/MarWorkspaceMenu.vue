@@ -1,0 +1,131 @@
+<script setup lang="ts">
+import { CreditCard, Gauge, KeyRound, LogOut, ShieldAlert, UserCog, Users } from 'lucide-vue-next'
+import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
+import DropdownMenuContent from '../ui/DropdownMenuContent.vue'
+import DropdownMenuItem from '../ui/DropdownMenuItem.vue'
+import DropdownMenuSeparator from '../ui/DropdownMenuSeparator.vue'
+import ContextSwitchSub from '../parts/ContextSwitchSub.vue'
+import WorkspaceAvatar from '../parts/WorkspaceAvatar.vue'
+import { go, proto, toast, type Page } from '../useProto'
+import {
+  realAccount,
+  realSignOut,
+  shownCredits,
+  shownEmail,
+  shownWorkspace as workspace
+} from '../account'
+
+/**
+ * The workspace menu in Mar's proposal: who and where on top with the
+ * credits left, then the workspace's admin, then your account. Opens from
+ * whatever trigger it wraps (the sidebar's workspace row).
+ */
+const { side = 'top' } = defineProps<{ side?: 'top' | 'right' | 'bottom' }>()
+
+const ADMIN: { page: Page; label: string; icon: unknown }[] = [
+  { page: 'usage', label: 'Usage', icon: Gauge },
+  { page: 'billing', label: 'Billing & credits', icon: CreditCard },
+  { page: 'limits', label: 'Limits', icon: ShieldAlert },
+  { page: 'people', label: 'People', icon: Users },
+  { page: 'provider-keys', label: 'Provider keys', icon: KeyRound }
+]
+
+const role = (r: string): string => r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+
+function signOut(): void {
+  if (realAccount.value) return void realSignOut()
+  proto.signedIn = false
+  toast('Signed out')
+}
+</script>
+
+<template>
+  <DropdownMenuRoot :modal="false">
+    <DropdownMenuTrigger as-child><slot /></DropdownMenuTrigger>
+    <DropdownMenuContent :side align="start" :side-offset="8" class="mar-ws-menu w-68">
+      <!-- Who and where, and what's left to spend. -->
+      <div class="mar-ws-card">
+        <div class="flex items-center gap-3">
+          <WorkspaceAvatar :ws="workspace" size="lg" />
+          <span class="flex min-w-0 flex-col">
+            <span class="truncate text-ui font-medium text-base-foreground">{{
+              workspace.name
+            }}</span>
+            <span class="truncate text-ui text-subtle-foreground"
+              >{{ workspace.plan.replace(' plan', '')
+              }}{{ workspace.role ? ` · ${role(workspace.role)}` : '' }}</span
+            >
+          </span>
+        </div>
+        <button v-if="shownCredits" type="button" class="mar-ws-credits" @click="go('billing')">
+          <span class="flex items-baseline justify-between">
+            <span
+              ><span class="font-medium text-base-foreground tabular-nums">{{ shownCredits }}</span>
+              credits left</span
+            ><span class="text-base-foreground">Top up</span>
+          </span>
+          <span class="mar-ws-bar"><span /></span>
+        </button>
+      </div>
+
+      <ContextSwitchSub />
+      <DropdownMenuSeparator />
+      <DropdownMenuItem v-for="i in ADMIN" :key="i.page" @select="go(i.page)">
+        <component :is="i.icon" :size="15" class="text-subtle-foreground" />{{ i.label }}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem @select="toast('Account settings')">
+        <UserCog :size="15" class="text-subtle-foreground" />
+        <span class="flex min-w-0 flex-col">
+          <span>Account settings</span>
+          <span class="truncate text-[12px] text-subtle-foreground">{{ shownEmail }}</span>
+        </span>
+      </DropdownMenuItem>
+      <DropdownMenuItem @select="signOut"
+        ><LogOut :size="15" class="text-subtle-foreground" />Log out</DropdownMenuItem
+      >
+    </DropdownMenuContent>
+  </DropdownMenuRoot>
+</template>
+
+<style>
+/* Global: the menu is portalled to <body>. */
+.mar-ws-menu .mar-ws-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-ws-credits,
+.mar-ws-menu .mar-ws-credits {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  color: var(--color-subtle-foreground);
+  font-size: 12px;
+  text-align: left;
+}
+.mar-ws-menu .mar-ws-bar {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+}
+.mar-ws-menu .mar-ws-bar > span {
+  display: block;
+  width: 62%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-base-foreground);
+}
+.mar-ws-menu [role='menuitem'] {
+  min-height: 32px;
+  gap: 10px;
+}
+</style>

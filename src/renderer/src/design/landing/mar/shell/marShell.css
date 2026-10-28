@@ -669,3 +669,54 @@
 :root #app {
   filter: var(--scr-filter, none);
 }
+
+/* Sidebar rows read like Pablo's: grey at rest, white with a soft fill
+   when picked or hovered; Credits stays white and medium. */
+:root .proto-ui.proto-ui.proto-ui .mar-side-row {
+  background: transparent;
+  color: var(--color-muted-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-row:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  color: var(--color-base-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-row.is-on {
+  background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+  color: var(--color-base-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-credits {
+  color: var(--color-base-foreground);
+  font-weight: 500;
+}
+
+/* Credits (Proposal and UI › Credits): the workspace and the meter fill
+   the foot; the chip is small, next to the tabs. */
+:root .proto-ui.proto-ui.proto-ui :is(.mar-side-ws, .mar-side-meter) {
+  width: 100%;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-meter > span:first-child {
+  width: 100%;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-chip {
+  width: auto;
+  height: 26px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-meter {
+  padding: 4px 8px 0;
+  font-size: 12px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-head:has(.mar-side-chip) {
+  gap: 4px;
+}
+:root
+  .proto-ui.proto-ui.proto-ui
+  .mar-side-head:has(.mar-side-chip)
+  .mar-side-lens-btn:not([aria-pressed='true']) {
+  width: 28px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-side-chip {
+  padding: 0 8px 0 7px;
+  gap: 4px;
+}

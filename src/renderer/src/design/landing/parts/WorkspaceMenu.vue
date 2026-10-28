@@ -9,6 +9,8 @@ import DropdownMenuSeparator from '../ui/DropdownMenuSeparator.vue'
 import ContextSwitchSub from './ContextSwitchSub.vue'
 import SignInCard from './SignInCard.vue'
 import WorkspaceAvatar from './WorkspaceAvatar.vue'
+import MarWorkspaceMenu from '../mar/MarWorkspaceMenu.vue'
+import { isMariana } from '../mar/proposal'
 import { Gauge, KeyRound, ShieldAlert } from 'lucide-vue-next'
 import { go, proto, toast, type Page } from '../useProto'
 import {
@@ -47,7 +49,23 @@ function signOut(): void {
       <span class="sidebar-label text-left">Credits</span>
       <span class="tabular-nums">{{ shownCredits }}</span>
     </Button>
-    <DropdownMenuRoot :modal="false">
+    <!-- Mar's proposal: her workspace menu, same trigger (mar/). -->
+    <MarWorkspaceMenu v-if="isMariana">
+      <Button
+        variant="ghost"
+        class="h-auto justify-start gap-2.5 p-1.5 text-left text-base-foreground data-[state=open]:bg-secondary-background"
+      >
+        <WorkspaceAvatar :ws="workspace" />
+        <span class="sidebar-label flex flex-col">
+          <span class="truncate text-ui font-medium">{{ workspace.name }}</span>
+          <span class="truncate text-ui font-normal text-subtle-foreground">{{
+            workspace.plan
+          }}</span>
+        </span>
+        <ChevronsUpDown :size="14" class="text-subtle-foreground" />
+      </Button>
+    </MarWorkspaceMenu>
+    <DropdownMenuRoot v-else :modal="false">
       <DropdownMenuTrigger as-child>
         <Button
           variant="ghost"
