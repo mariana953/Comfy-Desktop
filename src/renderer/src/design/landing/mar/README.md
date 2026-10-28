@@ -1,12 +1,20 @@
 # Mariana's proposal
 
-Lives apart from Pablo's prototype. Switch with the **Pablo | Mar** tabs at
-the top of the window, or open the preview with `?proposal=mariana`.
+Lives apart from Pablo's prototype. Pick it in the Prototype menu
+(Proposal: Pablo or Mar, the first section) or open the preview with
+`?proposal=mariana`.
 
 Mar's proposal always shows Pablo's latest milestone (first run included,
-which keeps his example cards). Picking another milestone in the Prototype
-menu switches to Pablo's at that milestone. What changed and why is in
+which keeps his example cards). Picking another milestone switches to
+Pablo's at that milestone. What changed and why is in
 [DECISIONS.md](DECISIONS.md).
+
+## UI and the tuner
+
+The menu's **UI** section picks the look: **Void** (the main one) or the
+other directions in `ui/looks/`. **Tune the UI…** opens a panel with live
+knobs on top of it (corners, text size, surfaces, borders, shadows, chips on
+images, focus colour), saved per browser. The knobs live in `uiTuner.ts`.
 
 ## What it changes
 
@@ -22,9 +30,12 @@ menu switches to Pablo's at that milestone. What changed and why is in
 
 ## How it stays apart
 
-Everything new is in this folder. Pablo's files only gain three hooks:
+Everything new is in this folder. Pablo's files only gain small hooks:
 
-- `LandingPrototypes.vue`: mounts the Pablo | Mar tabs.
+- `prototypeOptions.ts`: the Proposal, UI and Tune groups.
+- `comfyTitleBar/TitleBarApp.vue`: the Prototype menu shows a heading per
+  section, with Proposal first.
+- `LandingPrototypes.vue`: mounts the UI tuner.
 - `pages/modes/ModePages.vue`: Home goes through `HomeEntry.vue`.
 - `variants/VariantModes.vue`: the Agent icon comes from `proposal.ts`.
 

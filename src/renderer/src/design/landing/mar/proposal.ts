@@ -4,7 +4,7 @@ import { proto } from '../useProto'
 import { MILESTONES } from '../milestones'
 
 /**
- * Which proposal the prototype shows (the Pablo | Mar tabs at the top):
+ * Which proposal the prototype shows (Prototype menu › Proposal, first):
  * Pablo's, as it is on his branch, or Mar's, which lives in this folder
  * only. Pablo's files only gain the hooks that pick between them, so his
  * daily changes merge in cleanly.

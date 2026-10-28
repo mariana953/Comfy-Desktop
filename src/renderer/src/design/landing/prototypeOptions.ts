@@ -3,6 +3,8 @@ import { proto } from './useProto'
 import { can, MILESTONES } from './milestones'
 import { appsProto, type LookVariant } from './appFlow'
 import { DIRECTIONS, look as designLook, THEMES, type Direction, type Theme } from './look'
+import { PROPOSALS, proposal as pickedProposal, type Proposal } from './mar/proposal'
+import { tuner } from './mar/uiTuner'
 
 /**
  * The prototype's switches, shown in the Prototype panel (DevBar, browser
@@ -42,6 +44,18 @@ const theme = computed({
   set: (v) => (designLook.theme = v as Theme)
 })
 
+// Pablo's proposal or Mar's (mar/).
+const proposal = computed({
+  get: () => pickedProposal.id,
+  set: (v) => (pickedProposal.id = v as Proposal)
+})
+
+// Opens the UI tuner (mar/UiTuner.vue); nothing to keep checked.
+const tune = computed({
+  get: () => (tuner.open ? 'open' : ''),
+  set: () => (tuner.open = true)
+})
+
 // Milestone 10: how the creator customizes the app's look.
 const look = computed({
   get: () => appsProto.look,
@@ -51,7 +65,14 @@ const look = computed({
 export const prototypeGroups = computed<PrototypeGroup[]>(() =>
   [
     { key: 'milestone', label: 'Milestone', model: milestone, options: MILESTONES },
-    { key: 'direction', label: 'Direction', model: direction, options: [...DIRECTIONS] },
+    { key: 'proposal', label: 'Proposal', model: proposal, options: [...PROPOSALS] },
+    { key: 'direction', label: 'UI', model: direction, options: [...DIRECTIONS] },
+    {
+      key: 'tune',
+      label: 'Tune',
+      model: tune,
+      options: [{ value: 'open', label: 'Tune the UI…' }]
+    },
     { key: 'theme', label: 'Theme', model: theme, options: [...THEMES] },
     can.value.agent && {
       key: 'look',

@@ -10,7 +10,7 @@ import { reactive, watch } from 'vue'
  */
 
 export const DIRECTIONS = [
-  { value: 'original', label: 'Original' },
+  { value: 'original', label: 'Void' },
   { value: 'a', label: 'A' },
   { value: 'b', label: 'B' },
   { value: 'c', label: 'C' }
