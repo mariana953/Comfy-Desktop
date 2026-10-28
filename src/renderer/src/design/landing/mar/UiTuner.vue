@@ -10,6 +10,7 @@ import { homeBackground, marNav, type HomeBackground, type MarNav } from './shel
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 import Select from '../ui/Select.vue'
 import { COVERS, cover } from './cover'
+import { TEMPLATE_STYLES, templateStyle } from './brand/templateStyle'
 import { CREDITS_STYLES, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
@@ -176,6 +177,11 @@ function set(key: keyof Tuning, value: string): void {
             @update:model-value="(v: string) => ((p20 as Record<string, string>)[r.key] = v)"
           />
         </label>
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Templates</span>
+        <Select v-model="templateStyle.id" :options="TEMPLATE_STYLES" class="w-full" />
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

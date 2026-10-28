@@ -7,6 +7,8 @@ import { thumb, type Template } from '../mock'
 import CategoryChip from '../mar/CategoryChip.vue'
 import { isMariana } from '../mar/proposal'
 import FavoriteStar from '../mar/FavoriteStar.vue'
+import BrandedThumb from '../mar/brand/BrandedThumb.vue'
+import { templateStyle } from '../mar/brand/templateStyle'
 
 const { t } = defineProps<{ t: Template }>()
 </script>
@@ -17,6 +19,10 @@ const { t } = defineProps<{ t: Template }>()
     @click="openDetail('template', t.id)"
     @keydown.enter="openDetail('template', t.id)"
   >
+    <!-- Mar's proposal: templates as Comfy posters (mar/brand/). -->
+    <template v-if="isMariana && templateStyle.id === 'branded'" #media
+      ><BrandedThumb :t="t"
+    /></template>
     <template #top-left>
       <!-- Mar's proposal: the real category, named on hover (mar/). -->
       <CategoryChip v-if="isMariana" :category="t.category" />

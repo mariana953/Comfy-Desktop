@@ -252,7 +252,14 @@
   color: var(--color-muted-foreground);
 }
 :root[data-mar-ui='on'] .mar-backdrop ~ div :is(.bg-secondary-background, [role='group']) {
-  background-color: color-mix(in oklch, var(--color-content-background) 55%, transparent);
+  /* Filters and fields read as controls: a lifted, light-tinted surface
+     with a faint edge, not a dark hole in the page. */
+  background-color: color-mix(
+    in oklch,
+    color-mix(in oklch, var(--color-base-foreground) 9%, var(--color-card-background)) 82%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
   backdrop-filter: blur(16px) saturate(1.2);
 }
 :root[data-mar-ui='on'] .mar-backdrop ~ div :is(.text-subtle-foreground, .text-muted-foreground) {
@@ -889,4 +896,46 @@
   .mar-prompt textarea {
     transition: none;
   }
+}
+
+/* The prompt is the one place you type: a very faint edge keeps it from
+   melting into the page, whatever the Borders pick. */
+:root[data-mar-ui='on'] .proto-main .mar-prompt.mar-prompt {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent),
+    0 12px 32px -16px rgb(0 0 0 / 0.5);
+}
+:root[data-mar-ui='on'] .proto-main .mar-prompt.mar-prompt:focus-within {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 12%, transparent),
+    0 12px 32px -16px rgb(0 0 0 / 0.5);
+}
+
+/* Every field and select in Mar's pages (filters, sort, search): the same
+   lifted surface, so they hold their own against photos and the page. */
+:root[data-mar-ui='on']
+  .proto-main
+  :is(button[role='combobox'], .bg-secondary-background:has(> input)) {
+  background-color: color-mix(
+    in oklch,
+    color-mix(in oklch, var(--color-base-foreground) 9%, var(--color-card-background)) 82%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+}
+:root[data-mar-ui='on'] .proto-main button[role='combobox']:hover {
+  background-color: color-mix(
+    in oklch,
+    color-mix(in oklch, var(--color-base-foreground) 13%, var(--color-card-background)) 86%,
+    transparent
+  );
+}
+
+/* Faces inside a button (Share): cut out in the button's own colour. */
+:root[data-mar-ui='on'] .proto-main button :is(.-space-x-1, .-space-x-1\.5) > * {
+  --tw-ring-color: color-mix(
+    in oklch,
+    var(--color-secondary-background) 80%,
+    var(--color-content-background)
+  );
 }
