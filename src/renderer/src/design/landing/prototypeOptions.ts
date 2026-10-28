@@ -3,6 +3,7 @@ import { proto } from './useProto'
 import { can, MILESTONES } from './milestones'
 import { appsProto, type LookVariant } from './appFlow'
 import { DIRECTIONS, look as designLook, THEMES, type Direction, type Theme } from './look'
+import { PROPOSALS, proposal as pickedProposal, type Proposal } from './mar/proposal'
 
 /**
  * The prototype's switches, shown in the Prototype panel (DevBar, browser
@@ -42,6 +43,12 @@ const theme = computed({
   set: (v) => (designLook.theme = v as Theme)
 })
 
+// Pablo's proposal or Mariana's (mar/).
+const proposal = computed({
+  get: () => pickedProposal.id,
+  set: (v) => (pickedProposal.id = v as Proposal)
+})
+
 // Milestone 10: how the creator customizes the app's look.
 const look = computed({
   get: () => appsProto.look,
@@ -51,6 +58,7 @@ const look = computed({
 export const prototypeGroups = computed<PrototypeGroup[]>(() =>
   [
     { key: 'milestone', label: 'Milestone', model: milestone, options: MILESTONES },
+    { key: 'proposal', label: 'Proposal', model: proposal, options: [...PROPOSALS] },
     { key: 'direction', label: 'Direction', model: direction, options: [...DIRECTIONS] },
     { key: 'theme', label: 'Theme', model: theme, options: [...THEMES] },
     can.value.agent && {

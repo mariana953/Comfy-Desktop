@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Code, Palette, Sparkles } from 'lucide-vue-next'
+import { Code, Palette } from 'lucide-vue-next'
 import ModeSwitch from '../parts/ModeSwitch.vue'
 import DetailSheet from '../parts/DetailSheet.vue'
 import LaunchOverlay from '../parts/LaunchOverlay.vue'
@@ -19,6 +19,7 @@ import ModePages from '../pages/modes/ModePages.vue'
 import { goIn, proto, type Mode } from '../useProto'
 import { building } from '../appFlow'
 import { can, landingPage } from '../milestones'
+import { agentIcon } from '../mar/proposal'
 
 /**
  * The launcher from Milestone 2 on: a sidebar and the page it opens.
@@ -39,7 +40,7 @@ const mode = computed({
 const MODES = computed(() => [
   { value: 'create' as Mode, label: 'Create', icon: Palette },
   { value: 'build' as Mode, label: 'Build', icon: Code },
-  ...(can.value.agent ? [{ value: 'agent' as Mode, label: 'Agent', icon: Sparkles }] : [])
+  ...(can.value.agent ? [{ value: 'agent' as Mode, label: 'Agent', icon: agentIcon.value }] : [])
 ])
 </script>
 
