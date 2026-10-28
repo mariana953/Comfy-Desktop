@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronRight, Home, LayoutGrid, X } from 'lucide-vue-next'
 import LocationIcon from '../../ui/LocationIcon.vue'
+import MarTitleTabs from '../../mar/shell/MarTitleTabs.vue'
 import type { TitleBarCommand, TitleBarState } from '../../titleBarBridge'
 
 /**
@@ -37,7 +38,9 @@ const crumb = (active: boolean): string =>
 </script>
 
 <template>
-  <nav class="proto-ui flex min-w-0 items-center gap-0.5" aria-label="Breadcrumb">
+  <!-- Mar's proposal can swap the breadcrumb for tabs (mar/shell/titleTabs.ts). -->
+  <MarTitleTabs v-if="state.tabs" :state="state" @command="emit('command', $event)" />
+  <nav v-else class="proto-ui flex min-w-0 items-center gap-0.5" aria-label="Breadcrumb">
     <button
       type="button"
       :class="[crumb(state.home), 'shrink-0 pr-2.5 pl-2', !state.home && 'bg-transparent']"

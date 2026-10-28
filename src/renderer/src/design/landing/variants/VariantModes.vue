@@ -23,6 +23,8 @@ import { agentIcon, isMariana } from '../mar/proposal'
 import MarBackdrop from '../mar/shell/MarBackdrop.vue'
 import MarSidebarToggle from '../mar/shell/MarSidebarToggle.vue'
 import { marSidebarClosed } from '../mar/shell/marShell'
+import MarLensSwitch from '../mar/shell/MarLensSwitch.vue'
+import { marTabsOn } from '../mar/shell/titleTabs'
 
 /**
  * The launcher from Milestone 2 on: a sidebar and the page it opens.
@@ -45,7 +47,9 @@ const sidebarHidden = computed(() => building.value || marSidebarClosed.value)
 const MODES = computed(() => [
   { value: 'create' as Mode, label: 'Create', icon: Palette },
   { value: 'build' as Mode, label: 'Build', icon: Code },
-  ...(can.value.agent ? [{ value: 'agent' as Mode, label: 'Agent', icon: agentIcon.value }] : [])
+  ...(can.value.agent && !marTabsOn.value
+    ? [{ value: 'agent' as Mode, label: 'Agent', icon: agentIcon.value }]
+    : [])
 ])
 </script>
 
@@ -71,7 +75,8 @@ const MODES = computed(() => [
       <div class="flex min-h-full w-55 shrink-0 flex-col">
         <!-- Create / Build (Milestone 6: the Builder) -->
         <div v-if="can.builder" class="mb-3 flex h-8.5 shrink-0 items-center">
-          <ModeSwitch v-model="mode" :options="MODES" />
+          <MarLensSwitch v-if="marTabsOn" v-model="mode" :options="MODES" />
+          <ModeSwitch v-else v-model="mode" :options="MODES" />
         </div>
 
         <AgentNav v-if="proto.mode === 'agent'" />

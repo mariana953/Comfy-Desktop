@@ -5,6 +5,8 @@ import { appsProto, type LookVariant } from './appFlow'
 import { DIRECTIONS, look as designLook, THEMES, type Theme } from './look'
 import { PROPOSALS, proposal as pickedProposal } from './mar/proposal'
 import { tuner } from './mar/uiTuner'
+import { isMariana } from './mar/proposal'
+import { titleTabs, type TitleBarStyle } from './mar/shell/titleTabs'
 
 /**
  * The prototype's switches, shown in the Prototype panel (DevBar, browser
@@ -54,6 +56,12 @@ const tuneLabel = computed(
     } · Tune…`
 )
 
+// Mar's proposal: Pablo's breadcrumb or her tabs (mar/shell/titleTabs.ts).
+const titleBar = computed({
+  get: () => titleTabs.style,
+  set: (v) => (titleTabs.style = v as TitleBarStyle)
+})
+
 // Milestone 10: how the creator customizes the app's look.
 const look = computed({
   get: () => appsProto.look,
@@ -68,6 +76,15 @@ export const prototypeGroups = computed<PrototypeGroup[]>(() =>
       label: 'Proposal and UI',
       model: tune,
       options: [{ value: 'open', label: tuneLabel.value }]
+    },
+    isMariana.value && {
+      key: 'marTitle',
+      label: 'Title bar',
+      model: titleBar,
+      options: [
+        { value: 'breadcrumb', label: 'Breadcrumb' },
+        { value: 'tabs', label: 'Tabs' }
+      ]
     },
     { key: 'theme', label: 'Theme', model: theme, options: [...THEMES] },
     can.value.agent && {

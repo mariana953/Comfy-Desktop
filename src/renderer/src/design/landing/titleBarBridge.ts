@@ -47,6 +47,13 @@ export interface TitleBarState {
    *  switcher; `appFront` is the tab in front (null: none). */
   apps?: { id: string; name: string; thumb: string }[]
   appFront?: string | null
+  /** Mar's tabs title bar (mar/shell/titleTabs.ts), only while it's on:
+   *  the open workflows as tabs, the one in front, where Home runs next,
+   *  and whether the agent is open. */
+  tabs?: { id: string; name: string; build: string; kind: 'local' | 'cloud' }[]
+  tabFront?: string | null
+  runsOn?: { name: string; kind: 'local' | 'cloud' }
+  agent?: boolean
   /** The Prototype menu: each switch and its current value. */
   options: {
     key: string
@@ -61,6 +68,11 @@ export type TitleBarCommand =
   /** Bring an app's tab to the front, or close it. */
   | { type: 'app'; id: string }
   | { type: 'closeApp'; id: string }
+  /** Mar's tabs title bar: bring a workflow tab to the front, close it, or
+   *  open and close the agent. */
+  | { type: 'tab'; id: string }
+  | { type: 'closeTab'; id: string }
+  | { type: 'agent' }
   /** Toggle the build switcher under the chevron (window px). */
   | { type: 'switcher'; left: number; width: number; bottom: number }
   /** The pointer entered / left the build's name, or it was clicked - its
