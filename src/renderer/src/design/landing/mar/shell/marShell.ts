@@ -63,12 +63,13 @@ watch(
  *  (MarDock.vue), or Classic: Pablo's sidebar and layout as they are.
  *  Same places in all. */
 export type MarNav = 'sidebar' | 'floating' | 'dock' | 'classic'
-// v2: the sidebar is the default; the dock is the alternative.
+// v2: the sidebar is the default. The dock is no longer offered (it read
+// unclear); a stored pick of it falls back to the sidebar.
 const NAV_KEY = 'comfy.design.mar.nav.v2'
 function loadNav(): { id: MarNav; collapsed: boolean } {
   try {
     const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? '{}')
-    const id: MarNav = ['dock', 'floating', 'classic'].includes(v.id) ? v.id : 'sidebar'
+    const id: MarNav = ['floating', 'classic'].includes(v.id) ? v.id : 'sidebar'
     return { id, collapsed: Boolean(v.collapsed) }
   } catch {
     return { id: 'sidebar', collapsed: false }

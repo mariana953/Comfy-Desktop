@@ -18,8 +18,7 @@ import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 const NAVS: { value: MarNav; label: string }[] = [
   { value: 'classic', label: "Classic · Pablo's sidebar" },
   { value: 'sidebar', label: 'Sidebar · attached, translucent' },
-  { value: 'floating', label: 'Floating · a card' },
-  { value: 'dock', label: 'Dock · at the bottom' }
+  { value: 'floating', label: 'Floating · a card' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom · colour out of grain' },
