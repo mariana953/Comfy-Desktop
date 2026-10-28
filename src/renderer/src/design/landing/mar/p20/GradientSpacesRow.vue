@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import SectionHeader from '../../ui/SectionHeader.vue'
+import SpaceMark from '../../parts/space/SpaceMark.vue'
 import { SPACES, type Space } from '../../spaces'
 import { go } from '../../useProto'
 import portraitGarden from '../assets/portrait-garden.jpg'
@@ -11,7 +12,8 @@ import portraitGrass from '../assets/portrait-grass.jpg'
 
 /**
  * 07 · Gradient spaces: each space is known by its colour. The brand
- * colour washes down from the top of the card and gathers in a lit orb
+ * colour washes down from the top of the card; its logo sits on it (a lit
+ * orb when it has none)
  * (never an empty circle); under it the name, the address, who's in it,
  * what it has and that it's live. Home shows the three live spaces;
  * drafts and the rest are in All spaces.
@@ -43,7 +45,15 @@ const people = (n: number): string => (n === 1 ? '1 person' : `${n} people`)
         @click="go(`space:${s.id}`)"
       >
         <span class="p07-wash" aria-hidden="true" />
-        <span class="p07-orb" aria-hidden="true" />
+        <!-- The space's logo; the lit orb only when it has none. -->
+        <SpaceMark
+          v-if="s.brand.logo.icon"
+          :brand="s.brand"
+          size="lg"
+          class="p07-logo"
+          aria-hidden="true"
+        />
+        <span v-else class="p07-orb" aria-hidden="true" />
         <span class="absolute top-[148px] right-[18px] left-[18px] flex flex-col gap-0.5">
           <span
             class="truncate text-[17px] leading-[1.4] font-semibold tracking-[-0.01em] text-base-foreground"
@@ -115,6 +125,14 @@ const people = (n: number): string => (n === 1 ? '1 person' : `${n} people`)
     color-mix(in oklch, var(--brand) 65%, black) 100%
   );
   box-shadow: 0 10px 24px -8px color-mix(in oklch, var(--brand) 70%, transparent);
+}
+.p07-logo {
+  position: absolute;
+  top: 84px;
+  left: 18px;
+}
+.p07-logo :deep(> span:first-child) {
+  box-shadow: 0 10px 24px -10px color-mix(in oklch, var(--brand) 70%, transparent);
 }
 .p07-face {
   box-shadow: 0 0 0 2px

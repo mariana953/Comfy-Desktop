@@ -9,6 +9,7 @@ import { SURFACES, surface } from './shell/surface'
 import { homeBackground, marNav, type HomeBackground, type MarNav } from './shell/marShell'
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 import Select from '../ui/Select.vue'
+import { PALETTES, palette } from './palette'
 import { COVERS, cover } from './cover'
 import { TEMPLATE_STYLES, templateStyle } from './brand/templateStyle'
 import { CREDITS_STYLES, creditsStyle } from './credits'
@@ -34,7 +35,10 @@ function reset(): void {
   resetTuning()
   marNav.id = 'classic'
   homeBackground.id = 'spotlight'
+  palette.id = 'void'
 }
+
+const paletteOptions = PALETTES.map((p) => ({ value: p.id, label: p.label }))
 
 const THEMES = [
   { value: 'dark', label: 'Dark' },
@@ -132,6 +136,11 @@ function set(key: keyof Tuning, value: string): void {
             {{ t.label }}
           </button>
         </div>
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Palette</span>
+        <Select v-model="palette.id" :options="paletteOptions" class="w-full" />
       </div>
 
       <div class="flex flex-col gap-1.5">
