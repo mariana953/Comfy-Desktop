@@ -413,20 +413,22 @@
 /* Browser preview: the title bar is translucent and floats over the page,
    so the page's photo or bloom runs under it. (In the app the title bar is
    its own window and can't show the page behind it.) */
-:root[data-mar-ui='on']:not([data-mar-surface='cloud']) .proto-ui > .glass-titlebar {
+:root[data-mar-ui='on']:not([data-mar-surface='cloud'], [data-mar-nav='classic'])
+  .proto-ui
+  > .glass-titlebar {
   position: absolute;
   inset: 0 0 auto;
   z-index: 45;
   background: color-mix(in oklch, var(--color-titlebar-background) 45%, transparent);
   backdrop-filter: blur(24px) saturate(1.2);
 }
-:root[data-mar-ui='on']:not([data-mar-surface='cloud'])
+:root[data-mar-ui='on']:not([data-mar-surface='cloud'], [data-mar-nav='classic'])
   .proto-ui:has(> .glass-titlebar)
   .proto-main.proto-main {
   padding-top: 44px;
 }
 
-:root[data-mar-ui='on']:not([data-mar-surface='cloud'])
+:root[data-mar-ui='on']:not([data-mar-surface='cloud'], [data-mar-nav='classic'])
   .proto-ui:has(> .glass-titlebar)
   .mar-top-actions {
   top: 58px;
@@ -594,12 +596,4 @@
   box-shadow:
     0 2px 4px oklch(0 0 0 / 0.35),
     0 10px 26px oklch(0 0 0 / 0.34);
-}
-
-/* Navigation: Pablo's: his sidebar as it is, starting below the floating
-   title bar. */
-:root[data-mar-ui='on']:not([data-mar-surface='cloud'])
-  .proto-ui:has(> .glass-titlebar)
-  .proto-sidebar.proto-sidebar {
-  margin-top: 52px;
 }

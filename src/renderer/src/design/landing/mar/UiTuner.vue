@@ -14,7 +14,7 @@ const NAVS: { value: MarNav; label: string }[] = [
   { value: 'sidebar', label: 'Sidebar' },
   { value: 'floating', label: 'Floating' },
   { value: 'dock', label: 'Dock' },
-  { value: 'pablo', label: "Pablo's" }
+  { value: 'classic', label: 'Classic' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom' },

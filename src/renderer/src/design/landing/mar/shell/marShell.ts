@@ -60,14 +60,15 @@ watch(
 
 /** Mar's navigation (Proposal and UI › Navigation): Mar's sidebar attached
  *  to the window or floating (MarSidebar.vue), the dock at the bottom
- *  (MarDock.vue), or Pablo's own sidebar as it is. Same places in all. */
-export type MarNav = 'sidebar' | 'floating' | 'dock' | 'pablo'
+ *  (MarDock.vue), or Classic: Pablo's sidebar and layout as they are.
+ *  Same places in all. */
+export type MarNav = 'sidebar' | 'floating' | 'dock' | 'classic'
 // v2: the sidebar is the default; the dock is the alternative.
 const NAV_KEY = 'comfy.design.mar.nav.v2'
 function loadNav(): { id: MarNav; collapsed: boolean } {
   try {
     const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? '{}')
-    const id: MarNav = ['dock', 'floating', 'pablo'].includes(v.id) ? v.id : 'sidebar'
+    const id: MarNav = ['dock', 'floating', 'classic'].includes(v.id) ? v.id : 'sidebar'
     return { id, collapsed: Boolean(v.collapsed) }
   } catch {
     return { id: 'sidebar', collapsed: false }
@@ -129,6 +130,17 @@ watch(
   (on) => {
     if (on) document.documentElement.dataset.marUi = 'on'
     else delete document.documentElement.dataset.marUi
+  },
+  { immediate: true }
+)
+
+// Navigation: Classic keeps Pablo's frame (solid title bar, content in an
+// inset panel), so the floating title bar rules skip it.
+watch(
+  () => isMariana.value && marNav.id === 'classic',
+  (on) => {
+    if (on) document.documentElement.dataset.marNav = 'classic'
+    else delete document.documentElement.dataset.marNav
   },
   { immediate: true }
 )
