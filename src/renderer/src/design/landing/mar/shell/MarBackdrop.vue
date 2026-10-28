@@ -5,7 +5,13 @@ import MarSidebar from './MarSidebar.vue'
 import { onCloud } from './surface'
 import MarBloom from './MarBloom.vue'
 import MarSearch from '../search/MarSearch.vue'
-import { altBackground, bloomOn, heroImage, marDockOn, marSideOn } from './marShell'
+import QueuePanel from '../p20/QueuePanel.vue'
+import InspectorPanel from '../p20/InspectorPanel.vue'
+import ShortcutBar from '../p20/ShortcutBar.vue'
+import TabsNav from '../p20/TabsNav.vue'
+import { p20 } from '../p20/p20'
+import { isMariana } from '../proposal'
+import { altBackground, bloomOn, heroImage, marDockOn, marNav, marSideOn } from './marShell'
 import lastOutput from '../assets/portrait-seaside.jpg'
 import './marShell.css'
 import '../motion/motion.css'
@@ -38,6 +44,12 @@ import '../motion/tabSlide'
   <MarSidebar v-if="marSideOn" />
   <MarCloudBar v-if="onCloud" />
   <MarSearch />
+  <template v-if="isMariana">
+    <QueuePanel v-if="p20.panel === 'queue'" />
+    <InspectorPanel v-else-if="p20.panel === 'inspector'" />
+    <ShortcutBar v-if="p20.density === 'dense'" />
+    <TabsNav v-if="marNav.id === 'tabs'" />
+  </template>
 </template>
 
 <style scoped>

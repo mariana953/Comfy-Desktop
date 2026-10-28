@@ -12,6 +12,19 @@ import MarStart from './MarStart.vue'
 import StarterCards from '../parts/StarterCards.vue'
 import TemplatesRow from '../parts/TemplatesRow.vue'
 import MarSpacesRow from './MarSpacesRow.vue'
+import { p20 } from './p20/p20'
+import CommandHome from './p20/CommandHome.vue'
+import BentoHome from './p20/BentoHome.vue'
+import ComposerHome from './p20/ComposerHome.vue'
+import TimelineHome from './p20/TimelineHome.vue'
+import CanvasHome from './p20/CanvasHome.vue'
+import ZenHome from './p20/ZenHome.vue'
+import FilmstripRow from './p20/FilmstripRow.vue'
+import TableRow from './p20/TableRow.vue'
+import PulseStrip from './p20/PulseStrip.vue'
+import SpotlightCarousel from './p20/SpotlightCarousel.vue'
+import GradientSpacesRow from './p20/GradientSpacesRow.vue'
+import BuildHealthRow from './p20/BuildHealthRow.vue'
 import Button from '../ui/Button.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
 import SectionHeader from '../ui/SectionHeader.vue'
@@ -74,6 +87,16 @@ const actions = computed(() => [
       ]
     : [])
 ])
+// Proposals · 20: a picked layout replaces the Home's body.
+const LAYOUTS = {
+  command: CommandHome,
+  bento: BentoHome,
+  composer: ComposerHome,
+  timeline: TimelineHome,
+  canvas: CanvasHome,
+  zen: ZenHome
+} as const
+const layout = computed(() => (p20.homeLayout === 'default' ? undefined : LAYOUTS[p20.homeLayout]))
 const noLocal = computed(() => !instances.value.some((i) => i.kind === 'local'))
 const builds = computed(() => recentInstances.value.slice(0, 3))
 const tight = computed(() => parts.value.top === 'mar')
@@ -126,7 +149,8 @@ const recent = computed(() =>
       </Button>
     </template>
   </div>
-  <div :class="['mar-home mx-auto w-full max-w-300 px-10', noLocal ? 'pb-10' : 'pb-16']">
+  <component :is="layout" v-if="layout && !noLocal" />
+  <div v-else :class="['mar-home mx-auto w-full max-w-300 px-10', noLocal ? 'pb-10' : 'pb-16']">
     <section :class="['flex flex-col', noLocal ? 'h-full' : tight ? 'pt-14 pb-4' : 'pt-12 pb-4']">
       <div :class="['flex flex-1 flex-col', noLocal || !tight ? 'justify-center pt-10' : '']">
         <MarStart v-if="noLocal" />
@@ -139,6 +163,8 @@ const recent = computed(() =>
           <div v-if="can.agent" class="mar-prompt-slot">
             <PromptBox target class="mar-prompt" />
           </div>
+          <PulseStrip v-if="p20.pulse === 'on'" />
+          <BuildHealthRow v-if="p20.builds === 'health'" />
           <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-210">
             <div class="mb-2.5 flex items-center justify-between px-1">
               <span class="text-ui text-muted-foreground">Or launch ComfyUI</span>
@@ -184,7 +210,9 @@ const recent = computed(() =>
             >
           </template>
         </SectionHeader>
-        <ScrollRow :columns="5">
+        <FilmstripRow v-if="p20.recent === 'filmstrip'" />
+        <TableRow v-else-if="p20.recent === 'table'" />
+        <ScrollRow v-else :columns="5">
           <WorkflowCard
             v-for="r in recent"
             :key="r.w.id"
@@ -226,11 +254,13 @@ const recent = computed(() =>
       </section>
 
       <template v-if="can.explore">
-        <WhatsNew v-if="parts.news === 'mar'" />
+        <SpotlightCarousel v-if="p20.news === 'spotlight'" />
+        <WhatsNew v-else-if="parts.news === 'mar'" />
         <LaunchBanner v-else-if="parts.news === 'banner'" />
         <LaunchesRow v-else />
       </template>
-      <MarSpacesRow v-if="can.spaces && proto.signedIn" />
+      <GradientSpacesRow v-if="can.spaces && proto.signedIn && p20.spaces === 'gradient'" />
+      <MarSpacesRow v-else-if="can.spaces && proto.signedIn" />
     </div>
   </div>
   <div

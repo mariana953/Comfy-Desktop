@@ -11,6 +11,7 @@ import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 import Select from '../ui/Select.vue'
 import { COVERS, cover } from './cover'
 import { CREDITS_STYLES, creditsStyle } from './credits'
+import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
@@ -19,7 +20,8 @@ import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 const NAVS: { value: MarNav; label: string }[] = [
   { value: 'classic', label: "Classic · Pablo's sidebar" },
   { value: 'sidebar', label: 'Sidebar · attached, translucent' },
-  { value: 'floating', label: 'Floating · a card' }
+  { value: 'floating', label: 'Floating · a card' },
+  { value: 'tabs', label: '08 · Tabs · a bar on top' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
   { value: 'bloom', label: 'Latent bloom · colour out of grain' },
@@ -35,6 +37,19 @@ const THEMES = [
   { value: 'dark', label: 'Dark' },
   { value: 'light', label: 'Light' }
 ] as const
+const P20_ROWS: { key: keyof typeof P20; label: string }[] = [
+  { key: 'homeLayout', label: 'Home layout' },
+  { key: 'recent', label: 'Recently used' },
+  { key: 'news', label: "What's new" },
+  { key: 'spaces', label: 'Spaces' },
+  { key: 'builds', label: 'Builds' },
+  { key: 'pulse', label: 'Usage strip' },
+  { key: 'panel', label: 'Right panel' },
+  { key: 'density', label: 'Density' },
+  { key: 'rail', label: 'Collapsed rail' }
+]
+const p20Options = (k: keyof typeof P20): { value: string; label: string }[] => [...P20[k]]
+
 const zoomOptions = ZOOMS.map((z) => ({ value: String(z), label: `${Math.round(z * 100)}%` }))
 const zoomPick = computed({
   get: () => String(screen.zoom),
@@ -147,6 +162,20 @@ function set(key: keyof Tuning, value: string): void {
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Navigation</span>
         <Select v-model="marNav.id" :options="NAVS" class="w-full" />
+      </div>
+
+      <!-- The 20 Figma proposals, as switches (p20/). -->
+      <div v-if="isMariana" class="flex flex-col gap-2">
+        <span class="text-ui font-medium text-base-foreground">Proposals · 20</span>
+        <label v-for="r in P20_ROWS" :key="r.key" class="flex items-center gap-2">
+          <span class="w-24 shrink-0 text-ui text-subtle-foreground">{{ r.label }}</span>
+          <Select
+            :model-value="p20[r.key]"
+            :options="p20Options(r.key)"
+            class="min-w-0 flex-1"
+            @update:model-value="(v: string) => ((p20 as Record<string, string>)[r.key] = v)"
+          />
+        </label>
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

@@ -34,6 +34,8 @@ import { INSTANCES, PROJECTS, TEMPLATES, USER, thumb } from '../../mock'
 import { favorites } from '../favorites'
 import { creditsStyle } from '../credits'
 import MarWorkspaceMenu from '../MarWorkspaceMenu.vue'
+import RailFlyout from '../p20/RailFlyout.vue'
+import { p20 } from '../p20/p20'
 import { SPACES } from '../../spaces'
 import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
@@ -194,6 +196,7 @@ function newChat(): void {
       </button>
     </div>
 
+    <RailFlyout v-if="!open && p20.rail === 'flyout'" />
     <nav class="mar-side-scroll">
       <button
         type="button"
