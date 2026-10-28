@@ -1,10 +1,11 @@
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 
 /**
- * Mar's changes on top of Pablo's v10, one switch each (Tune the UI ›
- * Mar's changes). Pablo's content stays; each switch picks his part or
- * Mar's version of it, so nothing is deleted and changes can be added
- * one by one. Component and UI changes start on; additions start off.
+ * Mar's proposal has two Homes (Tune the UI › Mar's changes › Home):
+ *   - Pablo's v10: his content, composition and sidebar, exactly; only the
+ *     UI changes (Mar's look and transparencies, mar/shell/marShell.css).
+ *   - Mar draft: her content and composition changes, one switch each, so
+ *     each can be compared with Pablo's part and added one by one.
  */
 
 export type Side = 'pablo' | 'mar'
@@ -17,6 +18,7 @@ export interface Parts {
   builds: Side
   examples: Side | 'off'
   recent: Side
+  news: Side | 'banner'
 }
 
 export interface PartKnob {
@@ -48,7 +50,12 @@ export const PART_KNOBS: PartKnob[] = [
     label: 'Example workflows on Home',
     options: [...side('Row', 'Hand of cards'), { value: 'off', label: 'Agent only' }]
   },
-  { key: 'recent', label: 'Recently used', options: side('Pablo', 'Photo cards') }
+  { key: 'recent', label: 'Recently used', options: side('Pablo', 'Photo cards') },
+  {
+    key: 'news',
+    label: "What's new",
+    options: [...side('Pablo', 'Tabs'), { value: 'banner', label: 'Banner' }]
+  }
 ]
 
 const DEFAULTS: Parts = {
@@ -58,11 +65,24 @@ const DEFAULTS: Parts = {
   top: 'mar',
   builds: 'mar',
   examples: 'off',
-  recent: 'mar'
+  recent: 'mar',
+  news: 'mar'
 }
 
-// v2: Example workflows left Home (Agent only) by default.
-const KEY = 'comfy.design.mar.parts.v2'
+/** Pablo's v10: every part is his. */
+const PABLO: Parts = {
+  home: 'v10',
+  shell: 'pablo',
+  actions: 'pablo',
+  top: 'pablo',
+  builds: 'pablo',
+  examples: 'pablo',
+  recent: 'pablo',
+  news: 'pablo'
+}
+
+// v3: Pablo's v10 keeps all his parts; switches apply to Mar draft only.
+const KEY = 'comfy.design.mar.parts.v3'
 
 function load(): Parts {
   try {
@@ -74,8 +94,11 @@ function load(): Parts {
 
 export const parts = reactive<Parts>(load())
 
+/** The parts on screen: all Pablo's on v10, the switches on Mar draft. */
+export const active = computed<Parts>(() => (parts.home === 'draft' ? parts : PABLO))
+
 export function resetParts(): void {
-  Object.assign(parts, DEFAULTS)
+  Object.assign(parts, { ...DEFAULTS, home: parts.home })
 }
 
 watch(

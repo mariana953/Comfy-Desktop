@@ -4,6 +4,8 @@ import { Play, Rocket } from 'lucide-vue-next'
 import Greeting from '../parts/Greeting.vue'
 import PromptBox from '../parts/PromptBox.vue'
 import WhatsNew from './WhatsNew.vue'
+import LaunchBanner from './LaunchBanner.vue'
+import LaunchesRow from '../parts/LaunchesRow.vue'
 import QuickLaunch from '../parts/QuickLaunch.vue'
 import RecentWork from '../parts/RecentWork.vue'
 import StartPaths from '../parts/StartPaths.vue'
@@ -16,7 +18,7 @@ import SectionHeader from '../ui/SectionHeader.vue'
 import BuildTile from './BuildTile.vue'
 import CreateMenu from './CreateMenu.vue'
 import WorkflowCard from './WorkflowCard.vue'
-import { parts } from './marParts'
+import { active as parts } from './marParts'
 import { allWorkflows } from '../gallery'
 import {
   activeInstance,
@@ -68,7 +70,7 @@ const actions = computed(() => [
 ])
 const noLocal = computed(() => !instances.value.some((i) => i.kind === 'local'))
 const builds = computed(() => recentInstances.value.slice(0, 3))
-const tight = computed(() => parts.top === 'mar')
+const tight = computed(() => parts.value.top === 'mar')
 
 const RECENT_ART = [portraitSeaside, forestFog, portraitGrass, hillsFog, portraitWindow]
 const recent = computed(() =>
@@ -155,7 +157,11 @@ const recent = computed(() =>
       </section>
       <RecentWork v-else-if="parts.recent === 'pablo'" />
 
-      <WhatsNew v-if="can.explore" />
+      <template v-if="can.explore">
+        <WhatsNew v-if="parts.news === 'mar'" />
+        <LaunchBanner v-else-if="parts.news === 'banner'" />
+        <LaunchesRow v-else />
+      </template>
       <SpacesRow v-if="can.spaces && proto.signedIn" />
     </div>
   </div>

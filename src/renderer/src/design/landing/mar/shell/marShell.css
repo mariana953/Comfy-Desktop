@@ -1,13 +1,15 @@
 /*
- * Mar's shell (see marShell.ts). Scoped to Mar's proposal by the
- * `data-mar-shell` attribute on <html>; Pablo's stays as it is.
+ * Mar's UI and shell (see marShell.ts). `data-mar-ui` scopes the look
+ * (transparencies, page photos) to all of Mar's proposal, Pablo's v10
+ * included; `data-mar-shell` adds the floating sidebar on Mar draft only.
+ * Pablo's proposal has neither.
  */
 
 /* One flat, dark page: no glass mesh behind the content. */
-:root[data-mar-shell='on'] .proto-shell {
+:root[data-mar-ui='on'] .proto-shell {
   background: var(--color-content-background);
 }
-:root[data-mar-shell='on'] .proto-main::before {
+:root[data-mar-ui='on'] .proto-main::before {
   display: none;
 }
 
@@ -41,22 +43,22 @@
 }
 
 /* A page under a photo: its title sits low on the photo, larger. */
-:root[data-mar-shell='on'] .mar-backdrop ~ div > header:first-child {
+:root[data-mar-ui='on'] .mar-backdrop ~ div > header:first-child {
   padding-top: 168px;
 }
-:root[data-mar-shell='on'] .mar-backdrop ~ div > header:first-child h1 {
+:root[data-mar-ui='on'] .mar-backdrop ~ div > header:first-child h1 {
   font-size: 52px;
   line-height: 1.05;
   letter-spacing: -0.025em;
 }
 
 /* Mariana: no sparkles icon anywhere in her proposal. */
-:root[data-mar-shell='on'] [class*='lucide-sparkles'] {
+:root[data-mar-ui='on'] [class*='lucide-sparkles'] {
   display: none;
 }
 
 /* Glass is for backgrounds only: no shiny glass edge on borders. */
-:root[data-mar-shell='on'] .edge-shine::after {
+:root[data-mar-ui='on'] .edge-shine::after {
   display: none;
 }
 
@@ -81,4 +83,22 @@
   :root[data-mar-shell='on'] .proto-sidebar .mt-5\.5 {
     margin-top: 12px;
   }
+}
+
+/* Surfaces are translucent over the page and its photos: cards and
+   tiles show what is behind them, with a blur, and stay translucent on
+   hover instead of turning into a flat grey. */
+:root[data-mar-ui='on'] .proto-main .bg-card-background {
+  background-color: rgb(255 255 255 / 0.05);
+  backdrop-filter: blur(24px);
+}
+:root[data-mar-ui='on'] .proto-main .hover\:bg-card-background-hover:hover {
+  background-color: rgb(255 255 255 / 0.08);
+}
+:root[data-mar-ui='on'] .proto-main .bg-card-background\/60 {
+  background-color: rgb(255 255 255 / 0.04);
+  backdrop-filter: blur(24px);
+}
+:root[data-mar-ui='on'] .proto-main .hover\:bg-card-background:hover {
+  background-color: rgb(255 255 255 / 0.08);
 }

@@ -153,7 +153,8 @@ const TOKENS: { [K in keyof Tuning]: Partial<Record<Tuning[K], Record<string, st
   }
 }
 
-const KEY = 'comfy.design.uiTuning'
+// v2: back to neutral defaults (earlier picks were saved per browser).
+const KEY = 'comfy.design.uiTuning.v2'
 
 function load(): Tuning {
   try {

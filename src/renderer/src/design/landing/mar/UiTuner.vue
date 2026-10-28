@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import { DIRECTIONS, look } from '../look'
@@ -12,6 +13,10 @@ import { isMariana, proposal, PROPOSALS } from './proposal'
 function set(key: keyof Tuning, value: string): void {
   ;(tuning as Record<string, string>)[key] = value
 }
+// Pablo's v10 keeps all his parts: only the Home pick shows there.
+const shownParts = computed(() =>
+  parts.home === 'draft' ? PART_KNOBS : PART_KNOBS.filter((k) => k.key === 'home')
+)
 function setPart(key: keyof Parts, value: string): void {
   ;(parts as Record<string, string>)[key] = value
 }
@@ -98,7 +103,7 @@ function setPart(key: keyof Parts, value: string): void {
     <!-- Mar's changes on Pablo's v10: his part or hers, one by one. -->
     <template v-if="isMariana">
       <h2 class="border-t border-border-default pt-4 text-ui font-semibold">Mar's changes</h2>
-      <div v-for="k in PART_KNOBS" :key="k.key" class="flex flex-col gap-1.5">
+      <div v-for="k in shownParts" :key="k.key" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">{{ k.label }}</span>
         <div class="flex gap-1 rounded-control bg-secondary-background p-0.5">
           <button
@@ -118,7 +123,18 @@ function setPart(key: keyof Parts, value: string): void {
           </button>
         </div>
       </div>
-      <Button variant="ghost" size="sm" class="self-start" @click="resetParts">Reset</Button>
+      <p v-if="parts.home !== 'draft'" class="text-ui text-subtle-foreground">
+        Pablo's content, layout and sidebar; only the UI is Mar's. Pick Mar draft to switch her
+        changes one by one.
+      </p>
+      <Button
+        v-if="parts.home === 'draft'"
+        variant="ghost"
+        size="sm"
+        class="self-start"
+        @click="resetParts"
+        >Reset</Button
+      >
     </template>
   </aside>
 </template>

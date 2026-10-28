@@ -1,7 +1,7 @@
 import { computed, reactive, watch } from 'vue'
 import { proto } from '../../useProto'
 import { isMariana } from '../proposal'
-import { parts } from '../marParts'
+import { active } from '../marParts'
 import forestFog from '../assets/forest-fog.jpg'
 import hillsFog from '../assets/hills-fog.jpg'
 import hillsSunset from '../assets/hills-sunset.jpg'
@@ -46,14 +46,25 @@ watch(
   }
 )
 
-/** Mar's shell is on: her proposal, with the switch on. */
-export const marShellOn = computed(() => isMariana.value && parts.shell === 'mar')
+/** Mar's floating sidebar: her draft, with the switch on. */
+export const marShellOn = computed(() => isMariana.value && active.value.shell === 'mar')
 
 watch(
   marShellOn,
   (on) => {
     if (on) document.documentElement.dataset.marShell = 'on'
     else delete document.documentElement.dataset.marShell
+  },
+  { immediate: true }
+)
+
+/** Mar's UI (transparencies, page photos): all of her proposal, Pablo's
+ *  v10 included. Scopes the UI rules in marShell.css. */
+watch(
+  isMariana,
+  (on) => {
+    if (on) document.documentElement.dataset.marUi = 'on'
+    else delete document.documentElement.dataset.marUi
   },
   { immediate: true }
 )
@@ -74,7 +85,7 @@ const HERO: Record<string, string> = {
 
 /** The photo behind the top of the current page, if it has one. */
 export const heroImage = computed<string | undefined>(() => {
-  if (!marShellOn.value) return undefined
+  if (!isMariana.value) return undefined
   const page = proto.page
   if (page.startsWith('project:')) return portraitSeaside
   if (page.startsWith('space:')) return portraitWindow

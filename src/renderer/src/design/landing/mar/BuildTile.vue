@@ -23,7 +23,7 @@ const state = computed(() => {
 <template>
   <button
     type="button"
-    class="group flex min-w-0 flex-col gap-5 rounded-card bg-card-background/60 p-4 text-left outline-none transition-colors hover:bg-card-background focus-visible:ring-2 focus-visible:ring-border-focus"
+    class="group flex min-w-0 flex-col gap-5 rounded-card bg-white/5 p-4 text-left outline-none backdrop-blur-xl transition-colors hover:bg-white/8 focus-visible:ring-2 focus-visible:ring-border-focus"
     @click="hostActions.launch(inst)"
   >
     <span class="flex items-start justify-between">
