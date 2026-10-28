@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   FolderOpen,
   Hand,
   History,
@@ -23,12 +24,12 @@ import {
   Map as MapIcon,
   Maximize,
   Minus,
+  PanelRight,
   MousePointer2,
   Play,
   Plus,
   Search,
   Settings,
-  Square,
   Tag,
   Workflow,
   X
@@ -170,6 +171,8 @@ function fit(): void {
   const pad = current.value
     ? { l: 24, t: 64, r: 24, b: 64 }
     : { l: 84, t: top.value + 80, r: 32, b: 72 }
+  // Leave room under the run block while its job rows are open.
+  if (jobsOpen.value) pad.t += current.value ? 200 : 220
   const aw = size.w - pad.l - pad.r
   const ah = size.h - pad.t - pad.b
   const k = Math.min(1, Math.max(0.72, Math.min(aw / world.value.w, ah / world.value.h)))
@@ -270,6 +273,17 @@ watch(
   () => nextTick(fit)
 )
 const assets = ref(false)
+
+// The queue as the run block shows it (ComfyUI_frontend#17679): one run
+// going, the rest waiting their turn.
+const JOBS: { title: string; sub: string; progress?: number }[] = [
+  { title: 'Portrait in late sun', sub: '7:42 PM · 45%', progress: 45 },
+  { title: 'Background swap', sub: 'Queued · next up' },
+  { title: 'Add reflections', sub: 'Queued · #2' }
+]
+
+/** The job rows stay open while anything runs; the pill folds them. */
+const jobsOpen = ref(true)
 
 const MODES = [
   { id: 'canvas', label: 'Canvas' },
@@ -480,7 +494,7 @@ const RAIL: { icon: Component; label: string }[] = [
 
     <AssetsPanel v-if="assets" @close="assets = false" />
 
-    <!-- Run: a floating bar in Glass, ComfyUI's action bar in Current. -->
+    <!-- Glass: which graph you see, Canvas or the raw Nodes. -->
     <div v-if="!current" class="mg-bar">
       <span class="mg-mode" role="group" aria-label="Canvas mode">
         <button
@@ -495,34 +509,73 @@ const RAIL: { icon: Component; label: string }[] = [
           {{ m.label }}
         </button>
       </span>
-      <span class="mg-bar-sep" />
-      <button type="button" class="mg-bar-name">{{ workflow }}<ChevronDown :size="14" /></button>
-      <span class="mg-bar-sep" />
-      <span class="mg-bar-queue">
-        <svg class="mg-ring" viewBox="0 0 16 16" aria-hidden="true">
-          <circle cx="8" cy="8" r="6.5" />
-          <circle cx="8" cy="8" r="6.5" pathLength="100" stroke-dasharray="50 100" />
-        </svg>
-        <span v-if="isCanvas"><b>Relight</b> · 9 of 20</span>
-        <span v-else><b>Running</b> · 14 of 28</span>
-        <span class="mg-bar-dim">3 queued</span>
-      </span>
-      <span class="mg-run-group">
-        <button type="button" class="mg-run"><Play :size="12" fill="currentColor" />Run</button>
-        <button type="button" class="mg-run-more" aria-label="Run options">
-          <ChevronDown :size="14" />
-        </button>
-      </span>
     </div>
-    <div v-else class="mg-actionbar">
-      <span class="mg-grip" aria-hidden="true" />
-      <button type="button" class="mg-run"><Play :size="13" fill="currentColor" />Run</button>
-      <button type="button" class="mg-run-more" aria-label="Run options">
-        <ChevronDown :size="14" />
-      </button>
-      <span class="mg-actionbar-count">1</span>
-      <button type="button" class="mg-stop" aria-label="Stop"><Square :size="11" /></button>
-      <button type="button" class="mg-stop" aria-label="Queue"><History :size="14" /></button>
+
+    <!-- Run and what is running, as designed in ComfyUI_frontend#17679:
+         the action bar (batch count, the inverted split Run, the panel
+         toggle) and under it the status pill with its job rows. -->
+    <div class="mg-runblock">
+      <div class="mg-actionbar">
+        <span class="mg-grip" aria-hidden="true" />
+        <span class="mg-batch">
+          <span class="mg-batch-n">1</span>
+          <span class="mg-batch-step" aria-hidden="true">
+            <ChevronUp :size="12" /><ChevronDown :size="12" />
+          </span>
+        </span>
+        <span class="mg-run-group">
+          <button type="button" class="mg-run"><Play :size="15" />Run</button>
+          <button type="button" class="mg-run-more" aria-label="Run options">
+            <ChevronDown :size="15" />
+          </button>
+        </span>
+        <button type="button" class="mg-panel-btn" aria-label="Toggle the right panel">
+          <PanelRight :size="17" />
+        </button>
+      </div>
+      <div class="mg-status">
+        <button
+          type="button"
+          class="mg-pill"
+          :aria-expanded="jobsOpen"
+          @click="jobsOpen = !jobsOpen"
+        >
+          <i class="mg-spin" aria-hidden="true" />
+          <span>Running</span>
+          <span class="mg-badge">Queued {{ JOBS.length - 1 }}</span>
+          <span class="mg-hairline" :style="{ width: `${JOBS[0]!.progress}%` }" />
+        </button>
+        <template v-if="jobsOpen">
+          <div v-for="job in JOBS" :key="job.title" class="mg-job">
+            <i v-if="job.progress !== undefined" class="mg-spin is-small" aria-hidden="true" />
+            <i v-else class="mg-job-dot" aria-hidden="true" />
+            <span class="mg-job-text">
+              <span class="mg-job-title">{{ job.title }}</span>
+              <span class="mg-job-sub">{{ job.sub }}</span>
+            </span>
+            <button type="button" class="mg-job-stop" :aria-label="`Stop this run ${job.title}`">
+              <i />
+            </button>
+            <span
+              v-if="job.progress !== undefined"
+              class="mg-hairline"
+              :style="{ width: `${job.progress}%` }"
+            />
+          </div>
+          <div class="mg-job-foot">
+            <button type="button" class="mg-foot-btn">
+              <Images :size="12" />Results (4)<ChevronDown :size="12" />
+            </button>
+            <span class="mg-foot-group">
+              <button type="button" class="mg-foot-btn">Clear queue</button>
+              <span class="mg-foot-sep" />
+              <button type="button" class="mg-foot-btn">
+                <i class="mg-foot-square" />Cancel all
+              </button>
+            </span>
+          </div>
+        </template>
+      </div>
     </div>
     <button v-if="current" type="button" class="mg-search" aria-label="Search nodes">
       <Search :size="14" />
@@ -631,15 +684,14 @@ const RAIL: { icon: Component; label: string }[] = [
   --mg-ring: var(--color-content-background);
   --mg-radius: 18px;
   --mg-radius-in: 10px;
+  --mg-run: var(--color-inverted-background);
+  --mg-run-text: var(--color-inverted-foreground);
   position: relative;
   display: flex;
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 70% 60% at 22% 8%, oklch(0.42 0.06 305 / 0.2), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 88% 92%, oklch(0.5 0.05 60 / 0.12), transparent 70%),
-    var(--mg-canvas);
+  background: var(--mg-canvas);
   color: var(--mg-text);
   font-family: Inter, var(--font-sans, system-ui), sans-serif;
   font-size: 13px;
@@ -654,12 +706,6 @@ const RAIL: { icon: Component; label: string }[] = [
   --mg-float: oklch(1 0 0 / 0.72);
   --mg-hover: oklch(0 0 0 / 0.05);
   --mg-ring: oklch(0.955 0.003 285);
-}
-:root[data-ds-theme='light'] .mg.is-glass {
-  background:
-    radial-gradient(ellipse 70% 60% at 22% 8%, oklch(0.85 0.05 305 / 0.35), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 88% 92%, oklch(0.88 0.05 60 / 0.3), transparent 70%),
-    var(--mg-canvas);
 }
 
 /* ── Canvas. ── */
@@ -977,28 +1023,12 @@ const RAIL: { icon: Component; label: string }[] = [
   display: flex;
   height: 44px;
   align-items: center;
-  gap: 12px;
   padding: 0 6px;
   border-radius: 999px;
   background: var(--mg-float);
   backdrop-filter: blur(24px) saturate(1.2);
   transform: translateX(-50%);
   white-space: nowrap;
-}
-:root .proto-ui.proto-ui.proto-ui .mg-bar-name {
-  display: inline-flex;
-  height: 32px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px 0 12px;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--mg-text);
-  font-size: 13px;
-  font-weight: 500;
-}
-:root .proto-ui.proto-ui.proto-ui .mg-bar-name:hover {
-  background: var(--mg-hover);
 }
 .mg-mode {
   display: inline-flex;
@@ -1032,68 +1062,276 @@ const RAIL: { icon: Component; label: string }[] = [
   height: 24px;
   border-radius: 4px;
 }
-.mg-bar-name svg {
-  color: var(--mg-dim);
-}
-.mg-bar-sep,
 .mg-tools-sep {
   width: 1px;
   height: 16px;
   flex: none;
   background: color-mix(in oklch, var(--color-base-foreground) 12%, transparent);
 }
-.mg-bar-queue {
-  display: inline-flex;
-  align-items: center;
+
+/* ── Run block (ComfyUI_frontend#17679), in the Home's language: the
+   action bar, then the status pill and its job rows, all borderless
+   translucent surfaces. ── */
+.mg-runblock {
+  position: absolute;
+  top: calc(var(--mg-top) + 16px);
+  right: 16px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
+}
+.mg-actionbar {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px 0 4px;
+  border-radius: 16px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
   color: var(--mg-muted);
-  font-size: 12px;
+}
+.mg-grip {
+  width: 8px;
+  height: 16px;
+  margin: 0 2px 0 4px;
+  background: radial-gradient(circle, currentColor 1px, transparent 1.4px) 0 0 / 4px 4px;
+  opacity: 0.6;
+}
+.mg-batch {
+  display: inline-flex;
+  height: 32px;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--mg-well);
+  color: var(--mg-text);
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
-.mg-bar-queue b {
-  color: var(--mg-text);
-  font-weight: 500;
+.mg-batch-n {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
 }
-.mg-bar-dim {
-  padding-left: 4px;
+.mg-batch-step {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 6px;
+  box-shadow: inset 1px 0 0 color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
   color: var(--mg-dim);
 }
-.mg-ring {
-  width: 14px;
-  height: 14px;
-  transform: rotate(-90deg);
-}
-.mg-ring circle {
-  fill: none;
-  stroke: color-mix(in oklch, var(--color-base-foreground) 16%, transparent);
-  stroke-width: 2.5;
-}
-.mg-ring circle + circle {
-  stroke: var(--color-base-foreground);
-  stroke-linecap: round;
+.mg-batch-step svg + svg {
+  margin-top: -2px;
 }
 .mg-run-group {
   display: inline-flex;
-  gap: 1px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--mg-run);
 }
-:root .proto-ui.proto-ui.proto-ui .mg-bar .mg-run,
-:root .proto-ui.proto-ui.proto-ui .mg-bar .mg-run-more {
+:root .proto-ui.proto-ui.proto-ui .mg-run,
+:root .proto-ui.proto-ui.proto-ui .mg-run-more {
   display: inline-flex;
   height: 32px;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 0 14px 0 12px;
-  border-radius: 999px 4px 4px 999px;
-  background: var(--color-inverted-background);
-  color: var(--color-inverted-foreground);
-  font-size: 13px;
+  padding: 0 16px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--mg-run-text);
+  font-size: 14px;
   font-weight: 600;
 }
-:root .proto-ui.proto-ui.proto-ui .mg-bar .mg-run-more {
-  padding: 0 9px 0 7px;
-  border-radius: 4px 999px 999px 4px;
+:root .proto-ui.proto-ui.proto-ui .mg-run {
+  min-width: 88px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-run-more {
+  width: 28px;
+  padding: 0;
+  box-shadow: inset 1px 0 0 color-mix(in oklch, var(--mg-run-text) 25%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-panel-btn {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--mg-muted);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-panel-btn:hover {
+  background: var(--mg-hover);
+  color: var(--mg-text);
 }
 
+.mg-status {
+  display: flex;
+  width: 320px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-pill {
+  position: relative;
+  display: inline-flex;
+  height: 36px;
+  min-width: 176px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 10px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
+  color: var(--mg-text);
+  font-size: 14px;
+}
+.mg-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.mg-hairline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: color-mix(in oklch, var(--color-base-foreground) 70%, transparent);
+}
+.mg-spin {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border: 2px solid color-mix(in oklch, var(--color-base-foreground) 20%, transparent);
+  border-top-color: color-mix(in oklch, var(--color-base-foreground) 80%, transparent);
+  border-radius: 999px;
+  animation: mg-spin 0.9s linear infinite;
+}
+.mg-spin.is-small {
+  width: 13px;
+  height: 13px;
+  margin: 0 1.5px;
+}
+@keyframes mg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.mg-job {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 12px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+.mg-job-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  margin: 0 5px;
+  border-radius: 999px;
+  background: var(--mg-muted);
+}
+.mg-job-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+.mg-job-title {
+  overflow: hidden;
+  color: var(--mg-text);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mg-job-sub {
+  color: var(--mg-muted);
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-job-stop {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mg-muted);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-job-stop:hover {
+  background: var(--mg-hover);
+  color: var(--mg-text);
+}
+.mg-job-stop i,
+.mg-foot-square {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.mg-foot-square {
+  width: 10px;
+  height: 10px;
+}
+.mg-job-foot {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+.mg-foot-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.mg-foot-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 2px;
+  background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-foot-btn {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mg-muted);
+  font-size: 12px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-foot-btn:hover {
+  background: var(--mg-hover);
+  color: var(--mg-text);
+}
 .mg-corner {
   position: absolute;
   right: 16px;
@@ -1184,7 +1422,8 @@ const RAIL: { icon: Component; label: string }[] = [
   --mg-chrome-line: #0a0a0a;
   --mg-radius: 8px;
   --mg-radius-in: 10px;
-  --mg-run: #2563eb;
+  --mg-run: #f2f2f2;
+  --mg-run-text: #111;
   display: grid;
   grid-template-rows: 38px 1fr;
   grid-template-columns: 52px 1fr;
@@ -1209,6 +1448,8 @@ const RAIL: { icon: Component; label: string }[] = [
   --mg-chrome-2: #e7e7e9;
   --mg-chrome-line: #d4d4d8;
   --mg-hover: rgb(0 0 0 / 0.06);
+  --mg-run: #222;
+  --mg-run-text: #fff;
 }
 .is-current .mg-canvas {
   position: relative;
@@ -1436,82 +1677,44 @@ const RAIL: { icon: Component; label: string }[] = [
   color: var(--mg-text);
 }
 
-.mg-actionbar {
-  position: absolute;
+/* Current: the same run block on ComfyUI's chrome, with its hairline
+   borders, under the top bar. */
+.is-current .mg-runblock {
   top: calc(var(--mg-top) + 38px + 12px);
-  right: 16px;
-  z-index: 4;
-  display: flex;
-  height: 40px;
-  align-items: center;
-  gap: 4px;
-  padding: 0 6px 0 4px;
+}
+.is-current :is(.mg-actionbar, .mg-job, .mg-job-foot) {
   border-radius: 8px;
   background: var(--mg-chrome-2);
-  box-shadow:
-    0 0 0 1px var(--mg-chrome-line),
-    0 6px 16px rgb(0 0 0 / 0.35);
-  color: var(--mg-muted);
+  box-shadow: 0 0 0 1px var(--mg-chrome-line);
+  backdrop-filter: none;
 }
-.mg-grip {
-  width: 8px;
-  height: 18px;
-  margin: 0 4px;
-  background: radial-gradient(circle, currentColor 1px, transparent 1.4px) 0 0 / 4px 4px;
-  opacity: 0.6;
+:root .proto-ui.proto-ui.proto-ui .is-current .mg-pill {
+  border-radius: 8px;
+  background: var(--mg-chrome-2);
+  box-shadow: 0 0 0 1px var(--mg-chrome-line);
+  backdrop-filter: none;
 }
-:root .proto-ui.proto-ui.proto-ui .mg-actionbar .mg-run,
-:root .proto-ui.proto-ui.proto-ui .mg-actionbar .mg-run-more {
-  display: inline-flex;
-  height: 30px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 14px 0 12px;
-  border-radius: 6px 0 0 6px;
-  background: var(--mg-run);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
+.is-current :is(.mg-batch, .mg-run-group) {
+  border-radius: 8px;
 }
-:root .proto-ui.proto-ui.proto-ui .mg-actionbar .mg-run-more {
-  margin-left: -4px;
-  padding: 0 6px;
-  border-radius: 0 6px 6px 0;
-  box-shadow: inset 1px 0 0 rgb(255 255 255 / 0.25);
-}
-.mg-actionbar-count {
-  display: inline-flex;
-  height: 30px;
-  min-width: 34px;
-  align-items: center;
-  justify-content: center;
+:root .proto-ui.proto-ui.proto-ui .is-current .mg-panel-btn {
   border-radius: 6px;
-  background: var(--mg-well);
-  color: var(--mg-text);
-  font-variant-numeric: tabular-nums;
-}
-:root .proto-ui.proto-ui.proto-ui .mg-stop,
-:root .proto-ui.proto-ui.proto-ui .mg-search {
-  display: inline-flex;
-  width: 30px;
-  height: 30px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--mg-muted);
 }
 :root .proto-ui.proto-ui.proto-ui .mg-search {
   position: absolute;
   top: calc(var(--mg-top) + 38px + 12px);
   left: 64px;
   z-index: 4;
+  display: inline-flex;
   width: 36px;
   height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border-radius: 8px;
   background: var(--mg-chrome-2);
   box-shadow: 0 0 0 1px var(--mg-chrome-line);
+  color: var(--mg-muted);
 }
 .is-current .mg-corner {
   gap: 6px;

@@ -524,7 +524,7 @@ const controls = computed(() => controlsHeight(node, g))
 :root .proto-ui.proto-ui.proto-ui .is-current .sg-resume {
   border-radius: 6px;
   background: var(--mg-run);
-  color: #fff;
+  color: var(--mg-run-text);
 }
 .is-current .sg-controls {
   padding: 6px 8px;
