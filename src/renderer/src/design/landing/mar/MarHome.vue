@@ -41,7 +41,10 @@ import portraitWindow from './assets/portrait-window.jpg'
  *   - builds as tiles (state on top, name and place below)
  *   - workflow cards with a meta line and a value on the right
  *   - one photo series (Magnific stock) so the page reads as a whole
+ * Later versions branch on `version` where they differ; v1 stays as is.
  */
+const { version = 1 } = defineProps<{ version?: number }>()
+
 const EXAMPLE_ART = [portraitGarden, lakeFog, portraitSun, hillsSunset, portraitSmile]
 const RECENT_ART = [portraitSeaside, forestFog, portraitGrass, hillsFog, portraitWindow]
 const CATEGORY = { image: 'Image', video: 'Video', '3d': '3D', audio: 'Audio' } as const
@@ -83,7 +86,10 @@ const recent = computed(() =>
 
 <template>
   <div class="absolute top-3.5 right-4 z-10"><CreateMenu /></div>
-  <div :class="['mx-auto w-full max-w-300 px-10', noLocal ? 'h-full overflow-hidden' : 'pb-16']">
+  <div
+    :data-mar-version="version"
+    :class="['mx-auto w-full max-w-300 px-10', noLocal ? 'h-full overflow-hidden' : 'pb-16']"
+  >
     <section :class="['flex flex-col', noLocal ? 'h-full' : 'pt-12 pb-4']">
       <div class="flex flex-1 flex-col justify-center pt-10">
         <StartPaths v-if="noLocal" />

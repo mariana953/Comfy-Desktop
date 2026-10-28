@@ -1,9 +1,13 @@
 # Mariana's proposal
 
-Lives apart from Pablo's prototype. Pick it in the Prototype menu
-(Proposal: Mariana v1) or open the preview with `?proposal=mariana`.
+Lives apart from Pablo's prototype. Pick a version in the Prototype menu
+(Proposal: Mariana v1, Mariana v2) or open the preview with
+`?proposal=mariana-v1` (`?proposal=mariana` opens the latest).
 
-## What it changes
+Each version is frozen once the next one exists. What changed and why is in
+[DECISIONS.md](DECISIONS.md).
+
+## What v1 changes
 
 - Home: one Create button top right; Open ComfyUI and Deploy are its menu.
 - Builds on Home are tiles: where it runs and its state on top, name and
