@@ -80,7 +80,13 @@ function set(key: keyof Tuning, value: string): void {
       class="proto-ui fixed top-14 right-4 bottom-4 z-50 flex w-72 flex-col gap-4 overflow-y-auto rounded-panel border border-border-default bg-card-background p-4 shadow-popover [-webkit-app-region:no-drag]"
     >
       <header class="flex items-center justify-between">
-        <h2 class="text-ui font-semibold">Proposal and UI</h2>
+        <h2 class="text-ui font-semibold">
+          Proposal and UI
+          <kbd
+            class="ml-1.5 rounded-[5px] bg-secondary-background px-1.5 py-px font-sans text-[11px] font-normal text-subtle-foreground"
+            >⌘.</kbd
+          >
+        </h2>
         <Button variant="ghost" size="icon-sm" aria-label="Close" @click="tuner.open = false">
           <X :size="14" />
         </Button>

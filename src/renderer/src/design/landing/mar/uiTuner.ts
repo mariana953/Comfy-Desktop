@@ -124,6 +124,18 @@ function load(): Tuning {
 export const tuning = reactive<Tuning>(load())
 export const tuner = reactive({ open: false })
 
+// ⌘. (Ctrl+. on Windows) shows and hides the tuner, so you can look at
+// what a tweak did without the panel in the way; Esc closes it.
+window.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === '.') {
+    e.preventDefault()
+    tuner.open = !tuner.open
+  } else if (e.key === 'Escape' && tuner.open) {
+    const t = e.target as HTMLElement | null
+    if (!t?.closest('[role="listbox"], [role="menu"], [role="dialog"]')) tuner.open = false
+  }
+})
+
 export function resetTuning(): void {
   Object.assign(tuning, DEFAULTS)
 }
