@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Play, Rocket } from 'lucide-vue-next'
 import Greeting from '../parts/Greeting.vue'
 import PromptBox from '../parts/PromptBox.vue'
-import LaunchesRow from '../parts/LaunchesRow.vue'
+import WhatsNew from './WhatsNew.vue'
 import QuickLaunch from '../parts/QuickLaunch.vue'
 import RecentWork from '../parts/RecentWork.vue'
 import StartPaths from '../parts/StartPaths.vue'
@@ -155,7 +155,7 @@ const recent = computed(() =>
       </section>
       <RecentWork v-else-if="parts.recent === 'pablo'" />
 
-      <LaunchesRow v-if="can.explore" />
+      <WhatsNew v-if="can.explore" />
       <SpacesRow v-if="can.spaces && proto.signedIn" />
     </div>
   </div>
