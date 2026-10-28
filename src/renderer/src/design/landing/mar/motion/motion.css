@@ -88,7 +88,7 @@
   animation: mar-pop 260ms var(--mar-ease);
 }
 
-/* Floating panels (Proposal and UI) slide in from the right. */
+/* Floating panels (UI Playground) slide in from the right. */
 :root[data-mar-ui='on'] aside[aria-label='UI tuner'] {
   animation: mar-slide-in 320ms var(--mar-ease);
 }

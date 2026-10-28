@@ -1,6 +1,6 @@
 import { reactive, watch } from 'vue'
 
-/** How template pictures look in Mar's proposal (Proposal and UI ›
+/** How template pictures look in Mar's proposal (UI Playground ›
  *  Templates): the plain output photo, or a branded poster (Comfy's
  *  colours and slanted strokes around the photo, the name in big type),
  *  so the catalogue reads as Comfy's own. */

@@ -58,7 +58,7 @@ watch(
   { immediate: true }
 )
 
-/** Mar's navigation (Proposal and UI › Navigation): Mar's sidebar attached
+/** Mar's navigation (UI Playground › Navigation): Mar's sidebar attached
  *  to the window or floating (MarSidebar.vue), the dock at the bottom
  *  (MarDock.vue), or Classic: Pablo's sidebar and layout as they are.
  *  Same places in all. */
@@ -171,7 +171,7 @@ export const heroImage = computed<string | undefined>(() => {
   return HERO[page]
 })
 
-/** Home's background (Proposal and UI › Home background): Latent bloom
+/** Home's background (UI Playground › Home background): Latent bloom
  *  (default), the photo, or one of the quieter alternatives. */
 export type HomeBackground =
   | 'bloom'

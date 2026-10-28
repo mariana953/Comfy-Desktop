@@ -1,6 +1,6 @@
 import { reactive, watch } from 'vue'
 
-/** How ComfyUI's graph editor looks in Mar's proposal (Proposal and UI ›
+/** How ComfyUI's graph editor looks in Mar's proposal (UI Playground ›
  *  Graph editor): Glass, the Home's language carried into the canvas, or
  *  Current, ComfyUI as it looks today laid out in the new structure. */
 export type GraphStyle = 'glass' | 'current'

@@ -4,7 +4,7 @@ import { instances, proto } from '../../useProto'
 
 /**
  * Where Mar's proposal is shown: the desktop app, or Comfy Cloud in a
- * browser (Proposal and UI › Surface). Cloud swaps the app's title bar for
+ * browser (UI Playground › Surface). Cloud swaps the app's title bar for
  * the browser's tab and address bar with the app's own bar one level
  * below, and drops what a browser can't do (local builds).
  */

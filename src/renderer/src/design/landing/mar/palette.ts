@@ -1,7 +1,7 @@
 import { reactive, watch } from 'vue'
 
 /**
- * Neutral palettes to try (Proposal and UI › Palette). All stay grey, so
+ * Neutral palettes to try (UI Playground › Palette). All stay grey, so
  * imagery keeps the colour; each leans a hair towards one hue, enough to
  * tell them apart and to give the product a quiet signature. Only the
  * surfaces and greys move; the theme's contrast steps stay the same.
@@ -18,10 +18,12 @@ export interface Palette {
 export const PALETTES: Palette[] = [
   { id: 'void', label: 'Void · cool grey (today)', hue: 285, chroma: 0.004 },
   { id: 'graphite', label: 'Graphite · pure grey', hue: 0, chroma: 0 },
-  { id: 'stone', label: 'Stone · warm grey', hue: 70, chroma: 0.006 },
-  { id: 'plum', label: 'Plum · a hint of aubergine', hue: 320, chroma: 0.012 },
+  { id: 'steel', label: 'Steel · grey with a touch of blue', hue: 235, chroma: 0.006 },
   { id: 'slate', label: 'Slate · a hint of blue', hue: 250, chroma: 0.01 },
-  { id: 'moss', label: 'Moss · a hint of green', hue: 150, chroma: 0.007 }
+  { id: 'ink', label: 'Ink · deep blue-violet', hue: 270, chroma: 0.012 },
+  { id: 'indigo', label: 'Indigo · cooler, a bit more colour', hue: 278, chroma: 0.018 },
+  { id: 'aubergine', label: 'Aubergine · like comfy.org', hue: 305, chroma: 0.016 },
+  { id: 'plum', label: 'Plum · a hint of aubergine', hue: 320, chroma: 0.012 }
 ]
 
 const KEY = 'comfy.design.mar.palette'

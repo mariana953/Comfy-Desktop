@@ -2,7 +2,7 @@ import { reactive, watch } from 'vue'
 
 /**
  * The 20 UI proposals from Figma ("UI proposals · 20", page 115:1527),
- * brought into Mar's proposal as switches (Proposal and UI › Proposals ·
+ * brought into Mar's proposal as switches (UI Playground › Proposals ·
  * 20). Layouts replace the Home's body; the rest swap or add one piece.
  * Left out on purpose: 09 Dock, 17 Workspace switcher, 19 Agent split
  * and the Up next list of 16; the Home prompt gets no model or aspect

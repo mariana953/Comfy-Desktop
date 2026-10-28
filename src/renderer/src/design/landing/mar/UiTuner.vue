@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { X } from 'lucide-vue-next'
+import { Moon, Sun, X } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
 import { DIRECTIONS, look } from '../look'
 import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
@@ -10,13 +10,14 @@ import { homeBackground, marNav, type HomeBackground, type MarNav } from './shel
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 import Select from '../ui/Select.vue'
 import { PALETTES, palette } from './palette'
+import { MODE_STYLES, modeStyle } from './modes/modeStyle'
 import { COVERS, cover } from './cover'
 import { TEMPLATE_STYLES, templateStyle } from './brand/templateStyle'
 import { CREDITS_STYLES, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 
-/** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
+/** The UI tuner panel (Prototype menu › UI Playground): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
  *  then the knobs, applied live. */
 const NAVS: { value: MarNav; label: string }[] = [
@@ -41,8 +42,8 @@ function reset(): void {
 const paletteOptions = PALETTES.map((p) => ({ value: p.id, label: p.label }))
 
 const THEMES = [
-  { value: 'dark', label: 'Dark' },
-  { value: 'light', label: 'Light' }
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'light', label: 'Light', icon: Sun }
 ] as const
 const P20_ROWS: { key: keyof typeof P20; label: string }[] = [
   { key: 'homeLayout', label: 'Home layout' },
@@ -85,7 +86,7 @@ function set(key: keyof Tuning, value: string): void {
     >
       <header class="flex items-center justify-between">
         <h2 class="text-ui font-semibold">
-          Proposal and UI
+          UI Playground
           <kbd
             class="ml-1.5 rounded-[5px] bg-secondary-background px-1.5 py-px font-sans text-[11px] font-normal text-subtle-foreground"
             >⌘.</kbd
@@ -117,24 +118,53 @@ function set(key: keyof Tuning, value: string): void {
         </div>
       </div>
 
+      <!-- Surface and theme share one row. -->
       <div class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">Theme</span>
-        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
-          <button
-            v-for="t in THEMES"
-            :key="t.value"
-            type="button"
-            :aria-pressed="look.theme === t.value"
-            :class="[
-              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              look.theme === t.value
-                ? 'bg-secondary-background-hover font-medium text-base-foreground'
-                : 'text-muted-foreground hover:text-base-foreground'
-            ]"
-            @click="look.theme = t.value"
+        <span class="text-ui text-subtle-foreground">{{
+          isMariana ? 'Surface and theme' : 'Theme'
+        }}</span>
+        <div class="flex items-center gap-1.5">
+          <div
+            v-if="isMariana"
+            class="mar-seg flex min-w-0 flex-1 gap-1 rounded-control bg-secondary-background p-0.5"
           >
-            {{ t.label }}
-          </button>
+            <button
+              v-for="sf in SURFACES"
+              :key="sf.value"
+              type="button"
+              :aria-pressed="surface.id === sf.value"
+              :class="[
+                'h-7 min-w-0 flex-1 truncate rounded-[7px] px-1.5 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+                surface.id === sf.value
+                  ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                  : 'text-muted-foreground hover:text-base-foreground'
+              ]"
+              @click="surface.id = sf.value"
+            >
+              {{ sf.value === 'desktop' ? 'Desktop' : 'Cloud' }}
+            </button>
+          </div>
+          <div
+            class="mar-seg ml-auto flex shrink-0 gap-0.5 rounded-control bg-secondary-background p-0.5"
+          >
+            <button
+              v-for="t in THEMES"
+              :key="t.value"
+              type="button"
+              :aria-pressed="look.theme === t.value"
+              :aria-label="t.label"
+              :title="t.label"
+              :class="[
+                'inline-flex h-7 w-9 items-center justify-center rounded-[7px] outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+                look.theme === t.value
+                  ? 'bg-secondary-background-hover text-base-foreground'
+                  : 'text-muted-foreground hover:text-base-foreground'
+              ]"
+              @click="look.theme = t.value"
+            >
+              <component :is="t.icon" :size="14" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -157,29 +187,13 @@ function set(key: keyof Tuning, value: string): void {
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">Surface</span>
-        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
-          <button
-            v-for="sf in SURFACES"
-            :key="sf.value"
-            type="button"
-            :aria-pressed="surface.id === sf.value"
-            :class="[
-              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              surface.id === sf.value
-                ? 'bg-secondary-background-hover font-medium text-base-foreground'
-                : 'text-muted-foreground hover:text-base-foreground'
-            ]"
-            @click="surface.id = sf.value"
-          >
-            {{ sf.label }}
-          </button>
-        </div>
+        <span class="text-ui text-subtle-foreground">Navigation</span>
+        <Select v-model="marNav.id" :options="NAVS" class="w-full" />
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">Navigation</span>
-        <Select v-model="marNav.id" :options="NAVS" class="w-full" />
+        <span class="text-ui text-subtle-foreground">Mode switch</span>
+        <Select v-model="modeStyle.id" :options="MODE_STYLES" class="w-full" />
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

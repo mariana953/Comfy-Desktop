@@ -24,6 +24,8 @@ import MarBackdrop from '../mar/shell/MarBackdrop.vue'
 import MarSidebarToggle from '../mar/shell/MarSidebarToggle.vue'
 import { marSidebarClosed } from '../mar/shell/marShell'
 import MarLensSwitch from '../mar/shell/MarLensSwitch.vue'
+import MarModeSwitch from '../mar/modes/MarModeSwitch.vue'
+import { modeStyle } from '../mar/modes/modeStyle'
 import { marTabsOn } from '../mar/shell/titleTabs'
 
 /**
@@ -76,6 +78,12 @@ const MODES = computed(() => [
         <!-- Create / Build (Milestone 6: the Builder) -->
         <div v-if="can.builder" class="mb-3 flex h-8.5 shrink-0 items-center">
           <MarLensSwitch v-if="marTabsOn" v-model="mode" :options="MODES" />
+          <!-- Mar's proposal: the switch in the style picked in the tuner. -->
+          <MarModeSwitch
+            v-else-if="isMariana && modeStyle.id !== 'pablo'"
+            v-model="mode"
+            :options="MODES"
+          />
           <ModeSwitch v-else v-model="mode" :options="MODES" />
         </div>
 

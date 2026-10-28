@@ -1,6 +1,6 @@
 import { reactive, watch } from 'vue'
 
-/** Where credits show in Mar's sidebar (Proposal and UI › Credits). */
+/** Where credits show in Mar's sidebar (UI Playground › Credits). */
 export type CreditsStyle = 'row' | 'meter' | 'chip'
 
 export const CREDITS_STYLES: { value: CreditsStyle; label: string }[] = [

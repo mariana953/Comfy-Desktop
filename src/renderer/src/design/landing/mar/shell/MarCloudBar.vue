@@ -63,8 +63,8 @@ const path = computed(() => (proto.page === 'overview' ? 'home' : proto.page.rep
       <button
         type="button"
         class="mar-cloud-tune"
-        aria-label="Proposal and UI"
-        title="Proposal and UI (switch back to Desktop app)"
+        aria-label="UI Playground"
+        title="UI Playground (switch back to Desktop app)"
         @click="tuner.open = !tuner.open"
       >
         <SlidersHorizontal :size="14" />

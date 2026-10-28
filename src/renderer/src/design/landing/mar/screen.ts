@@ -1,7 +1,7 @@
 import { reactive, watch } from 'vue'
 
 /**
- * Screen simulator (Proposal and UI › Screen): lays the prototype out at a
+ * Screen simulator (UI Playground › Screen): lays the prototype out at a
  * screen size people really use, then scales it down to fit this window,
  * so one window can check them all. Zoom stands in for Windows display
  * scaling and Ctrl/Cmd + in the app: the layout gets fewer CSS pixels and

@@ -1,6 +1,6 @@
 import { reactive, watch } from 'vue'
 
-/** Workflow cards' cover (Proposal and UI › Workflow cover): the graph, as
+/** Workflow cards' cover (UI Playground › Workflow cover): the graph, as
  *  Pablo has it, or the output it makes. Mar's proposal only. */
 export type Cover = 'graph' | 'output'
 

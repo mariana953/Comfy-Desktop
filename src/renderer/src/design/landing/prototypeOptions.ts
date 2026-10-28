@@ -73,7 +73,7 @@ export const prototypeGroups = computed<PrototypeGroup[]>(() =>
     { key: 'milestone', label: 'Milestone', model: milestone, options: MILESTONES },
     {
       key: 'tune',
-      label: 'Proposal and UI',
+      label: 'UI Playground',
       model: tune,
       options: [{ value: 'open', label: tuneLabel.value }]
     },
