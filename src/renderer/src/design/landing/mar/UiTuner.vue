@@ -22,7 +22,6 @@ import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
  *  then the knobs, applied live. */
 const NAVS: { value: MarNav; label: string }[] = [
   { value: 'classic', label: 'Original' },
-  { value: 'sidebar', label: 'Sidebar · attached, translucent' },
   { value: 'floating', label: 'Floating · a card' },
   { value: 'tabs', label: '08 · Tabs · a bar on top' }
 ]

@@ -70,7 +70,7 @@ function loadNav(): { id: MarNav; collapsed: boolean } {
   try {
     const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? '{}')
     // Classic (Pablo's sidebar) is the default; a stored dock falls back to it.
-    const id: MarNav = ['sidebar', 'floating', 'classic', 'tabs'].includes(v.id) ? v.id : 'classic'
+    const id: MarNav = ['floating', 'classic', 'tabs'].includes(v.id) ? v.id : 'classic'
     return { id, collapsed: Boolean(v.collapsed) }
   } catch {
     return { id: 'classic', collapsed: false }

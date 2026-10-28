@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { ChevronDown, Plus, Search } from 'lucide-vue-next'
+import { AppWindow, ChevronDown, Images, Plus, Search, Server, Workflow } from 'lucide-vue-next'
+import CreateMenu from '../CreateMenu.vue'
 import { go, goIn, proto, toast, type Mode, type Page } from '../../useProto'
 import { can, landingPage } from '../../milestones'
 import { PROJECTS } from '../../mock'
@@ -25,17 +26,21 @@ interface Tab {
   page?: Page
   /** Also on for pages that start with this (one project, one build). */
   prefix?: string
-  menu?: 'projects' | 'spaces'
+  menu?: 'projects' | 'spaces' | 'library'
 }
 
+// Five places, not nine: your own things live under Library.
 const CREATE: Tab[] = [
   { key: 'overview', label: 'Home', page: 'overview' },
   { key: 'explore', label: 'Explore', page: 'explore' },
   { key: 'tutorials', label: 'Learn', page: 'tutorials' },
-  { key: 'workflows', label: 'Workflows', page: 'workflows' },
-  { key: 'apps', label: 'Apps', page: 'apps', prefix: 'app:' },
-  { key: 'assets', label: 'Assets', page: 'assets' },
-  { key: 'environments', label: 'Builds', page: 'environments', prefix: 'environment:' }
+  { key: 'library', label: 'Library', menu: 'library' }
+]
+const LIBRARY = [
+  { id: 'workflows', name: 'Workflows', page: 'workflows' as Page, icon: Workflow },
+  { id: 'apps', name: 'Apps', page: 'apps' as Page, icon: AppWindow },
+  { id: 'assets', name: 'Assets', page: 'assets' as Page, icon: Images },
+  { id: 'environments', name: 'Builds', page: 'environments' as Page, icon: Server }
 ]
 const BUILD: Tab[] = [
   { key: 'build-overview', label: 'Overview', page: 'build-overview' },
@@ -77,38 +82,58 @@ function isOn(t: Tab): boolean {
   const p = proto.page
   if (t.menu === 'projects') return p === 'projects' || p.startsWith('project:')
   if (t.menu === 'spaces') return p === 'spaces' || p.startsWith('space:')
+  if (t.menu === 'library')
+    return ['workflows', 'apps', 'assets', 'environments'].some(
+      (k) => p === k || p.startsWith(k === 'environments' ? 'environment:' : `${k.slice(0, -1)}:`)
+    )
   return p === t.page || Boolean(t.prefix && p.startsWith(t.prefix))
 }
 
 // Projects and Spaces open as menus under their tab.
 const ART = [portraitSeaside, lakeFog, portraitWindow, portraitGrass, hillsFog]
-const menu = ref<'projects' | 'spaces' | null>(null)
+const menu = ref<'projects' | 'spaces' | 'library' | null>(null)
 const menuItems = computed(() =>
-  menu.value === 'projects'
+  menu.value === 'library'
     ? {
-        all: { label: 'All projects', page: 'projects' as Page, count: PROJECTS.length },
-        items: PROJECTS.map((p, i) => ({
-          id: p.id,
-          name: p.name,
-          page: `project:${p.id}` as Page,
-          art: ART[i % ART.length],
-          color: undefined as string | undefined,
-          meta: undefined as string | undefined
-        })),
-        add: 'New project'
-      }
-    : {
-        all: { label: 'All spaces', page: 'spaces' as Page, count: SPACES.length },
-        items: SPACES.map((s) => ({
-          id: s.id,
-          name: s.name,
-          page: `space:${s.id}` as Page,
+        all: undefined,
+        items: LIBRARY.map((l) => ({
+          id: l.id,
+          name: l.name,
+          page: l.page,
           art: undefined as string | undefined,
-          color: s.brand.color,
-          meta: s.status === 'draft' ? 'Draft' : undefined
+          color: undefined as string | undefined,
+          meta: undefined as string | undefined,
+          icon: l.icon
         })),
-        add: 'New space'
+        add: undefined
       }
+    : menu.value === 'projects'
+      ? {
+          all: { label: 'All projects', page: 'projects' as Page, count: PROJECTS.length },
+          items: PROJECTS.map((p, i) => ({
+            id: p.id,
+            name: p.name,
+            page: `project:${p.id}` as Page,
+            art: ART[i % ART.length],
+            color: undefined as string | undefined,
+            meta: undefined as string | undefined,
+            icon: undefined
+          })),
+          add: 'New project'
+        }
+      : {
+          all: { label: 'All spaces', page: 'spaces' as Page, count: SPACES.length },
+          items: SPACES.map((s) => ({
+            id: s.id,
+            name: s.name,
+            page: `space:${s.id}` as Page,
+            art: undefined as string | undefined,
+            color: s.brand.color,
+            meta: s.status === 'draft' ? 'Draft' : undefined,
+            icon: undefined
+          })),
+          add: 'New space'
+        }
 )
 function onTab(t: Tab): void {
   if (t.menu) {
@@ -146,8 +171,11 @@ function place(): void {
     bar.shown = false
     return
   }
-  bar.left = el.offsetLeft + 10
-  bar.width = el.offsetWidth - 20
+  // Measured against the strip, so it holds when the tabs are centred.
+  const r = el.getBoundingClientRect()
+  const base = strip.value!.getBoundingClientRect()
+  bar.left = r.left - base.left + 10
+  bar.width = r.width - 20
   bar.shown = true
 }
 watch(
@@ -208,6 +236,7 @@ onBeforeUnmount(() => {
         <Transition name="p08-pop">
           <div v-if="t.menu && menu === t.menu" class="p08-menu" role="menu" :aria-label="t.label">
             <button
+              v-if="menuItems.all"
               type="button"
               role="menuitem"
               class="p08-item"
@@ -218,7 +247,7 @@ onBeforeUnmount(() => {
               }}</span
               ><span class="p08-meta">{{ menuItems.all.count }}</span>
             </button>
-            <span class="p08-sep" aria-hidden="true" />
+            <span v-if="menuItems.all" class="p08-sep" aria-hidden="true" />
             <button
               v-for="i in menuItems.items"
               :key="i.id"
@@ -228,12 +257,19 @@ onBeforeUnmount(() => {
               :class="proto.page === i.page && 'is-on'"
               @click="pick(i.page)"
             >
-              <img v-if="i.art" :src="i.art" alt="" class="p08-thumb" />
+              <component :is="i.icon" v-if="i.icon" :size="15" class="p08-icon" />
+              <img v-else-if="i.art" :src="i.art" alt="" class="p08-thumb" />
               <span v-else class="p08-orb" :style="{ '--orb': i.color }" />
               <span class="p08-name">{{ i.name }}</span>
               <span v-if="i.meta" class="p08-meta">{{ i.meta }}</span>
             </button>
-            <button type="button" role="menuitem" class="p08-item is-add" @click="add">
+            <button
+              v-if="menuItems.add"
+              type="button"
+              role="menuitem"
+              class="p08-item is-add"
+              @click="add"
+            >
               <Plus :size="14" /><span class="p08-name">{{ menuItems.add }}</span>
             </button>
           </div>
@@ -247,9 +283,12 @@ onBeforeUnmount(() => {
       />
     </nav>
 
-    <button type="button" class="p08-search" @click="search.open = true">
-      <Search :size="14" /><span class="p08-search-text">Search</span><kbd>⌘K</kbd>
-    </button>
+    <div class="p08-end">
+      <button type="button" class="p08-search" aria-label="Search" @click="search.open = true">
+        <Search :size="14" /><span class="p08-search-text">Search</span><kbd>⌘K</kbd>
+      </button>
+      <CreateMenu v-if="proto.mode === 'create'" />
+    </div>
   </header>
 </template>
 
@@ -411,6 +450,37 @@ onBeforeUnmount(() => {
   .p08-pop-enter-from {
     transform: none;
   }
+}
+</style>
+
+<style>
+/* Tabs nav: the tabs sit centred; Create lives in the bar, not floating
+   below it; the bar is the page's own colour, separated by a hairline. */
+:root[data-mar-nav='tabs'] .mar-top-actions {
+  display: none;
+}
+.p08-bar .p08-tabs {
+  justify-content: center;
+}
+.p08-bar {
+  background: color-mix(in oklch, var(--color-content-background) 82%, transparent) !important;
+  box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+}
+.p08-end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+.p08-icon {
+  flex-shrink: 0;
+  color: var(--color-muted-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .p08-search {
+  width: 200px;
+  height: 32px;
+  gap: 8px;
+  padding: 0 10px;
 }
 </style>
 

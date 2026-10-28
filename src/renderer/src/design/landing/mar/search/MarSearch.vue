@@ -183,10 +183,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
               <span v-else class="mar-search-thumb is-icon"
                 ><component :is="h.icon ?? Workflow" :size="15"
               /></span>
-              <span class="flex min-w-0 flex-col text-left">
-                <span class="truncate">{{ h.label }}</span>
-                <span v-if="h.meta" class="mar-search-meta">{{ h.meta }}</span>
-              </span>
+              <span class="min-w-0 flex-1 truncate text-left">{{ h.label }}</span>
+              <span v-if="h.meta" class="mar-search-meta">{{ h.meta }}</span>
             </button>
           </section>
           <p v-if="query.trim() && !hits.length" class="mar-search-empty">
@@ -216,8 +214,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
 }
 .mar-search {
   display: flex;
-  width: min(640px, calc(100vw - 32px));
-  max-height: 72vh;
+  width: min(600px, calc(100vw - 32px));
+  max-height: 68vh;
   flex-direction: column;
   overflow: hidden;
   border-radius: 20px;
@@ -232,12 +230,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
 }
 :root .proto-ui.proto-ui.proto-ui .mar-search-field {
   display: flex;
-  height: 56px;
+  height: 40px;
   flex-shrink: 0;
   align-items: center;
-  gap: 12px;
-  padding: 0 14px 0 20px;
-  box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  gap: 10px;
+  margin: 10px 10px 2px;
+  padding: 0 8px 0 14px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
 :root .proto-ui.proto-ui.proto-ui .mar-search-field input {
   min-width: 0;
@@ -247,7 +247,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
   box-shadow: none;
   flex: 1;
   background: transparent;
-  font-size: 15px;
+  font-size: 13px;
   outline: none;
 }
 .mar-search-field input::placeholder {
@@ -280,12 +280,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 8px 8px;
+  padding: 12px 8px 6px;
   color: var(--color-subtle-foreground);
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 .mar-search-head button {
   color: var(--color-muted-foreground);
@@ -307,7 +305,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
   overflow: hidden;
   padding: 0;
   border-radius: 12px;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
 }
 .mar-search-tile img {
   width: 100%;
@@ -328,21 +326,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
 :root .proto-ui.proto-ui.proto-ui .mar-search-row {
   display: flex;
   width: 100%;
-  height: 52px;
+  height: 40px;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 0 8px;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: 13px;
 }
 :root .proto-ui.proto-ui.proto-ui .mar-search-row.is-on {
   background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
 }
 .mar-search-thumb {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: 7px;
   object-fit: cover;
 }
 .mar-search-thumb.is-icon {
@@ -364,12 +362,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
 }
 .mar-search-foot {
   display: flex;
-  height: 40px;
+  height: 36px;
   flex-shrink: 0;
   align-items: center;
-  gap: 18px;
-  padding: 0 20px;
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  gap: 16px;
+  padding: 0 18px;
   color: var(--color-subtle-foreground);
   font-size: 12px;
 }
