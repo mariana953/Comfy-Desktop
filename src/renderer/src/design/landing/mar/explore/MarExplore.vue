@@ -214,8 +214,8 @@ const empty = computed(
   display: flex;
   gap: 2px;
   padding: 3px;
-  border-radius: 12px;
-  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
 .mar-ex-count {
   margin-left: 6px;
@@ -318,9 +318,9 @@ const empty = computed(
 /* Global: tabs and cards are buttons, past the prototype's button reset. */
 :root .proto-ui.proto-ui.proto-ui .mar-ex-tab {
   width: auto;
-  height: 30px;
+  height: 28px;
   padding: 0 12px;
-  border-radius: 9px;
+  border-radius: 999px;
   color: var(--color-muted-foreground);
   font-size: 13px;
 }

@@ -259,7 +259,6 @@
     color-mix(in oklch, var(--color-base-foreground) 9%, var(--color-card-background)) 82%,
     transparent
   );
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
   backdrop-filter: blur(16px) saturate(1.2);
 }
 :root[data-mar-ui='on'] .mar-backdrop ~ div :is(.text-subtle-foreground, .text-muted-foreground) {
@@ -911,26 +910,6 @@
     0 12px 32px -16px rgb(0 0 0 / 0.5);
 }
 
-/* Every field and select in Mar's pages (filters, sort, search): the same
-   lifted surface, so they hold their own against photos and the page. */
-:root[data-mar-ui='on']
-  .proto-main
-  :is(button[role='combobox'], .bg-secondary-background:has(> input)) {
-  background-color: color-mix(
-    in oklch,
-    color-mix(in oklch, var(--color-base-foreground) 9%, var(--color-card-background)) 82%,
-    transparent
-  );
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
-}
-:root[data-mar-ui='on'] .proto-main button[role='combobox']:hover {
-  background-color: color-mix(
-    in oklch,
-    color-mix(in oklch, var(--color-base-foreground) 13%, var(--color-card-background)) 86%,
-    transparent
-  );
-}
-
 /* Faces inside a button (Share): cut out in the button's own colour. */
 :root[data-mar-ui='on'] .proto-main button :is(.-space-x-1, .-space-x-1\.5) > * {
   --tw-ring-color: color-mix(
@@ -938,4 +917,65 @@
     var(--color-secondary-background) 80%,
     var(--color-content-background)
   );
+}
+
+/* ── Filter system (every page in Mar's proposal) ─────────────────────
+   One look for everything that narrows a page, so a new filter is just
+   one more of the same:
+   - Scope tabs (All / This computer / Cloud): a soft track, no border;
+     the picked one is a lighter pill.
+   - Filters (selects) and Sort: pills. Muted label, white value, no edge;
+     a little lighter on hover and while open.
+   - Search: the same pill, with its icon.
+   - Other filter buttons (Folders): the same pill. */
+:root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) {
+  border-color: transparent;
+  border-radius: 999px;
+  padding: 3px;
+  background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  box-shadow: none;
+}
+:root .proto-ui.proto-ui.proto-ui .proto-main [role='group']:has(> button[data-state]) > button {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+}
+:root[data-mar-ui='on'] .proto-main [role='group'] > button[data-state='on'] {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
+}
+:root[data-mar-ui='on']
+  .proto-main
+  :is(
+    button[role='combobox'],
+    label:has(> input[type='search'], > input:not([type])),
+    .h-8.border-border-default
+  ) {
+  height: 34px;
+  border-color: transparent;
+  border-radius: 999px;
+  padding-inline: 14px 12px;
+  background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  box-shadow: none;
+  backdrop-filter: blur(16px);
+}
+:root[data-mar-ui='on'] .proto-main button[role='combobox']:hover,
+:root[data-mar-ui='on'] .proto-main button[role='combobox'][data-state='open'] {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
+}
+:root[data-mar-ui='on'] .proto-main label:has(> input):focus-within {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+}
+
+/* Assets and other picture grids: bigger tiles, more air. */
+:root[data-mar-ui='on'] .proto-main .grid[class*='minmax(176px'] {
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 18px;
+}
+/* When a page has many filters, the search gives way first. */
+:root[data-mar-ui='on'] .proto-main label:has(> input[type='search'], > input:not([type])) {
+  min-width: 150px;
+  flex: 0 1 220px;
+}
+:root[data-mar-ui='on'] .proto-main :is(.ml-auto, .flex):has(> label > input) {
+  min-width: 0;
 }
