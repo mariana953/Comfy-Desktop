@@ -5,7 +5,8 @@ import MarSidebar from './MarSidebar.vue'
 import { onCloud } from './surface'
 import MarBloom from './MarBloom.vue'
 import MarSearch from '../search/MarSearch.vue'
-import { bloomOn, heroImage, marDockOn, marSideOn } from './marShell'
+import { altBackground, bloomOn, heroImage, marDockOn, marSideOn } from './marShell'
+import lastOutput from '../assets/portrait-seaside.jpg'
 import './marShell.css'
 import '../motion/motion.css'
 import '../motion/tabSlide'
@@ -19,6 +20,17 @@ import '../motion/tabSlide'
 
 <template>
   <div v-if="bloomOn" class="mar-backdrop is-bloom" aria-hidden="true"><MarBloom /></div>
+  <!-- The quieter alternatives: drawn in CSS (marShell.css), except Your
+       latest, which blurs the last thing you made. -->
+  <div
+    v-else-if="altBackground"
+    class="mar-backdrop is-bloom is-alt"
+    :class="`is-${altBackground}`"
+    aria-hidden="true"
+  >
+    <img v-if="altBackground === 'output'" :src="lastOutput" alt="" class="mar-bg-output" />
+    <div v-else class="mar-bg" />
+  </div>
   <div v-else-if="heroImage" class="mar-backdrop" aria-hidden="true">
     <img :src="heroImage" alt="" />
   </div>

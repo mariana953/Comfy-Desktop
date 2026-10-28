@@ -22,8 +22,13 @@ const NAVS: { value: MarNav; label: string }[] = [
   { value: 'dock', label: 'Dock · at the bottom' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
-  { value: 'bloom', label: 'Latent bloom' },
-  { value: 'photo', label: 'Photo' }
+  { value: 'bloom', label: 'Latent bloom · colour out of grain' },
+  { value: 'photo', label: 'Photo · a picture, blurred' },
+  { value: 'mesh', label: 'Mesh · still plum and sand light' },
+  { value: 'spotlight', label: 'Spotlight · one soft light from above' },
+  { value: 'aurora', label: 'Aurora · slow bands of light' },
+  { value: 'grain', label: 'Grain · neutral, film texture' },
+  { value: 'output', label: 'Your latest · your last output, blurred' }
 ]
 
 const THEMES = [
@@ -201,23 +206,7 @@ function set(key: keyof Tuning, value: string): void {
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Home background</span>
-        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
-          <button
-            v-for="b in BACKGROUNDS"
-            :key="b.value"
-            type="button"
-            :aria-pressed="homeBackground.id === b.value"
-            :class="[
-              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
-              homeBackground.id === b.value
-                ? 'bg-secondary-background-hover font-medium text-base-foreground'
-                : 'text-muted-foreground hover:text-base-foreground'
-            ]"
-            @click="homeBackground.id = b.value"
-          >
-            {{ b.label }}
-          </button>
-        </div>
+        <Select v-model="homeBackground.id" :options="BACKGROUNDS" class="w-full" />
       </div>
 
       <div v-if="DIRECTIONS.length > 1" class="flex flex-col gap-1.5">

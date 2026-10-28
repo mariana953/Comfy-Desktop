@@ -168,13 +168,30 @@ export const heroImage = computed<string | undefined>(() => {
   return HERO[page]
 })
 
-/** Home's background: Latent bloom (default) or the photo
- *  (Proposal and UI › Home background). */
-export type HomeBackground = 'bloom' | 'photo'
+/** Home's background (Proposal and UI › Home background): Latent bloom
+ *  (default), the photo, or one of the quieter alternatives. */
+export type HomeBackground =
+  | 'bloom'
+  | 'photo'
+  | 'mesh'
+  | 'spotlight'
+  | 'aurora'
+  | 'grain'
+  | 'output'
+const BACKGROUND_IDS: HomeBackground[] = [
+  'bloom',
+  'photo',
+  'mesh',
+  'spotlight',
+  'aurora',
+  'grain',
+  'output'
+]
 const BG_KEY = 'comfy.design.mar.homeBackground'
 function loadBackground(): HomeBackground {
   try {
-    return localStorage.getItem(BG_KEY) === 'photo' ? 'photo' : 'bloom'
+    const v = localStorage.getItem(BG_KEY) as HomeBackground | null
+    return v && BACKGROUND_IDS.includes(v) ? v : 'bloom'
   } catch {
     return 'bloom'
   }
@@ -194,4 +211,11 @@ watch(
 /** Latent bloom is on screen: Home, Mar's proposal, bloom picked. */
 export const bloomOn = computed(
   () => isMariana.value && proto.page === 'overview' && homeBackground.id === 'bloom'
+)
+
+/** One of the quieter Home backgrounds (CSS only, MarBackdrop.vue). */
+export const altBackground = computed(() =>
+  isMariana.value && proto.page === 'overview' && !['bloom', 'photo'].includes(homeBackground.id)
+    ? homeBackground.id
+    : undefined
 )
