@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ArrowUpRight } from 'lucide-vue-next'
 import Button from '../ui/Button.vue'
-import SectionHeader from '../ui/SectionHeader.vue'
 import { toast } from '../useProto'
 import hillsSunset from './assets/hills-sunset.jpg'
 import portraitSun from './assets/portrait-sun.jpg'
@@ -68,9 +67,13 @@ onBeforeUnmount(() => clearInterval(timer))
 
 <template>
   <section class="mt-10">
-    <SectionHeader title="What's new" link="All launches" @link="toast('All launches')">
-      <template #link-icon><ArrowUpRight :size="13" /></template>
-    </SectionHeader>
+    <!-- No section title: the banner says what's new; only the way to all
+         launches stays. -->
+    <div class="mb-3.5 flex justify-end">
+      <Button variant="link" size="sm" @click="toast('All launches')">
+        All launches<ArrowUpRight :size="13" />
+      </Button>
+    </div>
     <div
       class="relative aspect-[5/1] min-h-52 overflow-hidden rounded-[20px]"
       @mouseenter="paused = true"
