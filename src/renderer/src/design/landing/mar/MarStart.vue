@@ -116,9 +116,6 @@ function openCloud(): void {
   object-fit: cover;
   transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.mar-start-card:hover img {
-  transform: scale(1.05);
-}
 .mar-start-card::after {
   content: '';
   position: absolute;

@@ -19,24 +19,21 @@ import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
  *  then the knobs, applied live. */
 const NAVS: { value: MarNav; label: string }[] = [
-  { value: 'classic', label: "Classic · Pablo's sidebar" },
+  { value: 'classic', label: 'Original' },
   { value: 'sidebar', label: 'Sidebar · attached, translucent' },
   { value: 'floating', label: 'Floating · a card' },
   { value: 'tabs', label: '08 · Tabs · a bar on top' }
 ]
 const BACKGROUNDS: { value: HomeBackground; label: string }[] = [
+  { value: 'spotlight', label: 'Spotlight · soft light and film grain' },
   { value: 'bloom', label: 'Latent bloom · colour out of grain' },
-  { value: 'photo', label: 'Photo · a picture, blurred' },
-  { value: 'mesh', label: 'Mesh · still plum and sand light' },
-  { value: 'spotlight', label: 'Spotlight · one soft light from above' },
-  { value: 'aurora', label: 'Aurora · slow bands of light' },
-  { value: 'grain', label: 'Grain · neutral, film texture' },
-  { value: 'output', label: 'Your latest · your last output, blurred' }
+  { value: 'output', label: 'Latest output · your last result, blurred' }
 ]
 
 function reset(): void {
   resetTuning()
   marNav.id = 'classic'
+  homeBackground.id = 'spotlight'
 }
 
 const THEMES = [

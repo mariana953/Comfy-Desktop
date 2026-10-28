@@ -101,10 +101,6 @@ const tilt = computed(() => ([...t.id].reduce((n, c) => n + c.charCodeAt(0), 0) 
   object-fit: cover;
   box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.55);
   transform: rotate(var(--bt-tilt));
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-:global(.group:hover) .bt-photo {
-  transform: rotate(0deg) scale(1.03);
 }
 .bt-title {
   position: absolute;
@@ -121,10 +117,5 @@ const tilt = computed(() => ([...t.id].reduce((n, c) => n + c.charCodeAt(0), 0) 
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.02;
-}
-@media (prefers-reduced-motion: reduce) {
-  .bt-photo {
-    transition: none;
-  }
 }
 </style>

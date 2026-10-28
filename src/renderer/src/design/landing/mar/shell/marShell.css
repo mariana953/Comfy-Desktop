@@ -744,13 +744,16 @@
     radial-gradient(ellipse 40% 60% at 75% 45%, oklch(0.5 0.05 60 / 0.4), transparent 70%),
     radial-gradient(ellipse 25% 40% at 55% 15%, oklch(0.75 0.08 110 / 0.18), transparent 70%);
 }
-/* Spotlight: one soft light from above, like a stage. Fully neutral. */
+/* Spotlight: one soft light from above, like a stage, with a fine film
+   grain over it. Fully neutral. */
 :root[data-mar-ui='on'] .mar-backdrop.is-spotlight .mar-bg {
-  background: radial-gradient(
-    ellipse 55% 85% at 50% -15%,
-    color-mix(in oklch, var(--color-base-foreground) 16%, transparent),
-    transparent 70%
-  );
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(
+      ellipse 55% 85% at 50% -15%,
+      color-mix(in oklch, var(--color-base-foreground) 16%, transparent),
+      transparent 70%
+    );
 }
 /* Aurora: slow, wide bands of muted light drifting sideways. */
 :root[data-mar-ui='on'] .mar-backdrop.is-aurora .mar-bg {
@@ -978,4 +981,26 @@
 }
 :root[data-mar-ui='on'] .proto-main :is(.ml-auto, .flex):has(> label > input) {
   min-width: 0;
+}
+
+/* Hover never makes a card or its picture bigger (no lift, no zoom). A
+   card answers with its surface, a shade lighter. */
+:root[data-mar-ui='on'] :is(.group, [class*='-card'], [role='button']):hover img,
+:root[data-mar-ui='on']
+  .group:hover
+  :is(.group-hover\:scale-\[1\.04\], .group-hover\:scale-\[1\.03\]) {
+  transform: none !important;
+}
+
+/* Search fields: the text is the UI's 13px, not the browser's 16px. */
+:root .proto-ui.proto-ui.proto-ui label:has(> input) > input,
+:root .proto-ui.proto-ui.proto-ui label:has(> input) > input::placeholder {
+  font-size: 13px;
+}
+
+/* The tuner paints its own surface, so no app-level aside style can turn
+   it dark in light mode. */
+:root .proto-ui.proto-ui.proto-ui[aria-label='UI tuner'] {
+  background-color: var(--color-card-background);
+  color: var(--color-base-foreground);
 }

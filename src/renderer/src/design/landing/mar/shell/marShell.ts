@@ -181,22 +181,15 @@ export type HomeBackground =
   | 'aurora'
   | 'grain'
   | 'output'
-const BACKGROUND_IDS: HomeBackground[] = [
-  'bloom',
-  'photo',
-  'mesh',
-  'spotlight',
-  'aurora',
-  'grain',
-  'output'
-]
 const BG_KEY = 'comfy.design.mar.homeBackground'
 function loadBackground(): HomeBackground {
   try {
     const v = localStorage.getItem(BG_KEY) as HomeBackground | null
-    return v && BACKGROUND_IDS.includes(v) ? v : 'bloom'
+    // Spotlight is the default; retired picks (photo, mesh, aurora, grain)
+    // fall back to it.
+    return v && ['bloom', 'spotlight', 'output'].includes(v) ? v : 'spotlight'
   } catch {
-    return 'bloom'
+    return 'spotlight'
   }
 }
 export const homeBackground = reactive<{ id: HomeBackground }>({ id: loadBackground() })

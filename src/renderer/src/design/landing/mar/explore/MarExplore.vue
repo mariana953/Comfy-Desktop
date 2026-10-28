@@ -285,9 +285,6 @@ const empty = computed(
   object-fit: cover;
   transition: transform 500ms ease;
 }
-.group:hover .mar-ex-media img {
-  transform: scale(1.04);
-}
 .mar-ex-play,
 .mar-ex-time {
   position: absolute;

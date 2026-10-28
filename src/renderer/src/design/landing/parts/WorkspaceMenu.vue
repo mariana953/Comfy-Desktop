@@ -11,6 +11,8 @@ import SignInCard from './SignInCard.vue'
 import WorkspaceAvatar from './WorkspaceAvatar.vue'
 import MarWorkspaceMenu from '../mar/MarWorkspaceMenu.vue'
 import { isMariana } from '../mar/proposal'
+import MarCredits from '../mar/MarCredits.vue'
+import { creditsStyle } from '../mar/credits'
 import { Gauge, KeyRound, ShieldAlert } from 'lucide-vue-next'
 import { go, proto, toast, type Page } from '../useProto'
 import {
@@ -39,8 +41,10 @@ function signOut(): void {
 <template>
   <SignInCard v-if="!proto.signedIn" />
   <div v-else class="flex flex-col gap-1">
+    <!-- Mar's proposal: credits as a chip or meter instead (mar/). -->
+    <MarCredits v-if="isMariana && creditsStyle.id === 'chip'" />
     <Button
-      v-if="shownCredits"
+      v-if="shownCredits && !(isMariana && creditsStyle.id !== 'row')"
       variant="ghost"
       class="h-8 justify-start gap-2.5 px-3 text-base-foreground"
       @click="toast('Manage plan & credits')"
@@ -65,6 +69,7 @@ function signOut(): void {
         <ChevronsUpDown :size="14" class="text-subtle-foreground" />
       </Button>
     </MarWorkspaceMenu>
+    <MarCredits v-if="isMariana && creditsStyle.id === 'meter'" />
     <DropdownMenuRoot v-else :modal="false">
       <DropdownMenuTrigger as-child>
         <Button

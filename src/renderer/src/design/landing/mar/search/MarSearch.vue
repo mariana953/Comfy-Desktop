@@ -315,9 +315,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
   object-fit: cover;
   transition: transform 400ms ease;
 }
-.mar-search-tile:hover img {
-  transform: scale(1.04);
-}
 .mar-search-tile span {
   position: absolute;
   inset: auto 0 0;
