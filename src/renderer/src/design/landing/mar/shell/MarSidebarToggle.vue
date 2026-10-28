@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next'
-import { marShell } from './marShell'
+import { marShell, marShellOn } from './marShell'
 
 /** Opens and closes Mar's floating sidebar. */
 </script>
 
 <template>
   <button
+    v-if="marShellOn"
     type="button"
     :class="['mar-sidebar-toggle', marShell.open ? 'is-open' : 'is-closed']"
     :aria-label="marShell.open ? 'Close sidebar' : 'Open sidebar'"

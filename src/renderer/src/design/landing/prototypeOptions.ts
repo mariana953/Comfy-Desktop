@@ -2,8 +2,8 @@ import { computed, type WritableComputedRef } from 'vue'
 import { proto } from './useProto'
 import { can, MILESTONES } from './milestones'
 import { appsProto, type LookVariant } from './appFlow'
-import { DIRECTIONS, look as designLook, THEMES, type Direction, type Theme } from './look'
-import { PROPOSALS, proposal as pickedProposal, type Proposal } from './mar/proposal'
+import { DIRECTIONS, look as designLook, THEMES, type Theme } from './look'
+import { PROPOSALS, proposal as pickedProposal } from './mar/proposal'
 import { tuner } from './mar/uiTuner'
 
 /**
@@ -34,27 +34,25 @@ const data = computed({
   set: (v) => (proto.live = v === 'mine')
 })
 
-// The visual direction and theme being explored (look.ts, ui/looks/).
-const direction = computed({
-  get: () => designLook.direction,
-  set: (v) => (designLook.direction = v as Direction)
-})
+// The theme being explored (look.ts, ui/looks/); the direction is picked
+// in the tuner.
 const theme = computed({
   get: () => designLook.theme,
   set: (v) => (designLook.theme = v as Theme)
 })
 
-// Pablo's proposal or Mar's (mar/).
-const proposal = computed({
-  get: () => pickedProposal.id,
-  set: (v) => (pickedProposal.id = v as Proposal)
-})
-
-// Opens the UI tuner (mar/UiTuner.vue); nothing to keep checked.
+// One row for the proposal (Pablo's or Mar's, mar/) and the UI: it opens
+// the tuner (mar/UiTuner.vue), where both are picked; nothing to keep checked.
 const tune = computed({
   get: () => (tuner.open ? 'open' : ''),
   set: () => (tuner.open = true)
 })
+const tuneLabel = computed(
+  () =>
+    `${PROPOSALS.find((p) => p.value === pickedProposal.id)?.label ?? 'Pablo'} · ${
+      DIRECTIONS.find((d) => d.value === designLook.direction)?.label ?? 'Void'
+    } · Tune…`
+)
 
 // Milestone 10: how the creator customizes the app's look.
 const look = computed({
@@ -65,13 +63,11 @@ const look = computed({
 export const prototypeGroups = computed<PrototypeGroup[]>(() =>
   [
     { key: 'milestone', label: 'Milestone', model: milestone, options: MILESTONES },
-    { key: 'proposal', label: 'Proposal', model: proposal, options: [...PROPOSALS] },
-    { key: 'direction', label: 'UI', model: direction, options: [...DIRECTIONS] },
     {
       key: 'tune',
-      label: 'Tune',
+      label: 'Proposal and UI',
       model: tune,
-      options: [{ value: 'open', label: 'Tune the UI…' }]
+      options: [{ value: 'open', label: tuneLabel.value }]
     },
     { key: 'theme', label: 'Theme', model: theme, options: [...THEMES] },
     can.value.agent && {

@@ -1,18 +1,18 @@
 /*
  * Mar's shell (see marShell.ts). Scoped to Mar's proposal by the
- * `data-proposal` attribute on <html>; Pablo's stays as it is.
+ * `data-mar-shell` attribute on <html>; Pablo's stays as it is.
  */
 
 /* One flat, dark page: no glass mesh behind the content. */
-:root[data-proposal='mariana'] .proto-shell {
+:root[data-mar-shell='on'] .proto-shell {
   background: var(--color-content-background);
 }
-:root[data-proposal='mariana'] .proto-main::before {
+:root[data-mar-shell='on'] .proto-main::before {
   display: none;
 }
 
 /* The sidebar floats over the page: smoked, blurred, no border. */
-:root[data-proposal='mariana'] .proto-sidebar {
+:root[data-mar-shell='on'] .proto-sidebar {
   position: absolute;
   inset: 8px auto 8px 8px;
   margin: 0;
@@ -24,33 +24,61 @@
 }
 
 /* The content runs edge to edge, under the sidebar's blur. */
-:root[data-proposal='mariana'] .proto-main.proto-main {
+:root[data-mar-shell='on'] .proto-main.proto-main {
   margin: 0;
   border-radius: 0;
   background: var(--color-content-background);
   padding-left: 252px;
   transition: padding-left 320ms cubic-bezier(0.645, 0.045, 0.355, 1);
 }
-:root[data-proposal='mariana'] .mar-closed .proto-main.proto-main {
+:root[data-mar-shell='on'] .mar-closed .proto-main.proto-main {
   padding-left: 56px;
 }
 @media (prefers-reduced-motion: reduce) {
-  :root[data-proposal='mariana'] .proto-main.proto-main {
+  :root[data-mar-shell='on'] .proto-main.proto-main {
     transition: none;
   }
 }
 
 /* A page under a photo: its title sits low on the photo, larger. */
-:root[data-proposal='mariana'] .mar-backdrop ~ div > header:first-child {
+:root[data-mar-shell='on'] .mar-backdrop ~ div > header:first-child {
   padding-top: 168px;
 }
-:root[data-proposal='mariana'] .mar-backdrop ~ div > header:first-child h1 {
+:root[data-mar-shell='on'] .mar-backdrop ~ div > header:first-child h1 {
   font-size: 52px;
   line-height: 1.05;
   letter-spacing: -0.025em;
 }
 
 /* Mariana: no sparkles icon anywhere in her proposal. */
-:root[data-proposal='mariana'] [class*='lucide-sparkles'] {
+:root[data-mar-shell='on'] [class*='lucide-sparkles'] {
   display: none;
+}
+
+/* Glass is for backgrounds only: no shiny glass edge on borders. */
+:root[data-mar-shell='on'] .edge-shine::after {
+  display: none;
+}
+
+/* Credits and the workspace switcher stay pinned at the foot of the
+   sidebar; the rows above scroll if the window is short. */
+:root[data-mar-shell='on'] .proto-sidebar .mt-auto {
+  position: sticky;
+  bottom: -8px;
+  z-index: 1;
+  margin-inline: -8px;
+  margin-bottom: -8px;
+  padding: 12px 8px 8px;
+  background: linear-gradient(to bottom, transparent, rgb(12 12 14 / 0.92) 14px);
+}
+
+/* Short windows (laptops, low-resolution screens): tighter rows so the
+   whole sidebar fits. */
+@media (max-height: 900px) {
+  :root[data-mar-shell='on'] .proto-sidebar button.h-8:has(.sidebar-label) {
+    height: 28px;
+  }
+  :root[data-mar-shell='on'] .proto-sidebar .mt-5\.5 {
+    margin-top: 12px;
+  }
 }
