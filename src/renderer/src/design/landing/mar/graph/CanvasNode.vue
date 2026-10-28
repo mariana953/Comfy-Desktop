@@ -64,7 +64,7 @@ const controls = computed(() => controlsHeight(node, g))
   >
     <header class="sg-head" :data-node-head="node.id" :style="{ height: `${g.head}px` }">
       <component :is="ICONS[node.kind]" v-if="!current" :size="13" class="sg-head-icon" />
-      <span v-else class="mg-head-dot" />
+      <span v-else class="sg-dot" />
       <span class="sg-head-title">{{ node.title }}</span>
       <span v-if="node.badge" class="sg-badge">{{ node.badge }}</span>
     </header>
@@ -127,11 +127,7 @@ const controls = computed(() => controlsHeight(node, g))
           <span class="sg-c-button"><Download :size="12" />{{ c.label }}</span>
         </template>
         <template v-else>
-          <span
-            v-if="c.kind === 'slider'"
-            class="mg-w-fill"
-            :style="{ width: `${c.fill * 100}%` }"
-          />
+          <span v-if="c.kind === 'slider'" class="sg-fill" :style="{ width: `${c.fill * 100}%` }" />
           <span class="sg-c-name">{{ c.name }}</span>
           <span class="sg-c-value">{{ c.value }}</span>
           <ChevronDown v-if="c.kind === 'combo'" :size="12" class="sg-c-arrow" />
@@ -355,6 +351,11 @@ const controls = computed(() => controlsHeight(node, g))
   background: var(--mg-well);
   font-size: 12px;
 }
+.sg-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+}
 .sg-c-name {
   position: relative;
   flex: none;
@@ -478,6 +479,19 @@ const controls = computed(() => controlsHeight(node, g))
   padding: 0 10px;
   border-radius: var(--mg-radius) var(--mg-radius) 0 0;
   background: var(--mg-head-bg);
+}
+.sg-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 999px;
+  background: #777;
+}
+.is-current .sg-fill {
+  background: #4a4a4a;
+}
+:root[data-ds-theme='light'] .is-current .sg-fill {
+  background: #d4d4d4;
 }
 .is-current .sg-head-title {
   color: var(--mg-title);

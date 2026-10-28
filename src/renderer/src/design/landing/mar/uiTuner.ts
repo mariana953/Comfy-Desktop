@@ -141,19 +141,35 @@ export function resetTuning(): void {
 }
 
 const applied = new Set<string>()
+function darkSheet(): HTMLStyleElement {
+  let el = document.getElementById('mar-tuning-dark') as HTMLStyleElement | null
+  if (!el) {
+    el = document.createElement('style')
+    el.id = 'mar-tuning-dark'
+    document.head.append(el)
+  }
+  return el
+}
 watch(
   () => ({ ...tuning }),
   (t) => {
     const style = document.documentElement.style
     for (const name of applied) style.removeProperty(name)
     applied.clear()
+    // Surfaces (contrast) are dark-theme colours: they go in a sheet that
+    // only applies outside light mode, so light keeps its own surfaces.
+    let dark = ''
     for (const knob of KNOBS) {
       const values = (TOKENS[knob.key] as Record<string, Record<string, string>>)[t[knob.key]]
       for (const [name, value] of Object.entries(values ?? {})) {
-        style.setProperty(name, value)
-        applied.add(name)
+        if (knob.key === 'contrast') dark += `${name}: ${value};`
+        else {
+          style.setProperty(name, value)
+          applied.add(name)
+        }
       }
     }
+    darkSheet().textContent = dark ? `:root:not([data-ds-theme='light']) { ${dark} }` : ''
     document.documentElement.dataset.marBorders = t.borders
     document.documentElement.dataset.marShadows = t.shadows
     try {

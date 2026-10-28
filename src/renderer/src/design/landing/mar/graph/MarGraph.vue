@@ -12,8 +12,6 @@ import {
 import {
   Boxes,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   FolderOpen,
   Hand,
@@ -34,8 +32,7 @@ import {
   Workflow,
   X
 } from 'lucide-vue-next'
-import portrait from '../assets/portrait-sun.jpg'
-import { graphMode, graphStyle } from './graphStyle'
+import { graphStyle } from './graphStyle'
 import CanvasNode from './CanvasNode.vue'
 import AssetsPanel from './AssetsPanel.vue'
 import {
@@ -46,50 +43,29 @@ import {
   createCanvas,
   socketY
 } from './canvasData'
-import {
-  GEOMETRY,
-  GROUPS,
-  LINKS,
-  TYPES,
-  createNodes,
-  nodeHeight,
-  portY,
-  rows,
-  widgetHeight,
-  widgetsTop
-} from './graphData'
 
 /**
- * ComfyUI's graph editor as a mock, in Mar's proposal (a build's tab). Two
- * modes: Canvas, a simpler layer over ComfyUI (Node Banana's approach: few
- * nodes, results on the nodes, workflows as nodes), and Nodes, the raw
- * ComfyUI graph. Two looks over both: Glass, the Home's language
- * (translucent borderless nodes on a calm dot grid, a floating bar with
- * Run), and Current, ComfyUI as it looks today (frontend v1) in the same
- * new structure. The canvas pans (drag the background), zooms (wheel, the
- * zoom pill) and nodes move by their title, so it reads as the real thing.
+ * ComfyUI's graph editor as a mock, in Mar's proposal (a build's tab): a
+ * simpler layer over ComfyUI (Node Banana's approach: few nodes, results on
+ * the nodes, workflows as nodes). Two looks: Glass, the Home's language
+ * (translucent borderless nodes on a calm dot grid), and Current, ComfyUI
+ * as it looks today (frontend v1) in the same new structure. The canvas
+ * pans (drag the background), zooms (wheel, the zoom pill) and nodes move
+ * by their title, so it reads as the real thing.
  */
 const { workflow = 'portrait-sun' } = defineProps<{ workflow?: string }>()
 
 const current = computed(() => graphStyle.id === 'current')
-const isCanvas = computed(() => graphMode.id === 'canvas')
-const g = computed(() => GEOMETRY[graphStyle.id])
 const cg = computed(() => CANVAS_GEOMETRY[graphStyle.id])
-const nodes = reactive(createNodes())
 const sNodes = reactive(createCanvas())
-const byId = computed(() => Object.fromEntries(nodes.map((n) => [n.id, n])))
 const sById = computed(() => Object.fromEntries(sNodes.map((n) => [n.id, n])))
 const selected = ref('')
 const labels = ref(false)
 
-/** Every node's box in the mode on screen: the world, minimap, dragging. */
-const boxes = computed(() =>
-  isCanvas.value
-    ? sNodes.map((n) => ({ node: n, h: canvasNodeHeight(n, cg.value) }))
-    : nodes.map((n) => ({ node: n, h: nodeHeight(n, g.value) }))
-)
+/** Every node's box: the world and the minimap. */
+const boxes = computed(() => sNodes.map((n) => ({ node: n, h: canvasNodeHeight(n, cg.value) })))
 
-const canvasLinks = computed(() =>
+const links = computed(() =>
   CANVAS_LINKS.map(([a, ai, b, bi]) => {
     const from = sById.value[a]!
     const to = sById.value[b]!
@@ -103,35 +79,6 @@ const canvasLinks = computed(() =>
       color: SOCKETS[from.outs[ai]!.type]!,
       live: b === 'relight'
     }
-  })
-)
-
-const graphLinks = computed(() =>
-  LINKS.map(([a, ai, b, bi]) => {
-    const from = byId.value[a]!
-    const to = byId.value[b]!
-    const x1 = from.x + from.w
-    const y1 = portY(from, ai, g.value)
-    const x2 = to.x
-    const y2 = portY(to, bi, g.value)
-    const dx = Math.max(50, Math.abs(x2 - x1) * 0.45)
-    return {
-      d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`,
-      color: TYPES[from.outs[ai]!.type]!,
-      live: a === 'ks' || b === 'ks'
-    }
-  })
-)
-const links = computed(() => (isCanvas.value ? canvasLinks.value : graphLinks.value))
-
-const groups = computed(() =>
-  GROUPS.map((gr) => {
-    const ns = gr.nodes.map((id) => byId.value[id]!)
-    const x = Math.min(...ns.map((n) => n.x)) - 20
-    const y = Math.min(...ns.map((n) => n.y)) - 48
-    const r = Math.max(...ns.map((n) => n.x + n.w)) + 20
-    const b = Math.max(...ns.map((n) => n.y + nodeHeight(n, g.value))) + 20
-    return { title: gr.title, x, y, w: r - x, h: b - y }
   })
 )
 
@@ -225,7 +172,7 @@ function onMove(e: PointerEvent): void {
     view.x += dx
     view.y += dy
   } else {
-    const n = (isCanvas.value ? sById.value : byId.value)[drag.id!]!
+    const n = sById.value[drag.id!]!
     n.x += dx / view.k
     n.y += dy / view.k
   }
@@ -266,10 +213,9 @@ onMounted(() => {
 })
 onBeforeUnmount(() => ro?.disconnect())
 
-// Switching look or mode changes the geometry and the layout: frame it
-// again.
+// Switching look changes the geometry and the layout: frame it again.
 watch(
-  () => [graphStyle.id, graphMode.id],
+  () => graphStyle.id,
   () => nextTick(fit)
 )
 const assets = ref(false)
@@ -284,11 +230,6 @@ const JOBS: { title: string; sub: string; progress?: number }[] = [
 
 /** The job rows stay open while anything runs; the pill folds them. */
 const jobsOpen = ref(true)
-
-const MODES = [
-  { id: 'canvas', label: 'Canvas' },
-  { id: 'nodes', label: 'Nodes' }
-] as const
 
 const RAIL: { icon: Component; label: string }[] = [
   { icon: History, label: 'Queue' },
@@ -308,19 +249,6 @@ const RAIL: { icon: Component; label: string }[] = [
       <span class="mg-tab is-on">{{ workflow }}<X :size="12" /></span>
       <span class="mg-tab">Untitled<X :size="12" /></span>
       <Plus :size="14" class="mg-tab-add" />
-      <span class="mg-mode" role="group" aria-label="Canvas mode">
-        <button
-          v-for="m in MODES"
-          :key="m.id"
-          type="button"
-          class="mg-mode-btn"
-          :class="graphMode.id === m.id && 'is-on'"
-          :aria-pressed="graphMode.id === m.id"
-          @click="graphMode.id = m.id"
-        >
-          {{ m.label }}
-        </button>
-      </span>
     </div>
 
     <!-- ComfyUI's rail: its own panels, not the app's navigation. -->
@@ -371,15 +299,6 @@ const RAIL: { icon: Component; label: string }[] = [
           transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`
         }"
       >
-        <div
-          v-for="gr in isCanvas ? [] : groups"
-          :key="gr.title"
-          class="mg-group"
-          :style="{ left: `${gr.x}px`, top: `${gr.y}px`, width: `${gr.w}px`, height: `${gr.h}px` }"
-        >
-          <span class="mg-group-title">{{ gr.title }}</span>
-        </div>
-
         <svg class="mg-links" :viewBox="`0 0 ${world.w} ${world.h}`" aria-hidden="true">
           <template v-if="current">
             <path v-for="(l, i) in links" :key="`s${i}`" :d="l.d" class="mg-link-shade" />
@@ -394,122 +313,20 @@ const RAIL: { icon: Component; label: string }[] = [
           />
         </svg>
 
-        <section
-          v-for="n in isCanvas ? [] : nodes"
+        <CanvasNode
+          v-for="(n, i) in sNodes"
           :key="n.id"
-          class="mg-node"
-          :class="[n.state && `is-${n.state}`, selected === n.id && 'is-selected']"
-          :data-node="n.id"
-          :style="{
-            left: `${n.x}px`,
-            top: `${n.y}px`,
-            width: `${n.w}px`,
-            height: `${nodeHeight(n, g)}px`
-          }"
-          :aria-label="n.title"
-        >
-          <header class="mg-head" :data-node-head="n.id" :style="{ height: `${g.head}px` }">
-            <span v-if="current" class="mg-head-dot" />
-            <span class="mg-head-title">{{ n.title }}</span>
-            <span v-if="n.state === 'running' && !current" class="mg-head-status">
-              <i class="mg-pulse" />{{ n.steps }}
-            </span>
-            <span
-              v-if="n.state === 'running'"
-              class="mg-head-progress"
-              :style="{ width: `${(n.progress ?? 0) * 100}%` }"
-            />
-          </header>
-
-          <!-- Slots: inputs on the left edge, outputs on the right. -->
-          <div
-            v-for="r in rows(n)"
-            :key="r"
-            class="mg-slot"
-            :style="{ top: `${g.head + 6 + (r - 1) * g.row}px`, height: `${g.row}px` }"
-          >
-            <span v-if="n.ins[r - 1]" class="mg-in">
-              <i class="mg-port" :style="{ '--mg-port': TYPES[n.ins[r - 1]!.type] }" />{{
-                n.ins[r - 1]!.name
-              }}
-            </span>
-            <span v-else />
-            <span v-if="n.outs[r - 1]" class="mg-out">
-              {{ n.outs[r - 1]!.name
-              }}<i class="mg-port" :style="{ '--mg-port': TYPES[n.outs[r - 1]!.type] }" />
-            </span>
-          </div>
-
-          <!-- Widgets. -->
-          <div class="mg-widgets" :style="{ top: `${widgetsTop(n, g)}px`, gap: `${g.gap}px` }">
-            <div
-              v-for="w in n.widgets"
-              :key="w.name"
-              class="mg-w"
-              :class="`is-${w.kind}`"
-              :style="{ height: `${widgetHeight(w, g)}px` }"
-            >
-              <p v-if="w.kind === 'text'" class="mg-w-text">{{ w.value }}</p>
-              <template v-else>
-                <span
-                  v-if="w.kind === 'slider'"
-                  class="mg-w-fill"
-                  :style="{ width: `${w.fill * 100}%` }"
-                />
-                <ChevronLeft v-if="w.kind === 'number'" :size="12" class="mg-w-arrow" />
-                <span class="mg-w-name">{{ w.name }}</span>
-                <span v-if="w.kind === 'toggle'" class="mg-w-value">
-                  <template v-if="current">{{ w.value }}</template>
-                  <i class="mg-switch" :class="w.value && 'is-on'" />
-                </span>
-                <span v-else class="mg-w-value">{{ w.value }}</span>
-                <ChevronRight v-if="w.kind === 'number'" :size="12" class="mg-w-arrow" />
-                <ChevronDown v-if="w.kind === 'combo'" :size="12" class="mg-w-arrow" />
-              </template>
-            </div>
-            <figure v-if="n.image" class="mg-preview" :style="{ height: `${n.image}px` }">
-              <img :src="portrait" alt="Latest output" draggable="false" />
-              <span v-if="!current" class="mg-chip">1024 × 1280</span>
-            </figure>
-            <p v-if="n.image" class="mg-preview-caption">
-              {{ current ? '1024 × 1280' : 'portrait-sun_00042.png' }}
-            </p>
-          </div>
-        </section>
-
-        <template v-if="isCanvas">
-          <CanvasNode
-            v-for="(n, i) in sNodes"
-            :key="n.id"
-            :node="n"
-            :g="cg"
-            :current="current"
-            :labels="labels"
-            :selected="selected === n.id"
-            :style="{ '--sg-delay': `${-i * 1.3}s` }"
-          />
-        </template>
+          :node="n"
+          :g="cg"
+          :current="current"
+          :labels="labels"
+          :selected="selected === n.id"
+          :style="{ '--sg-delay': `${-i * 1.3}s` }"
+        />
       </div>
     </div>
 
     <AssetsPanel v-if="assets" @close="assets = false" />
-
-    <!-- Glass: which graph you see, Canvas or the raw Nodes. -->
-    <div v-if="!current" class="mg-bar">
-      <span class="mg-mode" role="group" aria-label="Canvas mode">
-        <button
-          v-for="m in MODES"
-          :key="m.id"
-          type="button"
-          class="mg-mode-btn"
-          :class="graphMode.id === m.id && 'is-on'"
-          :aria-pressed="graphMode.id === m.id"
-          @click="graphMode.id = m.id"
-        >
-          {{ m.label }}
-        </button>
-      </span>
-    </div>
 
     <!-- Run and what is running, as designed in ComfyUI_frontend#17679:
          the action bar (batch count, the inverted split Run, the panel
@@ -630,7 +447,6 @@ const RAIL: { icon: Component; label: string }[] = [
           <Hand :size="14" />
         </button>
         <button
-          v-if="isCanvas"
           type="button"
           class="mg-tool"
           :class="labels && 'is-on'"
@@ -742,241 +558,6 @@ const RAIL: { icon: Component; label: string }[] = [
   opacity: 0.95;
 }
 
-/* Groups: a faint tinted area with its title, no outline. */
-.mg-group {
-  position: absolute;
-  border-radius: 26px;
-  background: color-mix(in oklch, var(--color-base-foreground) 3%, transparent);
-}
-.mg-group-title {
-  position: absolute;
-  top: 15px;
-  left: 20px;
-  color: var(--mg-dim);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* ── Nodes (Glass): translucent, borderless, no lift. ── */
-.mg-node {
-  position: absolute;
-  border-radius: var(--mg-radius);
-  background: var(--mg-node);
-  backdrop-filter: blur(24px) saturate(1.15);
-}
-.mg-node.is-selected {
-  background: var(--mg-node-on);
-  box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--color-base-foreground) 36%, transparent);
-}
-.mg-head {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 14px 0 16px;
-  overflow: hidden;
-  border-radius: var(--mg-radius) var(--mg-radius) 0 0;
-  cursor: grab;
-}
-.mg-head-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.mg-head-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--mg-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.mg-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--color-status-running, #4ade80);
-}
-.mg-head-progress {
-  position: absolute;
-  bottom: 0;
-  left: 16px;
-  max-width: calc(100% - 32px);
-  height: 2px;
-  border-radius: 2px;
-  background: var(--color-base-foreground);
-  opacity: 0.55;
-}
-
-.mg-slot {
-  position: absolute;
-  right: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--mg-muted);
-  font-size: 12px;
-}
-.mg-in,
-.mg-out {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.mg-port {
-  width: 9px;
-  height: 9px;
-  flex: none;
-  border-radius: 999px;
-  background: var(--mg-port);
-  box-shadow: 0 0 0 2.5px var(--mg-ring);
-}
-.mg-in .mg-port {
-  margin-left: -4.5px;
-}
-.mg-out .mg-port {
-  margin-right: -4.5px;
-}
-
-/* Widgets: one quiet well per value, name left, value right. */
-.mg-widgets {
-  position: absolute;
-  right: 10px;
-  left: 10px;
-  display: flex;
-  flex-direction: column;
-}
-.mg-w {
-  position: relative;
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px 0 12px;
-  overflow: hidden;
-  border-radius: var(--mg-radius-in);
-  background: var(--mg-well);
-  font-size: 12px;
-}
-.mg-w-name {
-  position: relative;
-  flex: none;
-  max-width: 55%;
-  overflow: hidden;
-  color: var(--mg-dim);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.mg-w-value {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  color: var(--mg-text);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.mg-w.is-toggle .mg-w-value {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.mg-w-arrow {
-  position: relative;
-  flex: none;
-  color: var(--mg-dim);
-  opacity: 0.55;
-}
-.mg-w.is-number .mg-w-arrow:first-child {
-  margin-left: -4px;
-}
-.mg-w-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
-}
-.mg-w.is-text {
-  align-items: flex-start;
-  padding: 10px 12px;
-}
-.mg-w-text {
-  margin: 0;
-  color: var(--mg-text);
-  font-size: 12.5px;
-  line-height: 18px;
-  user-select: text;
-}
-.mg-switch {
-  position: relative;
-  width: 26px;
-  height: 16px;
-  border-radius: 999px;
-  background: color-mix(in oklch, var(--color-base-foreground) 16%, transparent);
-}
-.mg-switch::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: var(--color-content-background);
-  transition: transform 160ms ease;
-}
-.mg-switch.is-on {
-  background: var(--color-inverted-background);
-}
-.mg-switch.is-on::after {
-  background: var(--color-inverted-foreground);
-  transform: translateX(10px);
-}
-
-/* Output preview: the image, a grey chip on it, the file under it. */
-.mg-preview {
-  position: relative;
-  flex: none;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 12px;
-}
-.mg-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.mg-chip {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  display: inline-flex;
-  height: 20px;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: var(--color-media-overlay);
-  backdrop-filter: blur(12px);
-  color: rgb(255 255 255 / 0.92);
-  font-size: 11px;
-  font-weight: 500;
-}
-.mg-preview-caption {
-  height: 16px;
-  margin: -2px 0 0;
-  color: var(--mg-dim);
-  font-size: 11.5px;
-  text-align: center;
-}
-
 /* ── Floating chrome (Glass): rail, Run bar, controls. ── */
 .mg-rail {
   position: absolute;
@@ -1013,54 +594,6 @@ const RAIL: { icon: Component; label: string }[] = [
 :root .proto-ui.proto-ui.proto-ui .mg-rail-btn:hover {
   background: var(--mg-hover);
   color: var(--mg-text);
-}
-
-.mg-bar {
-  position: absolute;
-  top: calc(var(--mg-top) + 16px);
-  left: 50%;
-  z-index: 3;
-  display: flex;
-  height: 44px;
-  align-items: center;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--mg-float);
-  backdrop-filter: blur(24px) saturate(1.2);
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-.mg-mode {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 999px;
-  background: var(--mg-well);
-}
-:root .proto-ui.proto-ui.proto-ui .mg-mode-btn {
-  height: 26px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--mg-muted);
-  font-size: 12px;
-  font-weight: 500;
-}
-:root .proto-ui.proto-ui.proto-ui .mg-mode-btn.is-on {
-  background: var(--mg-hover);
-  color: var(--mg-text);
-}
-.mg-bar > .mg-mode {
-  margin-left: 0;
-}
-.mg-topbar > .mg-mode {
-  align-self: center;
-  margin-left: auto;
-  border-radius: 6px;
-  background: var(--mg-chrome-2);
-}
-:root .proto-ui.proto-ui.proto-ui .mg-topbar .mg-mode-btn {
-  height: 24px;
-  border-radius: 4px;
 }
 .mg-tools-sep {
   width: 1px;
@@ -1533,18 +1066,6 @@ const RAIL: { icon: Component; label: string }[] = [
   flex: 1;
   background: none;
 }
-.is-current .mg-group {
-  border-radius: 4px;
-  background: rgb(51 85 136 / 0.22);
-  box-shadow: inset 0 0 0 1px rgb(80 120 180 / 0.5);
-}
-.is-current .mg-group-title {
-  top: 6px;
-  left: 10px;
-  color: var(--mg-text);
-  font-size: 18px;
-  font-weight: 400;
-}
 .mg-link-shade {
   fill: none;
   stroke: rgb(0 0 0 / 0.5);
@@ -1556,125 +1077,6 @@ const RAIL: { icon: Component; label: string }[] = [
 .is-current .mg-link {
   stroke-width: 3;
   opacity: 1;
-}
-.is-current .mg-node {
-  backdrop-filter: none;
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.55),
-    3px 4px 10px rgb(0 0 0 / 0.35);
-}
-:root[data-ds-theme='light'] .is-current .mg-node {
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.18),
-    2px 3px 8px rgb(0 0 0 / 0.12);
-}
-.is-current .mg-node.is-selected {
-  box-shadow:
-    0 0 0 1.5px #fff,
-    3px 4px 10px rgb(0 0 0 / 0.35);
-}
-:root[data-ds-theme='light'] .is-current .mg-node.is-selected {
-  box-shadow: 0 0 0 1.5px #333;
-}
-.is-current .mg-node.is-running {
-  box-shadow:
-    0 0 0 2px #00d26a,
-    3px 4px 10px rgb(0 0 0 / 0.35);
-}
-.is-current .mg-head {
-  padding: 0 10px;
-  background: var(--mg-head-bg);
-}
-.is-current .mg-head-title {
-  color: var(--mg-title);
-  font-weight: 400;
-}
-.mg-head-dot {
-  width: 10px;
-  height: 10px;
-  flex: none;
-  border-radius: 999px;
-  background: #777;
-}
-.is-current .mg-head-progress {
-  top: 0;
-  bottom: auto;
-  left: 0;
-  max-width: none;
-  height: 3px;
-  border-radius: 0;
-  background: #00d26a;
-  opacity: 1;
-}
-.is-current .mg-slot {
-  font-size: 11.5px;
-}
-.is-current .mg-in,
-.is-current .mg-out {
-  gap: 8px;
-}
-.is-current .mg-in {
-  padding-left: 10px;
-}
-.is-current .mg-out {
-  padding-right: 10px;
-}
-.is-current .mg-port {
-  box-shadow: none;
-}
-.is-current .mg-in .mg-port,
-.is-current .mg-out .mg-port {
-  margin: 0;
-}
-.is-current .mg-widgets {
-  right: 12px;
-  left: 12px;
-}
-.is-current .mg-w {
-  gap: 6px;
-  padding: 0 8px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--mg-well-line);
-  font-size: 11.5px;
-}
-.is-current .mg-w-arrow {
-  color: var(--mg-text);
-  opacity: 0.8;
-}
-.is-current .mg-w.is-number .mg-w-arrow:first-child {
-  margin-left: 0;
-}
-.is-current .mg-w-fill {
-  background: #4a4a4a;
-}
-:root[data-ds-theme='light'] .is-current .mg-w-fill {
-  background: #d4d4d4;
-}
-.is-current .mg-w.is-text {
-  padding: 6px 8px;
-  border-radius: 4px;
-  box-shadow: none;
-}
-.is-current .mg-w-text {
-  font-size: 12px;
-  line-height: 16px;
-}
-.is-current .mg-switch {
-  width: 10px;
-  height: 10px;
-  background: #888;
-}
-.is-current .mg-switch::after {
-  display: none;
-}
-.is-current .mg-switch.is-on {
-  background: #89b;
-}
-.is-current .mg-preview {
-  border-radius: 0;
-}
-.is-current .mg-preview-caption {
-  color: var(--mg-text);
 }
 
 /* Current: the same run block on ComfyUI's chrome, with its hairline

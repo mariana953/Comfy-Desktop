@@ -1055,3 +1055,70 @@
   background-color: var(--color-card-background);
   color: var(--color-base-foreground);
 }
+
+/* The sliding pill behind scope tabs takes the tabs' round shape. */
+:root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) > .mar-tab-pill {
+  border-radius: 999px;
+}
+
+/* Form fields (inside cards: settings, dialogs) are not filters: a soft
+   rounded field, 40 tall, the same lifted surface, no edge. The pill shape
+   stays for filter bars. */
+:root[data-mar-ui='on']
+  .proto-main
+  :is(.rounded-card, [class*='rounded-card'])
+  :is(button[role='combobox'], label:has(> input), .h-8.border-border-default) {
+  height: 40px;
+  border-radius: 12px;
+  padding-inline: 14px 12px;
+}
+:root[data-mar-ui='on'] .proto-main :is(.rounded-card, [class*='rounded-card']) textarea {
+  border-color: transparent;
+  border-radius: 12px;
+  background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+
+/* Secondary buttons (Invite, Connect, Docs…): the same lifted surface as
+   fields, no border, no lit edge; a shade lighter on hover. */
+:root[data-mar-ui='on'] .proto-ui button.border-border-strong.bg-card-background-hover {
+  border-color: transparent;
+  background-color: color-mix(in oklch, var(--color-base-foreground) 9%, transparent);
+  box-shadow: none;
+  backdrop-filter: blur(16px);
+}
+:root[data-mar-ui='on'] .proto-ui button.border-border-strong.bg-card-background-hover:hover {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 13%, transparent);
+}
+:root[data-mar-ui='on']
+  .proto-main
+  :is(.rounded-card, [class*='rounded-card'])
+  button.border-border-strong.bg-card-background-hover {
+  height: 40px;
+  border-radius: 12px;
+}
+
+/* The prompt's faint edge is an outline, not a shadow, so it stays with
+   Shadows: Off and in every theme. */
+:root[data-mar-ui='on'] .proto-main .mar-prompt.mar-prompt {
+  outline: 1px solid color-mix(in oklch, var(--color-base-foreground) 9%, transparent);
+  outline-offset: -1px;
+}
+:root[data-mar-ui='on'] .proto-main .mar-prompt.mar-prompt:focus-within {
+  outline-color: color-mix(in oklch, var(--color-base-foreground) 14%, transparent);
+}
+
+/* Shadows: On is a soft, short lift, never a dark pool under a card. */
+:root[data-mar-ui='on']:not([data-mar-shadows='off']) {
+  --shadow-elev: 0 1px 2px oklch(0 0 0 / 0.12), 0 6px 16px -6px oklch(0 0 0 / 0.18);
+  --shadow-elev-hover: 0 2px 4px oklch(0 0 0 / 0.14), 0 10px 22px -8px oklch(0 0 0 / 0.22);
+}
+:root[data-mar-ui='on']:not([data-mar-borders='glass']) .edge-shine.shadow-elev {
+  box-shadow: var(--shadow-elev);
+}
+:root[data-mar-ui='on']:not([data-mar-borders='glass']) .edge-shine.shadow-elev:hover {
+  box-shadow: var(--shadow-elev-hover);
+}
+:root[data-mar-ui='on'][data-ds-theme='light']:not([data-mar-shadows='off']) {
+  --shadow-elev: 0 1px 2px oklch(0 0 0 / 0.05), 0 6px 16px -6px oklch(0 0 0 / 0.08);
+  --shadow-elev-hover: 0 2px 4px oklch(0 0 0 / 0.06), 0 10px 22px -8px oklch(0 0 0 / 0.1);
+}

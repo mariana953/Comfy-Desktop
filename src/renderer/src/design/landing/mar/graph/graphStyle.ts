@@ -32,31 +32,3 @@ watch(
     }
   }
 )
-
-/** Which graph the editor shows: Canvas, the simpler layer over ComfyUI
- *  (few nodes, previews on the nodes, workflows as nodes), or Nodes, the
- *  raw ComfyUI graph underneath. */
-export type GraphMode = 'canvas' | 'nodes'
-
-const MODE_KEY = 'comfy.design.mar.graphMode'
-
-export const graphMode = reactive<{ id: GraphMode }>({
-  id: (() => {
-    try {
-      return localStorage.getItem(MODE_KEY) === 'nodes' ? 'nodes' : 'canvas'
-    } catch {
-      return 'canvas'
-    }
-  })()
-})
-
-watch(
-  () => graphMode.id,
-  (id) => {
-    try {
-      localStorage.setItem(MODE_KEY, id)
-    } catch {
-      // Storage blocked: the pick lasts for this window only.
-    }
-  }
-)
