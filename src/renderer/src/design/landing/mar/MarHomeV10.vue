@@ -11,7 +11,7 @@ import RecentWork from '../parts/RecentWork.vue'
 import StartPaths from '../parts/StartPaths.vue'
 import StarterCards from '../parts/StarterCards.vue'
 import TemplatesRow from '../parts/TemplatesRow.vue'
-import SpacesRow from '../parts/space/SpacesRow.vue'
+import MarSpacesRow from './MarSpacesRow.vue'
 import Button from '../ui/Button.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
 import SectionHeader from '../ui/SectionHeader.vue'
@@ -235,7 +235,7 @@ const recent = computed(() =>
         <LaunchBanner v-else-if="parts.news === 'banner'" />
         <LaunchesRow v-else />
       </template>
-      <SpacesRow v-if="can.spaces && proto.signedIn" />
+      <MarSpacesRow v-if="can.spaces && proto.signedIn" />
     </div>
   </div>
   <div
