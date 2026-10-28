@@ -821,3 +821,15 @@
 :root[data-mar-ui='on'][data-mar-borders='glass'] .edge-shine:hover {
   --shine: 0.08;
 }
+
+/* Page photos stay a hint of colour behind the header, not a picture
+   competing with the UI: fainter, more blurred, and gone sooner. */
+:root[data-mar-ui='on'] .mar-backdrop:not(.is-bloom) img {
+  opacity: 0.3;
+  filter: blur(48px) saturate(0.7);
+  transform: scale(1.2);
+}
+:root[data-mar-ui='on'] .mar-backdrop.mar-backdrop:not(.is-bloom) {
+  height: 460px;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 100%);
+}
