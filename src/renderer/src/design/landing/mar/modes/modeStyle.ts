@@ -2,14 +2,14 @@ import { reactive, watch } from 'vue'
 
 /** How the Create / Build / Agent switch looks in Mar's proposal
  *  (UI Playground › Mode switch), until one is decided. */
-export type ModeStyle = 'pablo' | 'segmented' | 'underline' | 'menu' | 'icons'
+export type ModeStyle = 'pablo' | 'stack' | 'title' | 'split' | 'foot'
 
 export const MODE_STYLES: { value: ModeStyle; label: string }[] = [
   { value: 'pablo', label: 'Pill · picked one named (today)' },
-  { value: 'segmented', label: 'Segmented · all named, equal' },
-  { value: 'underline', label: 'Underline · text tabs' },
-  { value: 'menu', label: 'Menu · one button, pick from a list' },
-  { value: 'icons', label: 'Icons · quiet, names on hover' }
+  { value: 'stack', label: 'Stack · three rows that say what each does' },
+  { value: 'title', label: 'Title · the mode is the heading' },
+  { value: 'split', label: 'Split · Create or Build, Agent apart' },
+  { value: 'foot', label: 'Foot · switch at the bottom, by the workspace' }
 ]
 
 const KEY = 'comfy.design.mar.modeStyle'
