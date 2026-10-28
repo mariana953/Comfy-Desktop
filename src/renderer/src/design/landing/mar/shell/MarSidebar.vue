@@ -155,7 +155,7 @@ const open = computed(() => !marNav.collapsed)
         class="mar-side-lens-btn"
         @click="lens(l.value)"
       >
-        <component :is="l.icon" :size="15" /><span v-if="open">{{ l.label }}</span>
+        <component :is="l.icon" :size="16" />
       </button>
     </div>
 
