@@ -183,11 +183,11 @@ const recent = computed(() =>
 /* A compact prompt box: one line to type in, tighter padding, so the page
    starts higher. It grows as the text does. */
 .mar-prompt {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 12px;
+  padding-bottom: 10px;
 }
 .mar-prompt :deep(textarea) {
-  height: calc(1lh + 6px);
+  height: calc(1lh + 18px);
   field-sizing: content;
   max-height: 6lh;
 }
