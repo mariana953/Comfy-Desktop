@@ -8,7 +8,9 @@ import GraphPreview from './GraphPreview.vue'
 import DeployedTo from './space/DeployedTo.vue'
 import { openDeploy } from '../spaces'
 import type { ProjectWorkflow } from '../gallery'
-import { INSTANCES } from '../mock'
+import { INSTANCES, thumb } from '../mock'
+import { isMariana } from '../mar/proposal'
+import { cover } from '../mar/cover'
 import { AppWindow, EllipsisVertical, Play, Rocket } from 'lucide-vue-next'
 import { startFromName } from '../appFlow'
 import { can } from '../milestones'
@@ -85,7 +87,16 @@ function open(): void {
       </DropdownMenuRoot>
     </template>
     <template #media>
+      <!-- Mar's proposal can show what the workflow makes instead. -->
+      <img
+        v-if="isMariana && cover.id === 'output'"
+        :src="thumb(wf.thumbId)"
+        alt=""
+        loading="lazy"
+        class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+      />
       <GraphPreview
+        v-else
         :thumb-id="wf.thumbId"
         :category="wf.category"
         :zoom

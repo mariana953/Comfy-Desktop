@@ -53,17 +53,18 @@
   animation: mar-fade 420ms ease-out both;
 }
 
-/* Cards and pills lift a touch under the pointer. */
+/* Pills lift a touch under the pointer. Cards don't: their image zooms in
+   instead, so a grid stays still. */
 @media (hover: hover) and (pointer: fine) {
-  :root[data-mar-ui='on'] .proto-main :is(.mar-surface, [role='button'].group) {
+  :root[data-mar-ui='on'] .proto-main .mar-surface {
     transition:
       transform 240ms var(--mar-ease),
       background-color 200ms ease;
   }
-  :root[data-mar-ui='on'] .proto-main :is(.mar-surface, [role='button'].group):hover {
+  :root[data-mar-ui='on'] .proto-main .mar-surface:hover {
     transform: translateY(-2px);
   }
-  :root[data-mar-ui='on'] .proto-main :is(.mar-surface, [role='button'].group):active {
+  :root[data-mar-ui='on'] .proto-main .mar-surface:active {
     transform: translateY(0) scale(0.99);
   }
 }
@@ -146,7 +147,7 @@
   :root[data-mar-ui='on'] .proto-main .bg-status-running.size-1\.5::after {
     animation: none !important;
   }
-  :root[data-mar-ui='on'] .proto-main :is(.mar-surface, [role='button'].group):hover {
+  :root[data-mar-ui='on'] .proto-main .mar-surface:hover {
     transform: none;
   }
 }

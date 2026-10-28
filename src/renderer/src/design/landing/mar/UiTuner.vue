@@ -7,6 +7,7 @@ import { isMariana, proposal, PROPOSALS } from './proposal'
 import { SURFACES, surface } from './shell/surface'
 import { homeBackground, marNav, type HomeBackground, type MarNav } from './shell/marShell'
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
+import { COVERS, cover } from './cover'
 
 /** The UI tuner panel (Prototype menu › Proposal and UI): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
@@ -160,6 +161,27 @@ function set(key: keyof Tuning, value: string): void {
             @click="marNav.id = n.value"
           >
             {{ n.label }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Workflow cover</span>
+        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+          <button
+            v-for="c in COVERS"
+            :key="c.value"
+            type="button"
+            :aria-pressed="cover.id === c.value"
+            :class="[
+              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              cover.id === c.value
+                ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                : 'text-muted-foreground hover:text-base-foreground'
+            ]"
+            @click="cover.id = c.value"
+          >
+            {{ c.label }}
           </button>
         </div>
       </div>
