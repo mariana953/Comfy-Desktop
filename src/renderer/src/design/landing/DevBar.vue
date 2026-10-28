@@ -5,6 +5,7 @@ import SegmentedControl from './ui/SegmentedControl.vue'
 import { proto, toggleHome } from './useProto'
 import { can, MILESTONES } from './milestones'
 import { prototypeGroups } from './prototypeOptions'
+import { isMariana } from './mar/proposal'
 
 /** Prototype controls, bottom-left (the browser preview; in the app they're
  *  the title bar's Prototype menu, so only the shortcuts stay here): the
@@ -35,8 +36,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <!-- Small button; hovering opens the panel above it. -->
+  <!-- Mar's proposal: in the title bar instead (mar/MarProtoMenu.vue). -->
   <div
-    v-if="!inTitleBar"
+    v-if="!inTitleBar && !isMariana"
     role="toolbar"
     aria-label="Prototype controls"
     :class="['fixed bottom-2.5 z-40 flex items-end gap-1.5', can.builds ? 'left-67' : 'left-4']"

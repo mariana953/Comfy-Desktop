@@ -133,7 +133,11 @@ const recent = computed(() =>
         </SectionHeader>
         <StarterCards />
       </section>
-      <TemplatesRow v-else title="Example workflows" class="mt-0!" />
+      <TemplatesRow
+        v-else-if="parts.examples === 'pablo'"
+        title="Example workflows"
+        class="mt-0!"
+      />
 
       <section v-if="parts.recent === 'mar' && recent.length" class="mt-10">
         <SectionHeader title="Recently used" />

@@ -4,7 +4,6 @@ import Greeting from '../parts/Greeting.vue'
 import PromptBox from '../parts/PromptBox.vue'
 import StartPaths from '../parts/StartPaths.vue'
 import StarterCards from '../parts/StarterCards.vue'
-import LaunchesRow from '../parts/LaunchesRow.vue'
 import SpacesRow from '../parts/space/SpacesRow.vue'
 import Button from '../ui/Button.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
@@ -12,6 +11,7 @@ import SectionHeader from '../ui/SectionHeader.vue'
 import BuildTile from './BuildTile.vue'
 import CreateMenu from './CreateMenu.vue'
 import WorkflowCard from './WorkflowCard.vue'
+import LaunchBanner from './LaunchBanner.vue'
 import { allWorkflows } from '../gallery'
 import { go, hostActions, instanceById, instances, proto, recentInstances } from '../useProto'
 import { can } from '../milestones'
@@ -30,6 +30,7 @@ import portraitWindow from './assets/portrait-window.jpg'
  *   - examples as Pablo's hand of cards (interactive, his thumbnails)
  *   - recent workflows as cards with a meta line and a value on the right
  *   - one photo series (Magnific stock) so the page reads as a whole
+ *   - What's new as one branded banner at a time (LaunchBanner)
  */
 const RECENT_ART = [portraitSeaside, forestFog, portraitGrass, hillsFog, portraitWindow]
 
@@ -115,7 +116,7 @@ const recent = computed(() =>
         </ScrollRow>
       </section>
 
-      <LaunchesRow v-if="can.explore" />
+      <LaunchBanner v-if="can.explore" />
       <SpacesRow v-if="can.spaces && proto.signedIn" />
     </div>
   </div>

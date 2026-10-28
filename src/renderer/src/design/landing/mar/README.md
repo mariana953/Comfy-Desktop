@@ -26,6 +26,9 @@ images, focus colour), saved per browser. The knobs live in `uiTuner.ts`.
   column as the prompt and the builds.
 - Recent workflows are cards with a meta line and a value on the right
   (build, when), with one photo series (Magnific stock, `assets/`).
+- What's new is one full-width branded banner at a time (`LaunchBanner.vue`):
+  a looping visual, one centred message, a white CTA, dots. Gradients stand in
+  until the brand-kit loops from Magnific land in `assets/`.
 - The Agent lens uses a chat bubble icon.
 
 ## How it stays apart

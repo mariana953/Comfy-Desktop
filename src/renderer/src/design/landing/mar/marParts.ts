@@ -15,7 +15,7 @@ export interface Parts {
   actions: Side
   top: Side
   builds: Side
-  examples: Side
+  examples: Side | 'off'
   recent: Side
 }
 
@@ -43,7 +43,11 @@ export const PART_KNOBS: PartKnob[] = [
   { key: 'actions', label: 'Top right', options: side('ComfyUI + Deploy', 'Create menu') },
   { key: 'top', label: 'Greeting and prompt', options: side('Pablo', 'Tighter') },
   { key: 'builds', label: 'Builds on Home', options: side('Rows', 'Tiles') },
-  { key: 'examples', label: 'Example workflows', options: side('Row', 'Hand of cards') },
+  {
+    key: 'examples',
+    label: 'Example workflows on Home',
+    options: [...side('Row', 'Hand of cards'), { value: 'off', label: 'Agent only' }]
+  },
   { key: 'recent', label: 'Recently used', options: side('Pablo', 'Photo cards') }
 ]
 
@@ -53,11 +57,12 @@ const DEFAULTS: Parts = {
   actions: 'mar',
   top: 'mar',
   builds: 'mar',
-  examples: 'mar',
+  examples: 'off',
   recent: 'mar'
 }
 
-const KEY = 'comfy.design.mar.parts'
+// v2: Example workflows left Home (Agent only) by default.
+const KEY = 'comfy.design.mar.parts.v2'
 
 function load(): Parts {
   try {

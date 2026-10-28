@@ -5,6 +5,8 @@ import ComfyCLogo from '../../../components/icons/ComfyCLogo.vue'
 import { toast } from '../useProto'
 import { can } from '../milestones'
 import { runTitleBarCommand, titleBarState } from '../titleBar'
+import MarProtoMenu from '../mar/MarProtoMenu.vue'
+import { isMariana } from '../mar/proposal'
 
 /**
  * Browser preview only: a stand-in for the desktop app's title bar, laid
@@ -49,6 +51,7 @@ import { runTitleBarCommand, titleBarState } from '../titleBar'
       </button>
     </template>
     <span class="ml-auto flex items-center gap-3.5 text-muted-foreground">
+      <MarProtoMenu v-if="isMariana" />
       <Bell :size="15" />
       <MessageSquarePlus :size="15" />
       <Download :size="15" />
