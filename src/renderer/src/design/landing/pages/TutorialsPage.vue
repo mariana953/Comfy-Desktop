@@ -7,6 +7,8 @@ import SearchInput from '../ui/SearchInput.vue'
 import SegmentedControl from '../ui/SegmentedControl.vue'
 import TutorialCard from '../parts/TutorialCard.vue'
 import { TUTORIALS, type Tutorial } from '../mock'
+import { isMariana } from '../mar/proposal'
+import MarLearn from '../mar/learn/MarLearn.vue'
 
 const cat = ref<'All' | Tutorial['category']>('All')
 const q = ref('')
@@ -18,7 +20,8 @@ const list = computed(() =>
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-300 px-10 pb-16">
+  <MarLearn v-if="isMariana" />
+  <div v-else class="mx-auto w-full max-w-300 px-10 pb-16">
     <PageHeader
       title="Tutorials"
       description="Learn ComfyUI with hands-on lessons, from your first node graph to VFX, animation and ads."

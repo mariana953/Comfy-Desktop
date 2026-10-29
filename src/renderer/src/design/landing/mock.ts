@@ -829,6 +829,10 @@ export interface Tutorial {
   kind: 'graph' | 'app'
   thumbId: string
   minutes: number
+  /** How much you've watched, 0 to 1 (1 = watched). Basics lessons run in
+   *  the order listed. */
+  progress?: number
+  isNew?: boolean
 }
 
 export const TUTORIALS: Tutorial[] = [
@@ -838,7 +842,8 @@ export const TUTORIALS: Tutorial[] = [
     category: 'Basics',
     kind: 'graph',
     thumbId: 'image_z_image_turbo',
-    minutes: 8
+    minutes: 8,
+    progress: 1
   },
   {
     title: 'Text to image and image to image',
@@ -846,7 +851,8 @@ export const TUTORIALS: Tutorial[] = [
     category: 'Basics',
     kind: 'graph',
     thumbId: 'image_flux2',
-    minutes: 12
+    minutes: 12,
+    progress: 1
   },
   {
     title: 'LoRAs, style transfer and ControlNets',
@@ -854,7 +860,8 @@ export const TUTORIALS: Tutorial[] = [
     category: 'Basics',
     kind: 'graph',
     thumbId: 'image_krea2_turbo_t2i',
-    minutes: 15
+    minutes: 15,
+    progress: 0.4
   },
   {
     title: 'Inpainting, outpainting and upscaling',
@@ -886,7 +893,8 @@ export const TUTORIALS: Tutorial[] = [
     category: 'VFX',
     kind: 'graph',
     thumbId: 'image_qwen_image_edit_2511',
-    minutes: 16
+    minutes: 16,
+    isNew: true
   },
   {
     title: 'Character sheet',
@@ -902,7 +910,8 @@ export const TUTORIALS: Tutorial[] = [
     category: 'Animations',
     kind: 'graph',
     thumbId: 'video_minimax_h3_i2v',
-    minutes: 13
+    minutes: 13,
+    progress: 0.65
   },
   {
     title: 'Product placement in one click',
@@ -926,7 +935,8 @@ export const TUTORIALS: Tutorial[] = [
     category: 'Ads',
     kind: 'graph',
     thumbId: 'api_google_nano_banana2_image_edit',
-    minutes: 6
+    minutes: 6,
+    isNew: true
   }
 ]
 
