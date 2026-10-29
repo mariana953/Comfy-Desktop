@@ -9,6 +9,8 @@ import { envById } from './env'
 import { allWorkflows } from '../../gallery'
 import { go, hostActions, instances, proto, toast, type Page } from '../../useProto'
 import { PROJECTS } from '../../mock'
+import { isMariana } from '../../mar/proposal'
+import MarGroupTitle from '../../mar/shell/MarGroupTitle.vue'
 
 /**
  * The organising list under Create.
@@ -55,7 +57,13 @@ const itemClass = (page: Page): string =>
 <template>
   <div v-if="show" class="mt-5.5 flex shrink-0 flex-col">
     <div class="flex h-6.5 items-center justify-between pr-1 pl-3">
-      <span class="text-ui font-medium tracking-wider text-subtle-foreground uppercase">{{
+      <MarGroupTitle
+        v-if="isMariana"
+        :title="title"
+        :active="overviewActive"
+        @click="go(overviewPage)"
+      />
+      <span v-else class="text-ui font-medium tracking-wider text-subtle-foreground uppercase">{{
         title
       }}</span>
       <Tooltip :content="proto.projects ? 'New project' : 'New build'">
@@ -73,6 +81,7 @@ const itemClass = (page: Page): string =>
     </div>
     <!-- Overview of the whole group -->
     <Button
+      v-if="!isMariana"
       variant="ghost"
       :aria-current="overviewActive ? 'page' : undefined"
       :class="

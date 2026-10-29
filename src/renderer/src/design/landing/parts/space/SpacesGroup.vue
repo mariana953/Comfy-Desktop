@@ -6,6 +6,8 @@ import { cn } from '../../ui/cn'
 import SpaceMark from './SpaceMark.vue'
 import { SPACES } from '../../spaces'
 import { go, proto, type Page } from '../../useProto'
+import { isMariana } from '../../mar/proposal'
+import MarGroupTitle from '../../mar/shell/MarGroupTitle.vue'
 
 /** Sidebar group in the Spaces variant: the spaces this workspace runs. */
 const itemClass = (active: boolean): string =>
@@ -18,7 +20,13 @@ const itemClass = (active: boolean): string =>
 <template>
   <div v-if="proto.signedIn" class="mt-5.5 flex shrink-0 flex-col">
     <div class="flex h-6.5 items-center justify-between pr-1 pl-3">
-      <span class="text-ui font-medium tracking-wider text-subtle-foreground uppercase"
+      <MarGroupTitle
+        v-if="isMariana"
+        title="Spaces"
+        :active="proto.page === 'spaces'"
+        @click="go('spaces')"
+      />
+      <span v-else class="text-ui font-medium tracking-wider text-subtle-foreground uppercase"
         >Spaces</span
       >
       <Tooltip content="New space">
@@ -32,6 +40,7 @@ const itemClass = (active: boolean): string =>
       </Tooltip>
     </div>
     <Button
+      v-if="!isMariana"
       variant="ghost"
       :aria-current="proto.page === 'spaces' ? 'page' : undefined"
       :class="
