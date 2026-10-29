@@ -4,13 +4,15 @@ import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka
 import { assetView, type AssetLayout, type AssetSize } from './assetView'
 
 /** The View menu (Assets, Mar's proposal): layout, size and whether the
- *  name and details show under each picture. */
-const LAYOUTS: { value: AssetLayout; label: string; icon: unknown }[] = [
-  { value: 'grid', label: 'Grid', icon: LayoutGrid },
-  { value: 'square', label: 'Square', icon: Square },
-  { value: 'list', label: 'List', icon: List }
+ *  name and details show under each picture. Three calm sections with
+ *  room to breathe, hairlines between them. */
+const LAYOUTS: { value: AssetLayout; label: string; hint: string; icon: unknown }[] = [
+  { value: 'grid', label: 'Grid', hint: 'Each in its shape', icon: LayoutGrid },
+  { value: 'square', label: 'Square', hint: 'Even tiles', icon: Square },
+  { value: 'list', label: 'List', hint: 'Rows with details', icon: List }
 ]
 const SIZES: AssetSize[] = ['s', 'm', 'l']
+const SIZE_NAMES: Record<AssetSize, string> = { s: 'Small', m: 'Medium', l: 'Large' }
 function step(d: number): void {
   const i = SIZES.indexOf(assetView.size) + d
   if (i >= 0 && i < SIZES.length) assetView.size = SIZES[i]!
@@ -26,43 +28,69 @@ function step(d: number): void {
     </PopoverTrigger>
     <PopoverPortal>
       <PopoverContent align="end" :side-offset="8" class="proto-ui mar-view" role="dialog">
-        <p class="mar-view-label">Layout</p>
-        <div class="mar-view-layouts">
-          <button
-            v-for="l in LAYOUTS"
-            :key="l.value"
-            type="button"
-            :aria-pressed="assetView.layout === l.value"
-            class="mar-view-layout"
-            @click="assetView.layout = l.value"
-          >
-            <component :is="l.icon" :size="16" />{{ l.label }}
-          </button>
-        </div>
-
-        <div class="mar-view-row" :class="assetView.layout === 'list' && 'is-off'">
-          <span class="mar-view-label">Size</span>
-          <span class="flex items-center gap-2">
-            <button type="button" class="mar-view-step" aria-label="Smaller" @click="step(-1)">
-              <Minus :size="13" />
+        <section class="mar-view-sec">
+          <p class="mar-view-title">Layout</p>
+          <div class="mar-view-layouts">
+            <button
+              v-for="l in LAYOUTS"
+              :key="l.value"
+              type="button"
+              :aria-pressed="assetView.layout === l.value"
+              class="mar-view-layout"
+              @click="assetView.layout = l.value"
+            >
+              <component :is="l.icon" :size="18" />
+              <span class="mar-view-layout-name">{{ l.label }}</span>
+              <span class="mar-view-layout-hint">{{ l.hint }}</span>
             </button>
-            <span class="mar-view-track">
-              <i
-                v-for="s in SIZES"
-                :key="s"
-                :class="SIZES.indexOf(s) <= SIZES.indexOf(assetView.size) && 'is-on'"
-              />
+          </div>
+        </section>
+
+        <section class="mar-view-sec" :class="assetView.layout === 'list' && 'is-off'">
+          <div class="mar-view-row">
+            <span class="flex flex-col gap-0.5">
+              <span class="mar-view-title">Size</span>
+              <span class="mar-view-sub">{{ SIZE_NAMES[assetView.size] }}</span>
             </span>
-            <button type="button" class="mar-view-step" aria-label="Bigger" @click="step(1)">
-              <Plus :size="13" />
-            </button>
-          </span>
-        </div>
+            <span class="flex items-center gap-2.5">
+              <button
+                type="button"
+                class="mar-view-step"
+                aria-label="Smaller"
+                :disabled="assetView.size === 's'"
+                @click="step(-1)"
+              >
+                <Minus :size="14" />
+              </button>
+              <span class="mar-view-track" aria-hidden="true">
+                <i
+                  v-for="s in SIZES"
+                  :key="s"
+                  :class="SIZES.indexOf(s) <= SIZES.indexOf(assetView.size) && 'is-on'"
+                />
+              </span>
+              <button
+                type="button"
+                class="mar-view-step"
+                aria-label="Bigger"
+                :disabled="assetView.size === 'l'"
+                @click="step(1)"
+              >
+                <Plus :size="14" />
+              </button>
+            </span>
+          </div>
+        </section>
 
-        <label class="mar-view-row">
-          <span class="mar-view-label">Name and details</span>
-          <input v-model="assetView.details" type="checkbox" class="mar-view-switch" />
-        </label>
+        <section class="mar-view-sec">
+          <label class="mar-view-row">
+            <span class="flex flex-col gap-0.5">
+              <span class="mar-view-title">Name and details</span>
+              <span class="mar-view-sub">Under each picture</span>
+            </span>
+            <input v-model="assetView.details" type="checkbox" class="mar-view-switch" />
+          </label>
+        </section>
       </PopoverContent>
     </PopoverPortal>
   </PopoverRoot>
@@ -77,7 +105,7 @@ function step(d: number): void {
   align-items: center;
   gap: 7px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--mar-tab-radius, 10px);
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-base-foreground);
   font-size: 13px;
@@ -86,82 +114,124 @@ function step(d: number): void {
 :root .proto-ui.proto-ui.proto-ui .mar-view-trigger[data-state='open'] {
   background: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
 }
-.mar-view {
+/* Past the menu family's tight 6px padding: this is a small panel, not
+   a list of items. */
+:root .proto-ui.proto-ui.proto-ui.mar-view {
   z-index: 60;
   display: flex;
-  width: 280px;
+  width: 320px;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px;
-  border-radius: 16px;
+  padding: 6px 18px;
+  border-radius: 18px;
   background: color-mix(
     in oklch,
-    color-mix(in oklch, var(--color-base-foreground) 6%, var(--color-card-background)) 92%,
+    color-mix(in oklch, var(--color-base-foreground) 6%, var(--color-card-background)) 90%,
     transparent
   );
   backdrop-filter: blur(28px) saturate(1.3);
-  box-shadow: 0 20px 60px -20px rgb(0 0 0 / 0.6);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent),
+    0 24px 64px -20px rgb(0 0 0 / 0.6);
   color: var(--color-base-foreground);
 }
-.mar-view-label {
-  color: var(--color-muted-foreground);
+.mar-view-sec {
+  padding: 16px 0;
+}
+.mar-view-sec + .mar-view-sec {
+  border-top: 1px solid color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+}
+.mar-view-sec.is-off {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.mar-view-title {
+  color: var(--color-base-foreground);
   font-size: 13px;
+  font-weight: 500;
+}
+.mar-view-sub {
+  color: var(--color-subtle-foreground);
+  font-size: 12px;
 }
 .mar-view-layouts {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-top: -6px;
-  padding: 3px;
-  border-radius: 12px;
-  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  gap: 8px;
+  margin-top: 12px;
 }
 :root .proto-ui.proto-ui.proto-ui .mar-view-layout {
   display: flex;
   width: auto;
-  height: 56px;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0;
-  border-radius: 9px;
+  gap: 4px;
+  padding: 14px 6px 12px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+  box-shadow: inset 0 0 0 1px transparent;
   color: var(--color-muted-foreground);
-  font-size: 12px;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-view-layout:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  color: var(--color-base-foreground);
 }
 :root .proto-ui.proto-ui.proto-ui .mar-view-layout[aria-pressed='true'] {
   background: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 16%, transparent);
   color: var(--color-base-foreground);
+}
+.mar-view-layout svg {
+  margin-bottom: 4px;
+}
+.mar-view-layout-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+.mar-view-layout-hint {
+  color: var(--color-subtle-foreground);
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
 }
 .mar-view-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-.mar-view-row.is-off {
-  opacity: 0.4;
-  pointer-events: none;
+  gap: 16px;
+  cursor: pointer;
 }
 :root .proto-ui.proto-ui.proto-ui .mar-view-step {
   display: inline-flex;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border-radius: 999px;
+  border-radius: 9px;
   background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
   color: var(--color-muted-foreground);
 }
+:root .proto-ui.proto-ui.proto-ui .mar-view-step:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--color-base-foreground) 12%, transparent);
+  color: var(--color-base-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-view-step:disabled {
+  opacity: 0.35;
+}
 .mar-view-track {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 .mar-view-track i {
-  width: 22px;
+  width: 18px;
   height: 6px;
   border-radius: 999px;
   background: color-mix(in oklch, var(--color-base-foreground) 12%, transparent);
+  transition: background-color 150ms ease;
 }
 .mar-view-track i.is-on {
   background: var(--color-base-foreground);
@@ -173,8 +243,8 @@ function step(d: number): void {
   margin: 0;
   padding: 0;
   border: 0;
-  width: 34px;
-  height: 20px;
+  width: 36px;
+  height: 22px;
   border-radius: 999px;
   background: color-mix(in oklch, var(--color-base-foreground) 14%, transparent);
   appearance: none;
@@ -184,8 +254,8 @@ function step(d: number): void {
 .mar-view-switch::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 3px;
+  left: 3px;
   width: 16px;
   height: 16px;
   border-radius: 999px;
@@ -198,5 +268,11 @@ function step(d: number): void {
 .mar-view-switch:checked::after {
   background: var(--color-content-background);
   transform: translateX(14px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mar-view-switch::after,
+  .mar-view-track i {
+    transition: none;
+  }
 }
 </style>
