@@ -214,7 +214,7 @@ const empty = computed(
   display: flex;
   gap: 2px;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
 .mar-ex-count {
@@ -317,7 +317,7 @@ const empty = computed(
   width: auto;
   height: 28px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: 7px;
   color: var(--color-muted-foreground);
   font-size: 13px;
 }

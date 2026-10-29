@@ -1015,14 +1015,14 @@
    One look for everything that narrows a page, so a new filter is just
    one more of the same:
    - Scope tabs (All / This computer / Cloud): a soft track, no border;
-     the picked one is a lighter pill.
+     the picked one is lighter. Squared (10 / 7) to match buttons.
    - Filters (selects) and Sort: pills. Muted label, white value, no edge;
      a little lighter on hover and while open.
    - Search: the same pill, with its icon.
    - Other filter buttons (Folders): the same pill. */
 :root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) {
   border-color: transparent;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 3px;
   background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   box-shadow: none;
@@ -1030,7 +1030,7 @@
 :root .proto-ui.proto-ui.proto-ui .proto-main [role='group']:has(> button[data-state]) > button {
   height: 28px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: 7px;
 }
 :root[data-mar-ui='on'] .proto-main [role='group'] > button[data-state='on'] {
   background-color: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
@@ -1145,9 +1145,9 @@
   color: var(--color-base-foreground);
 }
 
-/* The sliding pill behind scope tabs takes the tabs' round shape. */
+/* The sliding pill behind scope tabs takes the tabs' shape. */
 :root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) > .mar-tab-pill {
-  border-radius: 999px;
+  border-radius: 7px;
 }
 
 /* Form fields (inside cards: settings, dialogs) are not filters: a soft
