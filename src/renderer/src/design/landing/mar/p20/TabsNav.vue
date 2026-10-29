@@ -29,6 +29,8 @@ interface Tab {
   /** Also on for pages that start with this (one project, one build). */
   prefix?: string
   menu?: 'projects' | 'spaces' | 'library'
+  /** Opens outside the app (Docs). */
+  href?: string
 }
 
 // Five places, not nine: your own things live under Library.
@@ -55,7 +57,9 @@ const BUILD: Tab[] = [
 const AGENT: Tab[] = [{ key: 'agent', label: 'Chat', page: 'agent' }]
 
 const tabs = computed<Tab[]>(() => {
-  if (proto.mode === 'build') return BUILD
+  // From Pablo › Docs: his Build nav ends with Docs (docs.comfy.org).
+  if (proto.mode === 'build')
+    return ports.navDocs ? [...BUILD, { key: 'docs', label: 'Docs', href: 'docs' }] : BUILD
   if (proto.mode === 'agent') return AGENT
   return [
     ...CREATE,
@@ -143,7 +147,8 @@ function onTab(t: Tab): void {
     return
   }
   menu.value = null
-  if (t.page) go(t.page)
+  if (t.href) toast('Opening docs.comfy.org ↗')
+  else if (t.page) go(t.page)
 }
 function pick(page: Page): void {
   menu.value = null

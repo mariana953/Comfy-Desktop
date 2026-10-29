@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import {
+  BookOpen,
   ChevronsUpDown,
   Circle,
   Code,
@@ -66,6 +67,8 @@ interface Item {
   icon: Component
   prefix?: string
   count?: number
+  /** Opens outside the app (Docs). */
+  href?: string
 }
 
 const CREATE: { title?: string; items: Item[] }[] = [
@@ -108,8 +111,14 @@ const BUILD: { title?: string; items: Item[] }[] = [
     ]
   }
 ]
+// From Pablo › Docs: his Build nav ends with Docs (docs.comfy.org).
+const DOCS: Item = { page: 'docs' as Page, label: 'Docs', icon: BookOpen, href: 'docs' }
+const withDocs = (gs: typeof BUILD): typeof BUILD =>
+  ports.navDocs
+    ? gs.map((g, i) => (i === gs.length - 1 ? { ...g, items: [...g.items, DOCS] } : g))
+    : gs
 const groups = computed(() =>
-  proto.mode === 'build' ? BUILD : proto.mode === 'create' ? CREATE : []
+  proto.mode === 'build' ? withDocs(BUILD) : proto.mode === 'create' ? CREATE : []
 )
 // Builds count what this user has (none, one or several local, plus Cloud).
 const countOf = (i: Item): number | undefined =>
@@ -227,7 +236,7 @@ function newChat(): void {
           :class="isOn(i) && 'is-on'"
           :aria-current="isOn(i) ? 'page' : undefined"
           :title="open ? undefined : i.label"
-          @click="go(i.page)"
+          @click="i.href ? toast('Opening docs.comfy.org ↗') : go(i.page)"
         >
           <component :is="i.icon" :size="16" />
           <template v-if="open"

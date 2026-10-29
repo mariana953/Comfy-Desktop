@@ -6,11 +6,12 @@ import { reactive, watch } from 'vue'
  * its own switch and starts Off: the proposal looks as it did until one is
  * turned on. Audit: design-shots/pablo-gaps.md.
  */
-export type Port = 'buildDetails' | 'navAccount'
+export type Port = 'buildDetails' | 'navAccount' | 'navDocs'
 
 export const PORTS: { key: Port; label: string }[] = [
   { key: 'buildDetails', label: 'Compact builds · GPU, disk and actions' },
-  { key: 'navAccount', label: 'Account · Log in card, workspace in Tabs' }
+  { key: 'navAccount', label: 'Account · Log in card, workspace in Tabs' },
+  { key: 'navDocs', label: 'Build nav · Docs link' }
 ]
 
 const KEY = 'comfy.design.mar.pabloPorts'
