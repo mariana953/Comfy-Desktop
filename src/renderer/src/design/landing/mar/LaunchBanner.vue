@@ -2,10 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import Button from '../ui/Button.vue'
 import { toast } from '../useProto'
-import hillsSunset from './assets/hills-sunset.jpg'
-import portraitSun from './assets/portrait-sun.jpg'
-import appsLoop from './assets/apps.mp4'
-import appsPoster from './assets/apps.jpg'
+import cloudLoop from './assets/banner-cloud.mp4'
+import cloudPoster from './assets/banner-cloud.jpg'
+import bloomLoop from './assets/banner-bloom.mp4'
+import bloomPoster from './assets/banner-bloom.jpg'
+import ribbonLoop from './assets/banner-ribbon.mp4'
+import ribbonPoster from './assets/banner-ribbon.jpg'
 
 /**
  * Mar's What's new: one full-width branded banner at a time (direction C in
@@ -20,8 +22,8 @@ interface Slide {
   cta: string
   gradient: string
   video?: string
-  /** A photo from the Magnific series, slowly drifting, until a loop exists;
-   *  with a video, its poster and the reduced-motion still. */
+  /** With a video, its poster and the reduced-motion still; on its own, a
+   *  photo that drifts slowly. */
   image?: string
 }
 
@@ -30,7 +32,8 @@ const SLIDES: Slide[] = [
     id: 'cloud',
     title: 'Comfy Cloud is here.\nRun any workflow without a GPU.',
     cta: 'Try it',
-    image: hillsSunset,
+    video: cloudLoop,
+    image: cloudPoster,
     gradient:
       'radial-gradient(60% 90% at 18% 30%, #3b82f6 0%, transparent 60%), radial-gradient(50% 80% at 85% 70%, #60a5fa 0%, transparent 65%), linear-gradient(120deg, #0b1b3f, #1e3a8a 45%, #0f2a5f)'
   },
@@ -38,7 +41,8 @@ const SLIDES: Slide[] = [
     id: 'wan',
     title: 'Wan 2.5 is in ComfyUI.\nA still becomes a scene.',
     cta: 'Try it now',
-    image: portraitSun,
+    video: bloomLoop,
+    image: bloomPoster,
     gradient:
       'radial-gradient(55% 90% at 20% 70%, #f97316 0%, transparent 60%), radial-gradient(55% 85% at 80% 25%, #db2777 0%, transparent 62%), linear-gradient(120deg, #2a0f1f, #6b1d3a 50%, #3a1208)'
   },
@@ -46,8 +50,8 @@ const SLIDES: Slide[] = [
     id: 'apps',
     title: 'Apps are here.\nTurn any workflow into a form.',
     cta: 'See how',
-    video: appsLoop,
-    image: appsPoster,
+    video: ribbonLoop,
+    image: ribbonPoster,
     gradient:
       'radial-gradient(60% 90% at 80% 35%, #10b981 0%, transparent 60%), radial-gradient(50% 80% at 15% 75%, #a3e635 0%, transparent 60%), linear-gradient(120deg, #06231b, #0f4d3a 50%, #0b2a12)'
   }
@@ -104,7 +108,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
               playsinline
               class="absolute inset-0 size-full object-cover"
             />
-            <span class="banner-veil absolute inset-0" aria-hidden="true" />
+            <span class="banner-veil is-soft absolute inset-0" aria-hidden="true" />
           </template>
           <template v-else-if="slide.image">
             <img
@@ -184,6 +188,11 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
   background:
     radial-gradient(70% 90% at 50% 50%, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.2)),
     linear-gradient(to bottom, rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.35));
+}
+/* The loops are pale pastel: a lighter veil keeps their colour and still
+   holds the white message. */
+.banner-veil.is-soft {
+  background: radial-gradient(55% 75% at 50% 50%, rgb(20 16 32 / 0.38), rgb(20 16 32 / 0.08));
 }
 @keyframes banner-drift {
   from {
