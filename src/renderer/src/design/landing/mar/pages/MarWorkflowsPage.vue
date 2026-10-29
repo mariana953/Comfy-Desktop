@@ -127,7 +127,7 @@ function newWorkflow(): void {
 }
 
 const where_ = (w: MarWorkflow): string =>
-  [w.source === 'cloud' ? 'Cloud' : 'This computer', w.project, w.modified]
+  [w.source === 'cloud' ? 'Cloud' : 'This computer', !fixedProject && w.project, w.modified]
     .filter(Boolean)
     .join(' · ')
 
@@ -156,6 +156,7 @@ function lines(w: MarWorkflow): MenuLine[] {
 <template>
   <MarPage
     title="Workflows"
+    :embedded="!!fixedProject"
     :description="
       fixedProject
         ? undefined

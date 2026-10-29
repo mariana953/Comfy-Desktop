@@ -30,7 +30,8 @@ const {
   errorTitle = "Can't reach Comfy Cloud",
   errorText = "You look offline. What's on this computer still opens; the rest comes back when you reconnect.",
   noResults = false,
-  state
+  state,
+  embedded = false
 } = defineProps<{
   title: string
   description?: string
@@ -42,6 +43,8 @@ const {
   noResults?: boolean
   /** Overrides the UI Playground's page state (e.g. a page with no empty). */
   state?: PageState
+  /** Inside another page (a project's tab): no title, no page margins. */
+  embedded?: boolean
 }>()
 const emit = defineEmits<{ action: []; second: []; clear: [] }>()
 
@@ -53,8 +56,12 @@ const rows = computed(() => (skeleton === 'grid' ? 8 : skeleton === 'cards' ? 6 
 </script>
 
 <template>
-  <div class="mar-page mx-auto w-full max-w-300 px-10 pb-24" :data-state="shown">
-    <header class="mar-page-head">
+  <div
+    class="mar-page"
+    :class="embedded ? 'is-embedded' : 'mx-auto w-full max-w-300 px-10 pb-24'"
+    :data-state="shown"
+  >
+    <header v-if="!embedded" class="mar-page-head">
       <div class="min-w-0">
         <div class="flex items-center gap-3">
           <slot name="lead" />
@@ -150,7 +157,7 @@ const rows = computed(() => (skeleton === 'grid' ? 8 : skeleton === 'cards' ? 6 
 
     <slot v-else />
 
-    <MarUndoToast />
+    <MarUndoToast v-if="!embedded" />
   </div>
 </template>
 
@@ -161,6 +168,9 @@ const rows = computed(() => (skeleton === 'grid' ? 8 : skeleton === 'cards' ? 6 
   justify-content: space-between;
   gap: 24px;
   padding: 48px 0 24px;
+}
+.mar-page.is-embedded .mar-page-empty {
+  padding: 56px 0 40px;
 }
 .mar-page-title {
   margin: 0;
