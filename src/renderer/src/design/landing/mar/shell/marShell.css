@@ -921,8 +921,8 @@
    changes as you work. */
 :root[data-mar-ui='on'] .mar-backdrop.is-output .mar-bg-output {
   object-fit: cover;
-  opacity: 0.45;
-  filter: blur(80px) saturate(0.85);
+  opacity: 0.22;
+  filter: blur(90px) saturate(0.75);
   transform: scale(1.3);
 }
 @media (prefers-reduced-motion: reduce) {

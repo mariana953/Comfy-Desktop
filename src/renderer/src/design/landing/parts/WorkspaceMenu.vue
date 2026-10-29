@@ -50,7 +50,7 @@ function signOut(): void {
       :class="isMariana && 'mar-credits-row'"
       @click="toast('Manage plan & credits')"
     >
-      <Coins v-if="isMariana" :size="15" class="shrink-0 text-muted-foreground" />
+      <Coins v-if="isMariana" :size="15" class="shrink-0 text-[#ddbd31]" />
       <span v-else class="size-3.5 shrink-0 rounded-full border-[1.5px] border-[#cfc9b8]" />
       <span class="sidebar-label text-left">Credits</span>
       <span class="tabular-nums">{{ shownCredits }}</span>
