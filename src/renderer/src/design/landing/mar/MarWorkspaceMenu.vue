@@ -74,10 +74,10 @@ function signOut(): void {
         <component :is="i.icon" :size="15" class="text-subtle-foreground" />{{ i.label }}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem @select="toast('Account settings')">
+      <DropdownMenuItem @select="go('settings' as Page)">
         <Settings2 :size="15" class="text-subtle-foreground" />
         <span class="flex min-w-0 flex-col">
-          <span>Account settings</span>
+          <span>Settings</span>
           <span class="truncate text-[12px] text-subtle-foreground">{{ shownEmail }}</span>
         </span>
       </DropdownMenuItem>
