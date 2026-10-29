@@ -20,6 +20,8 @@ import BuildOverview from '../../mar/build/BuildEntry.vue'
 import BuildStart from './BuildStart.vue'
 import CreateHome from '../../mar/HomeEntry.vue'
 import MarFavoritesPage from '../../mar/MarFavoritesPage.vue'
+import MarPages from '../../mar/pages/MarPages.vue'
+import { marOwns } from '../../mar/pages/owns'
 import DeploymentDetail from './DeploymentDetail.vue'
 import DeploymentsPage from './DeploymentsPage.vue'
 import EnvironmentDetail from './EnvironmentDetail.vue'
@@ -52,7 +54,8 @@ const ADMIN = ['usage', 'billing', 'limits', 'people', 'provider-keys']
 </script>
 
 <template>
-  <CreateHome v-if="proto.page === 'overview' && can.home" />
+  <MarPages v-if="marOwns(proto.page)" />
+  <CreateHome v-else-if="proto.page === 'overview' && can.home" />
   <MarFavoritesPage v-else-if="proto.page === 'favorites' && isMariana" />
   <!-- First run: libraries are empty, so show what will live there. -->
   <div

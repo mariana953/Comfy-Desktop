@@ -1,0 +1,64 @@
+<script setup lang="ts" generic="T extends string">
+/** Segmented tabs (Mar's pages): radius 10 outside, 7 inside, following
+ *  the Corners tweak; an optional count after each label. */
+const { options, label } = defineProps<{
+  options: { value: T; label: string; count?: number }[]
+  label: string
+}>()
+const model = defineModel<T>({ required: true })
+</script>
+
+<template>
+  <div class="mar-pseg" role="tablist" :aria-label="label">
+    <button
+      v-for="o in options"
+      :key="o.value"
+      type="button"
+      role="tab"
+      :aria-selected="model === o.value"
+      class="mar-pseg-btn"
+      @click="model = o.value"
+    >
+      {{ o.label }}<span v-if="o.count !== undefined" class="mar-pseg-count">{{ o.count }}</span>
+    </button>
+  </div>
+</template>
+
+<style>
+:root .proto-ui.proto-ui.proto-ui .mar-pseg {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--mar-tab-radius, 10px);
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-pseg-btn {
+  width: auto;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: var(--mar-tab-item-radius, 7px);
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-pseg-btn:hover {
+  color: var(--color-base-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-pseg-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: -2px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-pseg-btn[aria-selected='true'] {
+  background: color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+  color: var(--color-base-foreground);
+}
+.mar-pseg-count {
+  margin-left: 6px;
+  color: var(--color-subtle-foreground);
+  font-variant-numeric: tabular-nums;
+}
+</style>

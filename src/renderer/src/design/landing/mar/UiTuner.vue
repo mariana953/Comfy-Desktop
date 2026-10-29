@@ -18,6 +18,7 @@ import { CREDITS_STYLES, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 import { FIRST_RUNS, firstRun } from './firstRun'
+import { PAGE_STATES, pageState } from './pages/pageState'
 import { LOOKS, marLook } from './looks/looks'
 import MarLookFx from './looks/MarLookFx.vue'
 
@@ -187,6 +188,28 @@ function set(key: keyof Tuning, value: string): void {
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Look</span>
         <Select v-model="marLook.id" :options="LOOKS" class="w-full" />
+      </div>
+
+      <!-- Mar's pages: show any page Live, Loading, Empty or offline. -->
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Page state</span>
+        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+          <button
+            v-for="ps in PAGE_STATES"
+            :key="ps.value"
+            type="button"
+            :aria-pressed="pageState.id === ps.value"
+            :class="[
+              'h-7 min-w-0 flex-1 truncate rounded-[7px] px-1.5 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              pageState.id === ps.value
+                ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                : 'text-muted-foreground hover:text-base-foreground'
+            ]"
+            @click="pageState.id = ps.value"
+          >
+            {{ ps.label }}
+          </button>
+        </div>
       </div>
 
       <div class="flex flex-col gap-1.5">

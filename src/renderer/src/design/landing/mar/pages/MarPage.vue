@@ -1,0 +1,316 @@
+<script setup lang="ts">
+import { computed, type Component } from 'vue'
+import { CloudOff, RotateCw, SearchX } from 'lucide-vue-next'
+import Button from '../../ui/Button.vue'
+import { retry, shownState, type PageState } from './pageState'
+import MarUndoToast from './MarUndoToast.vue'
+
+/**
+ * The frame every library page in Mar's proposal shares: the title and
+ * its one primary action, the toolbar, then the page in its state.
+ * Loading keeps the toolbar and shows skeletons in the page's own shape;
+ * Empty drops the toolbar and invites the one action that fills the page;
+ * Error says what's unreachable and what still works, with Retry; a filter
+ * that matches nothing offers to clear it.
+ */
+export interface EmptyCopy {
+  icon: Component
+  title: string
+  text: string
+  action: string
+  /** A quieter second way in, e.g. "Browse templates". */
+  second?: string
+}
+
+const {
+  title,
+  description,
+  skeleton = 'grid',
+  empty,
+  errorTitle = "Can't reach Comfy Cloud",
+  errorText = "You look offline. What's on this computer still opens; the rest comes back when you reconnect.",
+  noResults = false,
+  state
+} = defineProps<{
+  title: string
+  description?: string
+  skeleton?: 'grid' | 'list' | 'cards' | 'settings'
+  empty?: EmptyCopy
+  errorTitle?: string
+  errorText?: string
+  /** Filters on, nothing matches. */
+  noResults?: boolean
+  /** Overrides the UI Playground's page state (e.g. a page with no empty). */
+  state?: PageState
+}>()
+const emit = defineEmits<{ action: []; second: []; clear: [] }>()
+
+const shown = computed<PageState>(() => {
+  const s = state ?? shownState.value
+  return s === 'empty' && !empty ? 'live' : s
+})
+const rows = computed(() => (skeleton === 'grid' ? 8 : skeleton === 'cards' ? 6 : 7))
+</script>
+
+<template>
+  <div class="mar-page mx-auto w-full max-w-300 px-10 pb-24" :data-state="shown">
+    <header class="mar-page-head">
+      <div class="min-w-0">
+        <div class="flex items-center gap-3">
+          <slot name="lead" />
+          <h1 class="mar-page-title">{{ title }}</h1>
+          <slot name="meta" />
+        </div>
+        <p v-if="description" class="mar-page-desc">{{ description }}</p>
+      </div>
+      <div v-if="$slots.actions" class="flex shrink-0 items-center gap-2">
+        <slot name="actions" :state="shown" />
+      </div>
+    </header>
+
+    <slot name="tabs" :state="shown" />
+
+    <div
+      v-if="$slots.toolbar && (shown === 'live' || shown === 'loading')"
+      class="mar-page-bar"
+      :inert="shown === 'loading'"
+      :class="shown === 'loading' && 'is-dim'"
+    >
+      <slot name="toolbar" />
+    </div>
+
+    <!-- Loading: the page's own shape, shimmering. -->
+    <div v-if="shown === 'loading'" aria-busy="true" aria-label="Loading">
+      <div
+        v-if="skeleton === 'grid' || skeleton === 'cards'"
+        class="mar-sk-grid"
+        :class="skeleton === 'cards' && 'is-cards'"
+      >
+        <div v-for="n in rows" :key="n" class="mar-sk-card">
+          <span class="mar-sk mar-sk-media" />
+          <span class="mar-sk mar-sk-line" :style="{ width: `${55 + ((n * 17) % 35)}%` }" />
+          <span class="mar-sk mar-sk-line is-sm" :style="{ width: `${30 + ((n * 11) % 25)}%` }" />
+        </div>
+      </div>
+      <div v-else-if="skeleton === 'list'" class="mar-sk-list">
+        <div v-for="n in rows" :key="n" class="mar-sk-row">
+          <span class="mar-sk mar-sk-thumb" />
+          <span class="mar-sk mar-sk-line" :style="{ width: `${22 + ((n * 13) % 20)}%` }" />
+          <span class="mar-sk mar-sk-line is-sm ml-auto" style="width: 12%" />
+          <span class="mar-sk mar-sk-line is-sm" style="width: 9%" />
+        </div>
+      </div>
+      <div v-else class="mar-sk-settings">
+        <div v-for="n in 6" :key="n" class="mar-sk-row">
+          <span class="flex flex-1 flex-col gap-2">
+            <span class="mar-sk mar-sk-line" :style="{ width: `${24 + ((n * 7) % 18)}%` }" />
+            <span class="mar-sk mar-sk-line is-sm" :style="{ width: `${40 + ((n * 13) % 25)}%` }" />
+          </span>
+          <span class="mar-sk mar-sk-ctl" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty: first use. What lives here, and the one thing that fills it. -->
+    <section v-else-if="shown === 'empty' && empty" class="mar-page-empty">
+      <slot name="empty-art">
+        <span class="mar-empty-icon"><component :is="empty.icon" :size="22" /></span>
+      </slot>
+      <div class="flex flex-col gap-1.5">
+        <h2 class="mar-empty-title">{{ empty.title }}</h2>
+        <p class="mar-empty-text">{{ empty.text }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <Button variant="primary" @click="emit('action')">{{ empty.action }}</Button>
+        <Button v-if="empty.second" variant="ghost" @click="emit('second')">{{
+          empty.second
+        }}</Button>
+      </div>
+    </section>
+
+    <!-- Error: what's out of reach, what still works, and a retry. -->
+    <section v-else-if="shown === 'error'" class="mar-page-empty is-error" role="alert">
+      <span class="mar-empty-icon"><CloudOff :size="22" /></span>
+      <div class="flex flex-col gap-1.5">
+        <h2 class="mar-empty-title">{{ errorTitle }}</h2>
+        <p class="mar-empty-text">{{ errorText }}</p>
+      </div>
+      <Button @click="retry"><RotateCw :size="14" />Try again</Button>
+    </section>
+
+    <!-- Live, but the filters leave nothing. -->
+    <section v-else-if="noResults" class="mar-page-empty is-small">
+      <span class="mar-empty-icon"><SearchX :size="20" /></span>
+      <div class="flex flex-col gap-1.5">
+        <h2 class="mar-empty-title">Nothing matches</h2>
+        <p class="mar-empty-text">Try another word, or clear the filters to see everything.</p>
+      </div>
+      <Button @click="emit('clear')">Clear filters</Button>
+    </section>
+
+    <slot v-else />
+
+    <MarUndoToast />
+  </div>
+</template>
+
+<style scoped>
+.mar-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 48px 0 24px;
+}
+.mar-page-title {
+  margin: 0;
+  font-size: var(--text-title, 24px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.mar-page-desc {
+  margin: 4px 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+}
+.mar-page-bar {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  transition: opacity 200ms ease;
+}
+.mar-page-bar.is-dim {
+  opacity: 0.45;
+}
+
+/* Skeletons */
+.mar-sk {
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(
+      100deg,
+      transparent 30%,
+      color-mix(in oklch, var(--color-base-foreground) 6%, transparent) 50%,
+      transparent 70%
+    )
+    color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  background-size: 250% 100%;
+  animation: mar-shimmer 1.4s linear infinite;
+}
+.mar-sk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.mar-sk-grid.is-cards {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+.mar-sk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 4px 10px;
+  border-radius: var(--radius-card);
+  background: color-mix(in oklch, var(--color-card-background) 50%, transparent);
+}
+.mar-sk-media {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-control);
+  margin-bottom: 4px;
+}
+.mar-sk-card .mar-sk-line {
+  margin-left: 8px;
+}
+.mar-sk-line {
+  height: 10px;
+}
+.mar-sk-line.is-sm {
+  height: 8px;
+  opacity: 0.7;
+}
+.mar-sk-list,
+.mar-sk-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mar-sk-row {
+  display: flex;
+  height: 56px;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  border-radius: 12px;
+}
+.mar-sk-settings .mar-sk-row {
+  height: 68px;
+  border-bottom: 1px solid var(--color-border-default);
+  border-radius: 0;
+}
+.mar-sk-thumb {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 9px;
+}
+.mar-sk-ctl {
+  width: 120px;
+  height: 28px;
+  border-radius: 8px;
+}
+@keyframes mar-shimmer {
+  to {
+    background-position: -150% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mar-sk {
+    animation: none;
+  }
+}
+
+/* Empty, error, no results */
+.mar-page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 88px 0 64px;
+  text-align: center;
+}
+.mar-page-empty.is-small {
+  padding: 56px 0;
+}
+.mar-empty-icon {
+  display: inline-flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  color: var(--color-muted-foreground);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+.is-small .mar-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+.mar-empty-title {
+  margin: 0;
+  color: var(--color-base-foreground);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.mar-empty-text {
+  max-width: 400px;
+  margin: 0;
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+</style>
