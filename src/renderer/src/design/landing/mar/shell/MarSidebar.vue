@@ -31,6 +31,7 @@ import { INSTANCES, PROJECTS, TEMPLATES, USER, thumb } from '../../mock'
 import { favorites } from '../favorites'
 import { creditsStyle } from '../credits'
 import MarWorkspaceMenu from '../MarWorkspaceMenu.vue'
+import MarCreditsFlyout from '../MarCreditsFlyout.vue'
 import RailFlyout from '../p20/RailFlyout.vue'
 import { p20 } from '../p20/p20'
 import { SPACES } from '../../spaces'
@@ -173,15 +174,11 @@ function newChat(): void {
           }}</span>
         </button>
       </div>
-      <button
-        v-if="open && creditsStyle.id === 'chip'"
-        type="button"
-        class="mar-side-chip"
-        :title="`${USER.credits} credits`"
-        @click="go('billing')"
-      >
-        <Coins :size="13" />{{ shortCredits }}
-      </button>
+      <MarCreditsFlyout v-if="open && creditsStyle.id === 'chip'" side="bottom" align="start">
+        <button type="button" class="mar-side-chip" :title="`${USER.credits} credits`">
+          <Coins :size="13" />{{ shortCredits }}
+        </button>
+      </MarCreditsFlyout>
       <button
         type="button"
         class="mar-side-icon"
@@ -339,31 +336,24 @@ function newChat(): void {
       </template>
     </nav>
 
-    <button
-      v-if="creditsStyle.id === 'row' || (!open && creditsStyle.id !== 'meter')"
-      type="button"
-      class="mar-side-credits"
-      :title="open ? undefined : 'Credits'"
-      @click="go('billing')"
-    >
-      <Coins :size="16" /><template v-if="open"
-        ><span class="flex-1 text-left">Credits</span><span>{{ USER.credits }}</span></template
-      >
-    </button>
+    <MarCreditsFlyout v-if="creditsStyle.id === 'row' || (!open && creditsStyle.id !== 'meter')">
+      <button type="button" class="mar-side-credits" :title="open ? undefined : 'Credits'">
+        <Coins :size="16" /><template v-if="open"
+          ><span class="flex-1 text-left">Credits</span><span>{{ USER.credits }}</span></template
+        >
+      </button>
+    </MarCreditsFlyout>
 
     <!-- Workspace, always last at the foot like Pablo's; credits above it. -->
     <div class="mar-side-foot" :class="open && creditsStyle.id === 'meter' && 'is-meter'">
-      <button
-        v-if="open && creditsStyle.id === 'meter'"
-        type="button"
-        class="mar-side-meter"
-        @click="go('billing')"
-      >
-        <span class="flex items-center justify-between">
-          <span>{{ USER.credits }} credits</span><span class="text-subtle-foreground">Top up</span>
-        </span>
-        <span class="mar-side-bar"><span :style="{ width: '62%' }" /></span>
-      </button>
+      <MarCreditsFlyout v-if="open && creditsStyle.id === 'meter'">
+        <button type="button" class="mar-side-meter">
+          <span class="flex items-center justify-between">
+            <span>{{ USER.credits }} credits</span><span class="text-subtle-foreground">Top up</span>
+          </span>
+          <span class="mar-side-bar"><span :style="{ width: '62%' }" /></span>
+        </button>
+      </MarCreditsFlyout>
       <MarWorkspaceMenu :side="open ? 'top' : 'right'">
         <button type="button" class="mar-side-ws" :title="open ? undefined : workspace.name">
           <span class="mar-side-avatar">{{ workspace.name.charAt(0) }}</span>

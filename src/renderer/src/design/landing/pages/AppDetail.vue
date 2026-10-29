@@ -10,9 +10,9 @@ import {
   EllipsisVertical,
   Rocket,
   Sparkles,
-  Users,
-  Waypoints
+  Users
 } from 'lucide-vue-next'
+import { GraphIcon } from '../mar/icons/kindIcons'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import Badge from '../ui/Badge.vue'
 import Button from '../ui/Button.vue'
@@ -189,7 +189,7 @@ function revokeAll(): void {
             >
             <DropdownMenuItem
               @select="hostActions.launch(instanceById('local-1')!, 'product-relight-studio')"
-              ><Waypoints :size="14" />Edit the workflow in ComfyUI</DropdownMenuItem
+              ><GraphIcon :size="14" />Edit the workflow in ComfyUI</DropdownMenuItem
             >
           </DropdownMenuContent>
         </DropdownMenuRoot>

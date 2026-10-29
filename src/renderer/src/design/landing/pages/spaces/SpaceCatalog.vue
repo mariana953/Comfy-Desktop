@@ -3,13 +3,12 @@ import { computed, ref } from 'vue'
 import {
   Copy,
   EllipsisVertical,
-  LayoutGrid,
   Plus,
   SlidersHorizontal,
   Trash2,
-  Waypoints,
   ArrowUpRight
 } from 'lucide-vue-next'
+import { GraphIcon, AppIcon } from '../../mar/icons/kindIcons'
 import {
   DialogDescription,
   DialogRoot,
@@ -224,8 +223,8 @@ function remove(id: string): void {
           v-model="flavor"
           variant="contained"
           :options="[
-            { value: 'app', label: 'App', icon: LayoutGrid },
-            { value: 'workflow', label: 'Workflow', icon: Waypoints }
+            { value: 'app', label: 'App', icon: AppIcon },
+            { value: 'workflow', label: 'Workflow', icon: GraphIcon }
           ]"
         />
         <span />

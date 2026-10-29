@@ -12,6 +12,7 @@ import WorkspaceAvatar from './WorkspaceAvatar.vue'
 import MarWorkspaceMenu from '../mar/MarWorkspaceMenu.vue'
 import { isMariana } from '../mar/proposal'
 import MarCredits from '../mar/MarCredits.vue'
+import MarCreditsFlyout from '../mar/MarCreditsFlyout.vue'
 import { creditsStyle } from '../mar/credits'
 import { Gauge, KeyRound, ShieldAlert } from 'lucide-vue-next'
 import { go, proto, toast, type Page } from '../useProto'
@@ -43,15 +44,24 @@ function signOut(): void {
   <div v-else class="flex flex-col gap-1">
     <!-- Mar's proposal: credits as a chip or meter instead (mar/). -->
     <MarCredits v-if="isMariana && creditsStyle.id !== 'row'" />
+    <!-- Mar's proposal: the row opens Alex's credits flyout (mar/). -->
+    <MarCreditsFlyout v-if="isMariana && shownCredits && creditsStyle.id === 'row'">
+      <Button
+        variant="ghost"
+        class="mar-credits-row h-8 justify-start gap-2.5 px-3 text-base-foreground data-[state=open]:bg-secondary-background"
+      >
+        <Coins :size="15" class="shrink-0 text-[#ddbd31]" />
+        <span class="sidebar-label text-left">Credits</span>
+        <span class="tabular-nums">{{ shownCredits }}</span>
+      </Button>
+    </MarCreditsFlyout>
     <Button
-      v-if="shownCredits && !(isMariana && creditsStyle.id !== 'row')"
+      v-else-if="shownCredits && !isMariana"
       variant="ghost"
       class="h-8 justify-start gap-2.5 px-3 text-base-foreground"
-      :class="isMariana && 'mar-credits-row'"
       @click="toast('Manage plan & credits')"
     >
-      <Coins v-if="isMariana" :size="15" class="shrink-0 text-[#ddbd31]" />
-      <span v-else class="size-3.5 shrink-0 rounded-full border-[1.5px] border-[#cfc9b8]" />
+      <span class="size-3.5 shrink-0 rounded-full border-[1.5px] border-[#cfc9b8]" />
       <span class="sidebar-label text-left">Credits</span>
       <span class="tabular-nums">{{ shownCredits }}</span>
     </Button>

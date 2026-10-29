@@ -30,13 +30,13 @@ const shown = computed(() => recentInstances.value.slice(0, 3))
         :key="i.id"
         as="button"
         interactive
-        class="group flex min-w-0 items-center gap-3 p-2.5 pr-4 text-left"
+        class="mar-row-card group"
         @click="hostActions.launch(i)"
       >
-        <span class="mar-well flex size-10 shrink-0 items-center justify-center rounded-control">
-          <LocationIcon :kind="i.kind === 'cloud' ? 'cloud' : 'local'" :size="16" />
+        <span class="mar-row-icon">
+          <LocationIcon :kind="i.kind === 'cloud' ? 'cloud' : 'local'" :size="18" />
         </span>
-        <span class="min-w-0 flex-1">
+        <span class="flex min-w-0 flex-1 flex-col gap-0.5">
           <span class="block truncate text-ui font-medium">{{ i.name }}</span>
           <span class="flex items-center gap-1.5 truncate text-ui text-subtle-foreground"
             ><StatusDot v-if="envStatus(i).live" status="running" />{{ envStatus(i).label }}</span

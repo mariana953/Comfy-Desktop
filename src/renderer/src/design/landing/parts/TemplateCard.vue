@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { LayoutGrid, Waypoints } from 'lucide-vue-next'
+import {} from 'lucide-vue-next'
+import { GraphIcon, AppIcon } from '../mar/icons/kindIcons'
 import Badge from '../ui/Badge.vue'
 import MediaCard from '../ui/MediaCard.vue'
 import { openDetail } from '../useProto'
@@ -33,7 +34,7 @@ const { t } = defineProps<{ t: Template }>()
         :aria-label="t.kind === 'graph' ? 'Node graph' : 'App'"
         class="px-1.5"
       >
-        <Waypoints v-if="t.kind === 'graph'" :size="12" /><LayoutGrid v-else :size="12" />
+        <GraphIcon v-if="t.kind === 'graph'" :size="12" /><AppIcon v-else :size="12" />
       </Badge>
     </template>
     <template v-if="isMariana" #top-right><FavoriteStar :id="t.id" /></template>

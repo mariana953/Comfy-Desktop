@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowUpRight, Globe, Link2, Lock, Plus, Sparkles, Users, Waypoints } from 'lucide-vue-next'
+import { ArrowUpRight, Globe, Link2, Lock, Plus, Sparkles, Users } from 'lucide-vue-next'
+import { GraphIcon } from '../mar/icons/kindIcons'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import Badge from '../ui/Badge.vue'
 import Button from '../ui/Button.vue'
@@ -71,7 +72,7 @@ function describe(): void {
             <DropdownMenuSeparator />
             <DropdownMenuLabel>From a workflow</DropdownMenuLabel>
             <DropdownMenuItem v-for="s in SOURCES" :key="s.name" @select="startFrom(s)"
-              ><Waypoints :size="14" />{{ s.name }}</DropdownMenuItem
+              ><GraphIcon :size="14" />{{ s.name }}</DropdownMenuItem
             >
           </DropdownMenuContent>
         </DropdownMenuRoot>

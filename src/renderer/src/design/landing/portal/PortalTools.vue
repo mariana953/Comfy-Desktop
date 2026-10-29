@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { LayoutGrid, Waypoints } from 'lucide-vue-next'
+import { LayoutGrid } from 'lucide-vue-next'
+import { GraphIcon, AppIcon } from '../mar/icons/kindIcons'
 import EmptyState from '../ui/EmptyState.vue'
 import PageHeader from '../ui/PageHeader.vue'
 import SearchInput from '../ui/SearchInput.vue'
@@ -29,8 +30,8 @@ const list = computed(() =>
         variant="contained"
         :options="[
           { value: 'all', label: 'All', count: visible.length },
-          { value: 'app', label: 'Apps', icon: LayoutGrid },
-          { value: 'workflow', label: 'Workflows', icon: Waypoints }
+          { value: 'app', label: 'Apps', icon: AppIcon },
+          { value: 'workflow', label: 'Workflows', icon: GraphIcon }
         ]"
       />
       <SearchInput v-model="q" placeholder="Search tools" class="w-56" />

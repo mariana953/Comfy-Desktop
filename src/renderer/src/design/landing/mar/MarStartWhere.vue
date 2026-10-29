@@ -2,11 +2,14 @@
 import { ArrowRight, Cloud, Laptop } from 'lucide-vue-next'
 import { hostActions, proto } from '../useProto'
 import { INSTANCES } from '../mock'
+import { onCloud } from './shell/surface'
 
 /**
  * First run · where Comfy runs: Comfy Cloud (recommended, ready now) or
  * this computer (an install). Two calm cards side by side, each saying
- * what you get and what it takes, with one clear action.
+ * what you get and what it takes, with one clear action. The local card
+ * depends on where you are: on Cloud it installs the Desktop app; on
+ * Desktop (the app is already here) it sets up ComfyUI on this computer.
  */
 function openCloud(): void {
   if (proto.signedIn) hostActions.launch(INSTANCES[0]!)
@@ -16,8 +19,8 @@ function openCloud(): void {
 
 <template>
   <div class="mar-where">
-    <button type="button" class="mar-where-card is-cloud" @click="openCloud">
-      <span class="mar-where-icon"><Cloud :size="18" /></span>
+    <button type="button" class="mar-where-card mar-row-card is-cloud" @click="openCloud">
+      <span class="mar-where-icon mar-row-icon"><Cloud :size="18" /></span>
       <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span class="flex items-center gap-2">
           <span class="text-ui font-medium text-base-foreground">Comfy Cloud</span>
@@ -31,13 +34,19 @@ function openCloud(): void {
         {{ proto.signedIn ? 'Open' : 'Sign in' }}<ArrowRight :size="14" />
       </span>
     </button>
-    <button type="button" class="mar-where-card" @click="hostActions.newInstance()">
-      <span class="mar-where-icon"><Laptop :size="18" /></span>
+    <button type="button" class="mar-where-card mar-row-card" @click="hostActions.newInstance()">
+      <span class="mar-where-icon mar-row-icon"><Laptop :size="18" /></span>
       <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span class="text-ui font-medium text-base-foreground">This computer</span>
-        <span class="text-ui text-subtle-foreground">Your own GPU, works offline.</span>
+        <span class="text-ui text-subtle-foreground">{{
+          onCloud
+            ? 'Get the Desktop app. Your own GPU, works offline.'
+            : 'Your own GPU, works offline.'
+        }}</span>
       </span>
-      <span class="mar-where-cta">Install<ArrowRight :size="14" /></span>
+      <span class="mar-where-cta"
+        >{{ onCloud ? 'Install' : 'Set up' }}<ArrowRight :size="14"
+      /></span>
     </button>
   </div>
 </template>
@@ -47,18 +56,7 @@ function openCloud(): void {
   display: grid;
   width: 100%;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.mar-where-icon {
-  display: inline-flex;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
-  color: var(--color-muted-foreground);
+  gap: 14px;
 }
 .is-cloud .mar-where-icon {
   background: linear-gradient(135deg, #f9d7e6, #d9d4fb 50%, #c9f0e1);
@@ -110,13 +108,6 @@ function openCloud(): void {
 <style>
 /* Global: buttons, past the prototype's button reset. */
 :root .proto-ui.proto-ui.proto-ui .mar-where-card {
-  display: flex;
-  width: auto;
-  height: 80px;
-  align-items: center;
-  gap: 14px;
-  padding: 0 16px;
-  border-radius: 20px;
   background: color-mix(in oklch, var(--color-card-background) 72%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   backdrop-filter: blur(20px);

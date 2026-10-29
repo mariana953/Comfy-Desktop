@@ -20,9 +20,9 @@ import {
   Sparkles,
   ToggleRight,
   Type,
-  Waypoints,
   X
 } from 'lucide-vue-next'
+import { GraphIcon } from '../mar/icons/kindIcons'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import Badge from '../ui/Badge.vue'
 import Button from '../ui/Button.vue'
@@ -364,7 +364,7 @@ const PAYER = { owner: 'You pay', split: 'Split', members: 'Clients pay' } as co
                             class="text-ui text-subtle-foreground"
                             >{{ i + 1 }}</span
                           >
-                          <Waypoints :size="12" />{{ s.name }}
+                          <GraphIcon :size="12" />{{ s.name }}
                           <Button
                             v-if="isLatest(m.id, 'app') && agent.app.sources.length > 1"
                             variant="ghost"
@@ -388,7 +388,7 @@ const PAYER = { owner: 'You pay', split: 'Split', members: 'Clients pay' } as co
                               )"
                               :key="w.name"
                               @select="addSource(w.name)"
-                              ><Waypoints :size="14" />{{ w.name }}</DropdownMenuItem
+                              ><GraphIcon :size="14" />{{ w.name }}</DropdownMenuItem
                             >
                           </DropdownMenuContent>
                         </DropdownMenuRoot>

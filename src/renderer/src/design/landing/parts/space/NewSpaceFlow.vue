@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Check, LayoutGrid, Waypoints } from 'lucide-vue-next'
+import { Check } from 'lucide-vue-next'
+import { GraphIcon, AppIcon } from '../../mar/icons/kindIcons'
 import { DialogDescription, DialogRoot, DialogTitle } from 'reka-ui'
 import Button from '../../ui/Button.vue'
 import Checkbox from '../../ui/Checkbox.vue'
@@ -267,8 +268,8 @@ const PAYERS: { value: Payer; label: string }[] = [
                   :model-value="picked[t.key]!"
                   size="sm"
                   :options="[
-                    { value: 'app', label: 'App', icon: LayoutGrid },
-                    { value: 'workflow', label: 'Workflow', icon: Waypoints }
+                    { value: 'app', label: 'App', icon: AppIcon },
+                    { value: 'workflow', label: 'Workflow', icon: GraphIcon }
                   ]"
                   @click.prevent
                   @update:model-value="(v: Flavor) => (picked = { ...picked, [t.key]: v })"
