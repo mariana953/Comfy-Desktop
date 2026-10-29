@@ -313,29 +313,63 @@
   letter-spacing: -0.035em;
 }
 
-/* Every menu, popover and select looks the same in Mar's proposal: a
-   smoked, blurred surface, rounded, no hard border, items on one line. */
+/* Menus, popovers and selects (audited together): one family. A smoked,
+   blurred surface a step lighter than the page with a hairline edge;
+   radius 14 around 6 of padding, so items nest at 8. Group labels are
+   small and quiet, separators are a visible hairline inset from the
+   edges, paths read in the UI font, and every menu grows from its
+   trigger. */
 :root[data-mar-ui='on']
   :is([role='menu'], [role='listbox'], [data-reka-popper-content-wrapper] > [role='dialog']) {
   border-color: transparent;
   border-radius: 14px;
   padding: 6px;
-  /* A step lighter than the page (the card colour lifted a little), so a
-     menu reads over dark photos and light ones alike. */
   background-color: color-mix(
     in oklch,
-    color-mix(in oklch, var(--color-base-foreground) 6%, var(--color-card-background)) 86%,
+    color-mix(in oklch, var(--color-base-foreground) 6%, var(--color-card-background)) 88%,
     transparent
   );
   backdrop-filter: blur(28px) saturate(1.3);
   box-shadow:
-    0 20px 60px -20px rgb(0 0 0 / 0.7),
-    inset 0 1px 0 color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 7%, transparent),
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 18px 48px -16px rgb(0 0 0 / 0.65);
+  transform-origin: var(
+    --reka-dropdown-menu-content-transform-origin,
+    var(--reka-popover-content-transform-origin, var(--reka-select-content-transform-origin))
+  );
+}
+:root[data-mar-ui='on']
+  :is(
+    [role='menu'],
+    [role='listbox'],
+    [data-reka-popper-content-wrapper] > [role='dialog']
+  )[data-state='open'] {
+  animation: mar-menu-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes mar-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+:root[data-mar-ui='on'][data-ds-theme='light']
+  :is([role='menu'], [role='listbox'], [data-reka-popper-content-wrapper] > [role='dialog']) {
+  background-color: color-mix(in oklch, var(--color-card-background) 92%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 8%, transparent),
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 16px 40px -14px rgb(0 0 0 / 0.2);
 }
 :root[data-mar-ui='on']
   :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='option']) {
-  border-radius: 9px;
+  min-height: 34px;
+  gap: 10px;
+  border-radius: 8px;
+  padding-top: 6px;
+  padding-bottom: 6px;
   white-space: nowrap;
+  transition: background-color 120ms ease;
 }
 :root[data-mar-ui='on']
   :is(
@@ -344,7 +378,50 @@
     [role='menuitemcheckbox'],
     [role='option']
   )[data-highlighted] {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+}
+:root[data-mar-ui='on']
+  :is(
+    [role='menuitem'],
+    [role='menuitemradio'],
+    [role='menuitemcheckbox'],
+    [role='option']
+  )[data-highlighted]
+  > svg {
+  color: var(--color-base-foreground);
+}
+/* Two-line items: the second line a step smaller and quieter. */
+:root[data-mar-ui='on']
+  :is([role='menuitem'], [role='menuitemcheckbox'], [role='option'])
+  .flex-col
+  > span
+  + span {
+  font-size: 12px;
+  line-height: 1.35;
+}
+:root[data-mar-ui='on'] :is([role='menu'], [role='listbox']) .font-mono {
+  font-family: inherit;
+  letter-spacing: 0;
+}
+:root[data-mar-ui='on'] [role='listbox'] {
+  min-width: max(var(--reka-select-trigger-width, 0px), 180px);
+}
+:root[data-mar-ui='on'] .mar-menu-label {
+  padding: 8px 10px 4px;
+  color: var(--color-subtle-foreground);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+:root[data-mar-ui='on'] .mar-menu-sep {
+  height: 1px;
+  margin: 6px 4px;
   background-color: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-mar-ui='on'] :is([role='menu'], [role='listbox'])[data-state='open'] {
+    animation-name: fade-in;
+  }
 }
 
 /* Avatar stacks: solid avatars with a ring in the page colour, so the

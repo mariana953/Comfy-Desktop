@@ -10,6 +10,8 @@ import DropdownMenuSeparator from '../ui/DropdownMenuSeparator.vue'
 import Tooltip from '../ui/Tooltip.vue'
 import { downloads, localFolders, type GalleryAsset } from '../gallery'
 import { instanceById, toast } from '../useProto'
+import { isMariana } from '../mar/proposal'
+import { shortPath } from '../mar/menus'
 
 /** Cloud badge on a gallery tile. Click to download the asset into one of
  *  the local folders; once downloaded it shows where it went. */
@@ -52,7 +54,9 @@ function save(folderId: string): void {
           <Folder :size="14" />
           <span class="flex min-w-0 flex-col">
             <span>{{ folderLabel(f) }}</span>
-            <span class="truncate font-mono text-ui text-subtle-foreground">{{ f.path }}</span>
+            <span class="truncate font-mono text-ui text-subtle-foreground" :title="f.path">{{
+              isMariana ? shortPath(f.path) : f.path
+            }}</span>
           </span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
