@@ -1342,3 +1342,27 @@
   width: 1px;
   background: color-mix(in oklch, var(--color-base-foreground) 9%, transparent);
 }
+
+/* ── App page (an app's published page) ──────────────────────────────
+   The app page is the product's own page: its segmented choices use the
+   same squared track as the filters (10 / 7), and the "Example" tag
+   stays legible on the photo in both themes. */
+:root[data-mar-ui='on'] .mar-app-page [role='group']:has(> button[data-state]) {
+  border-color: transparent;
+  border-radius: 10px;
+  padding: 3px;
+  background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  box-shadow: none;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-app-page [role='group']:has(> button[data-state]) > button {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 7px;
+}
+:root[data-mar-ui='on'] .mar-app-page [role='group'] > button[data-state='on'] {
+  background-color: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
+}
+:root[data-mar-ui='on'] .mar-app-page .bg-media-overlay {
+  color: oklch(1 0 0 / 0.86);
+  background-color: oklch(0 0 0 / 0.5);
+}

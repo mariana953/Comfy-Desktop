@@ -10,6 +10,7 @@ import { thumb } from '../../mock'
 import { toast } from '../../useProto'
 import { kitById, themeStyle, type AppTheme } from '../../appTheme'
 import type { AppLayout, Field } from '../../appFlow'
+import { isMariana } from '../../mar/proposal'
 
 /**
  * The app page in its theme: header (brand or Comfy), title or cover,
@@ -52,13 +53,20 @@ const PRESETS = ['Softbox studio', 'Golden hour', 'Marble counter']
 const titleStyle = computed(() => ({
   fontWeight: 'var(--app-title-weight)',
   letterSpacing: 'var(--app-title-spacing)',
-  textTransform: theme.font === 'condensed' ? ('uppercase' as const) : undefined
+  textTransform: !isMariana.value && theme.font === 'condensed' ? ('uppercase' as const) : undefined
 }))
 const pad = computed(() => (compact ? 'px-6' : 'px-10'))
+// Mar's proposal: the app page is the product's own page - its font,
+// corners and colours. A brand kit only puts its logo in the header.
+const MAR_STYLE = { '--app-title-weight': '600', '--app-title-spacing': '-0.02em' }
+const frameStyle = computed(() => (isMariana.value ? MAR_STYLE : themeStyle(theme)))
 </script>
 
 <template>
-  <div :style="themeStyle(theme)" class="bg-app-background text-base-foreground">
+  <div
+    :style="frameStyle"
+    :class="cn('bg-app-background text-base-foreground', isMariana && 'mar-app-page')"
+  >
     <header
       :class="
         cn(
@@ -112,7 +120,7 @@ const pad = computed(() => (compact ? 'px-6' : 'px-10'))
       </p>
 
       <!-- Quick-start presets -->
-      <div v-if="theme.presets" class="mt-6 flex flex-wrap items-center gap-2">
+      <div v-if="theme.presets && !isMariana" class="mt-6 flex flex-wrap items-center gap-2">
         <span class="text-ui text-subtle-foreground">Start from</span>
         <button
           v-for="p in PRESETS"
@@ -135,7 +143,7 @@ const pad = computed(() => (compact ? 'px-6' : 'px-10'))
           :payer
           :gate
           :compact
-          :run-label="theme.runLabel"
+          :run-label="isMariana ? 'Run' : theme.runLabel"
           @done="emit('done')"
         />
       </div>
@@ -150,7 +158,12 @@ const pad = computed(() => (compact ? 'px-6' : 'px-10'))
         "
       >
         <span class="flex items-center gap-1.5"><ComfyCLogo :size="12" />Made with Comfy</span>
-        <button type="button" class="flex items-center gap-1.5" @click="toast('Report sent')">
+        <button
+          v-if="!isMariana"
+          type="button"
+          class="flex items-center gap-1.5"
+          @click="toast('Report sent')"
+        >
           <Flag :size="12" />Report this app
         </button>
       </footer>
