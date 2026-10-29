@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Rocket,
   ScrollText,
+  Search,
   Server,
   SquareArrowOutUpRight,
   Workflow
@@ -20,6 +21,8 @@ import Button from '../../ui/Button.vue'
 import { cn } from '../../ui/cn'
 import { go, isNewUser, proto, toast, type Mode, type Page } from '../../useProto'
 import { can } from '../../milestones'
+import { isMariana } from '../../mar/proposal'
+import { search } from '../../mar/search/search'
 
 /**
  * Navigation for one lens. Create: make things. Build: ship them as an API.
@@ -126,6 +129,17 @@ function open(i: Item): void {
     <span>{{ label }}</span>
   </div>
   <nav class="flex flex-col gap-px" :aria-label="mode === 'create' ? 'Create' : 'Build'">
+    <!-- Mar's proposal: the global search (⌘K) heads the nav, by default. -->
+    <Button
+      v-if="isMariana"
+      variant="ghost"
+      class="h-8 w-full justify-start gap-2.5 px-3 text-ui font-normal"
+      @click="search.open = true"
+    >
+      <Search :size="15" />
+      <span class="sidebar-label flex-1 text-left">Search</span>
+      <kbd class="sidebar-label text-[11px] text-subtle-foreground">⌘K</kbd>
+    </Button>
     <template v-for="i in NAV[mode].filter((n) => !omit.includes(n.label))" :key="i.label">
       <div
         v-if="i.section"

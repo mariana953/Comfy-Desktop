@@ -299,10 +299,16 @@ function click(e: MouseEvent): void {
     inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 8%, transparent),
     0 8px 24px -10px rgb(0 0 0 / 0.5);
 }
+/* State sits top-left (Mar), opposite the tools; when the select check
+   shows in that corner on hover, the chip steps aside for it. */
 .mar-item-status {
   position: absolute;
-  bottom: 8px;
+  top: 8px;
   left: 8px;
+  transition: translate 160ms ease;
+}
+.mar-item:is(:hover, :focus-within, .is-selecting, .is-selected) .mar-item-status {
+  translate: 26px 0;
 }
 .mar-item-tools {
   position: absolute;
