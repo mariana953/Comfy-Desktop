@@ -70,8 +70,11 @@ watch(
     if (!on) return
     draft.value = name
     await nextTick()
-    input.value?.focus()
-    input.value?.select()
+    // After the ⋯ menu has closed and handed focus back to its button.
+    setTimeout(() => {
+      input.value?.focus()
+      input.value?.select()
+    }, 60)
   },
   { immediate: true }
 )

@@ -38,6 +38,10 @@ import { dismiss, runUndo, undoToast } from './undo'
   box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.5);
   transform: translateX(-50%);
 }
+/* Above the selection bar when both show. */
+:root .proto-ui.proto-ui.proto-ui .mar-page:has(.mar-selbar) .mar-undo {
+  bottom: 80px;
+}
 :root .proto-ui.proto-ui.proto-ui .mar-undo-btn {
   width: auto;
   height: 28px;

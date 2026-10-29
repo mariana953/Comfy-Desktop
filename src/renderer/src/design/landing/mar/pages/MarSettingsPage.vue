@@ -326,10 +326,9 @@ const hits = computed(() => {
 })
 const label = (id: string): string => GROUPS.find((g) => g.id === id)!.label
 
+// Theme is the prototype's own pick (UI Playground), never a change to undo.
 const changed = (s: Setting): boolean =>
-  s.kind !== 'button' &&
-  s.kind !== 'value' &&
-  (s.id === 'theme' ? look.theme !== s.def : values[s.id] !== s.def)
+  s.kind !== 'button' && s.kind !== 'value' && s.id !== 'theme' && values[s.id] !== s.def
 function reset(s: Setting): void {
   if (s.id === 'theme') theme.value = s.def as string
   else values[s.id] = s.def!
