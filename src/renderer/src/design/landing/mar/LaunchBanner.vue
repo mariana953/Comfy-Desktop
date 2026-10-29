@@ -125,7 +125,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
           />
           <span class="banner-grain absolute inset-0" aria-hidden="true" />
           <div
-            class="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8 text-center"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8 pb-6 text-center"
           >
             <h3
               class="text-[30px] leading-[1.15] font-medium tracking-[-0.015em] whitespace-pre-line text-white drop-shadow-sm"
@@ -151,29 +151,32 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
           </div>
         </div>
       </Transition>
-    </div>
-    <div class="mt-3 flex justify-center gap-1.5" role="tablist" aria-label="What's new slides">
-      <button
-        v-for="(s, i) in SLIDES"
-        :key="s.id"
-        type="button"
-        role="tab"
-        :aria-selected="i === index"
-        :aria-label="`Slide ${i + 1}`"
-        :class="[
-          'relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300',
-          i === index
-            ? 'w-8 bg-muted-foreground/30'
-            : 'w-1.5 bg-muted-foreground/40 hover:bg-muted-foreground'
-        ]"
-        @click="pick(i)"
+      <!-- The dots sit inside the banner, under the buttons. -->
+      <div
+        class="absolute inset-x-0 bottom-5 z-10 flex justify-center gap-1.5"
+        role="tablist"
+        aria-label="What's new slides"
       >
-        <span
-          v-if="i === index"
-          class="absolute inset-y-0 left-0 rounded-full bg-base-foreground"
-          :style="{ width: `${Math.min(progress, 1) * 100}%` }"
-        />
-      </button>
+        <button
+          v-for="(s, i) in SLIDES"
+          :key="s.id"
+          type="button"
+          role="tab"
+          :aria-selected="i === index"
+          :aria-label="`Slide ${i + 1}`"
+          :class="[
+            'relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300',
+            i === index ? 'w-8 bg-white/30' : 'w-1.5 bg-white/45 hover:bg-white/80'
+          ]"
+          @click="pick(i)"
+        >
+          <span
+            v-if="i === index"
+            class="absolute inset-y-0 left-0 rounded-full bg-white"
+            :style="{ width: `${Math.min(progress, 1) * 100}%` }"
+          />
+        </button>
+      </div>
     </div>
   </section>
 </template>
