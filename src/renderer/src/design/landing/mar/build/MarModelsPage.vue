@@ -4,6 +4,7 @@ import {
   ChevronDown,
   Cloud,
   Download,
+  KeyRound,
   LayoutGrid,
   List,
   Plus,
@@ -18,7 +19,7 @@ import EmptyState from '../../ui/EmptyState.vue'
 import SearchInput from '../../ui/SearchInput.vue'
 import Select from '../../ui/Select.vue'
 import { ROUTER_MODELS } from '../../mock'
-import { toast } from '../../useProto'
+import { go, toast } from '../../useProto'
 import { ComfyModel } from '../icons/comfyIcons'
 import ModelDeleteDialog from './ModelDeleteDialog.vue'
 import ModelDetail from './ModelDetail.vue'
@@ -354,7 +355,12 @@ const lowDisk = computed(() => freeGb.value < 120)
             <template v-if="scope === 'partner'"> · run in the cloud, nothing to download</template>
           </p>
         </div>
-        <div v-if="scope !== 'partner'" class="flex items-center gap-2">
+        <!-- Pablo keeps provider keys in admin; they belong next to the
+             models they unlock. -->
+        <Button v-if="scope === 'partner'" size="sm" variant="subtle" @click="go('provider-keys')"
+          ><KeyRound :size="13" />Provider keys</Button
+        >
+        <div v-else class="flex items-center gap-2">
           <Select
             v-model="sort"
             label="Sort"
