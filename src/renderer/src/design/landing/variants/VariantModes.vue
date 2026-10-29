@@ -4,6 +4,7 @@ import { Code, Palette } from 'lucide-vue-next'
 import ModeSwitch from '../parts/ModeSwitch.vue'
 import DetailSheet from '../parts/DetailSheet.vue'
 import MarTemplateModal from '../mar/templateModal/MarTemplateModal.vue'
+import MarDeployModal from '../mar/deploy/MarDeployModal.vue'
 import LaunchOverlay from '../parts/LaunchOverlay.vue'
 import LoginPrompt from '../parts/LoginPrompt.vue'
 import WorkspaceMenu from '../parts/WorkspaceMenu.vue'
@@ -117,7 +118,8 @@ const MODES = computed(() => [
     <DetailSheet v-if="!(isMariana && proto.detail?.kind === 'template')" />
     <LaunchOverlay />
     <LoginPrompt />
-    <DeployDialog />
+    <MarDeployModal v-if="isMariana" />
+    <DeployDialog v-else />
     <DeployToolDialog />
     <NewSpaceFlow v-if="can.spaces" />
     <template v-if="can.agent"><PublishDialog /><ShareDialog /></template>
