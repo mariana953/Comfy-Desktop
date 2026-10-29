@@ -10,9 +10,9 @@ import { isNewUser, proto } from '../useProto'
 export type Port = 'navAccount' | 'navDocs' | 'firstRunNav'
 
 export const PORTS: { key: Port; label: string }[] = [
-  { key: 'navAccount', label: 'Account · Log in card, workspace in Tabs' },
-  { key: 'navDocs', label: 'Build nav · Docs link' },
-  { key: 'firstRunNav', label: 'First-time nav · only what a first call needs' }
+  { key: 'navAccount', label: 'Signed out: Log in card, no Credits row' },
+  { key: 'navDocs', label: 'Build mode: Docs link at the end of the nav' },
+  { key: 'firstRunNav', label: 'First-time user: hide Builds, Deployments, Logs' }
 ]
 
 const KEY = 'comfy.design.mar.pabloPorts'

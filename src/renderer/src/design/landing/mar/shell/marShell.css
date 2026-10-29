@@ -1080,7 +1080,8 @@
   ) {
   height: 34px;
   border-color: transparent;
-  border-radius: 999px;
+  /* Same corner as the tab tracks (follows UI Playground › Corners). */
+  border-radius: var(--mar-tab-radius);
   padding-inline: 14px 12px;
   background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   box-shadow: none;

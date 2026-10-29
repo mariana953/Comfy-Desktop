@@ -196,9 +196,9 @@ function lines(a: MarAsset): MenuLine[] {
 
     <template #toolbar>
       <MarSeg v-model="kind" :options="KINDS" label="Type" />
-      <Select v-model="where" :options="WHERE" class="w-36" />
-      <Select v-if="!fixedProject" v-model="project" :options="PROJECTS" class="w-40" />
       <div class="ml-auto flex items-center gap-2">
+        <Select v-model="where" :options="WHERE" class="w-36" />
+        <Select v-if="!fixedProject" v-model="project" :options="PROJECTS" class="w-40" />
         <Select v-model="sort" :options="SORTS" label="Sort" class="w-34" />
         <MarSearchField v-model="query" placeholder="Search assets" />
         <AssetViewMenu />
@@ -301,20 +301,21 @@ function lines(a: MarAsset): MenuLine[] {
   filter: blur(14px) saturate(0.8);
   transform: scale(1.1);
 }
+/* A run in flight: the progress is the cover's bottom edge, clipped by
+   the picture's own corners, so it reads as the picture filling in. */
 .mar-asset-progress {
   position: absolute;
-  right: 10px;
-  bottom: 36px;
-  left: 10px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   height: 3px;
   overflow: hidden;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / 0.18);
 }
 .mar-asset-progress i {
   display: block;
   height: 100%;
-  border-radius: inherit;
   background: rgb(255 255 255 / 0.9);
+  transition: width 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

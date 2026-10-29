@@ -190,9 +190,9 @@ function lines(w: MarWorkflow): MenuLine[] {
 
     <template #toolbar>
       <MarSeg v-model="where" :options="WHERE" label="Where" />
-      <Select v-model="type" :options="TYPES" class="w-32" />
-      <Select v-if="!fixedProject" v-model="project" :options="PROJECTS" class="w-40" />
       <div class="ml-auto flex items-center gap-2">
+        <Select v-model="type" :options="TYPES" class="w-32" />
+        <Select v-if="!fixedProject" v-model="project" :options="PROJECTS" class="w-40" />
         <Select v-model="sort" :options="SORTS" label="Sort" class="w-40" />
         <MarSearchField v-model="query" placeholder="Search workflows" />
         <MarViewToggle v-model="view" />

@@ -197,8 +197,8 @@ function lines(a: LibApp): MenuLine[] {
 
     <template #toolbar>
       <MarSeg v-model="tab" :options="TABS" label="Whose" />
-      <Select v-if="tab === 'mine'" v-model="state" :options="STATES" class="w-44" />
       <div class="ml-auto flex items-center gap-2">
+        <Select v-if="tab === 'mine'" v-model="state" :options="STATES" class="w-44" />
         <Select v-model="sort" :options="SORTS" label="Sort" class="w-44" />
         <MarSearchField v-model="query" placeholder="Search apps" />
         <MarViewToggle v-model="view" />
