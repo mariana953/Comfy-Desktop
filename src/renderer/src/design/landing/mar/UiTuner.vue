@@ -12,6 +12,7 @@ import Select from '../ui/Select.vue'
 import { PALETTES, palette } from './palette'
 import { MODE_STYLES, modeStyle } from './modes/modeStyle'
 import { COVERS, cover } from './cover'
+import { HOME_BUILDS, homeBuilds } from './homeBuilds'
 import { TEMPLATE_STYLES, templateStyle } from './brand/templateStyle'
 import { CREDITS_STYLES, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
@@ -37,6 +38,7 @@ function reset(): void {
   resetTuning()
   marNav.id = 'classic'
   homeBackground.id = 'spotlight'
+  homeBuilds.id = 'off'
   palette.id = 'void'
 }
 
@@ -231,6 +233,27 @@ function set(key: keyof Tuning, value: string): void {
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Home background</span>
         <Select v-model="homeBackground.id" :options="BACKGROUNDS" class="w-full" />
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Build on Home</span>
+        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+          <button
+            v-for="b in HOME_BUILDS"
+            :key="b.value"
+            type="button"
+            :aria-pressed="homeBuilds.id === b.value"
+            :class="[
+              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              homeBuilds.id === b.value
+                ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                : 'text-muted-foreground hover:text-base-foreground'
+            ]"
+            @click="homeBuilds.id = b.value"
+          >
+            {{ b.label }}
+          </button>
+        </div>
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

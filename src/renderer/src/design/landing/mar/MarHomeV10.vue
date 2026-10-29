@@ -12,6 +12,8 @@ import MarStart from './MarStart.vue'
 import StarterCards from '../parts/StarterCards.vue'
 import TemplatesRow from '../parts/TemplatesRow.vue'
 import MarSpacesRow from './MarSpacesRow.vue'
+import MarBuildsRow from './MarBuildsRow.vue'
+import { homeBuilds } from './homeBuilds'
 import { p20 } from './p20/p20'
 import CommandHome from './p20/CommandHome.vue'
 import BentoHome from './p20/BentoHome.vue'
@@ -225,6 +227,7 @@ const recent = computed(() =>
         </ScrollRow>
       </section>
       <RecentWork v-else-if="parts.recent === 'pablo'" />
+      <MarBuildsRow v-if="homeBuilds.id === 'on'" />
 
       <section v-if="parts.examples === 'rows'" class="mt-10">
         <SectionHeader
