@@ -1,14 +1,19 @@
 import { defineComponent, h } from 'vue'
 
 /**
- * The Agent entry in Mar's proposal: a chat bubble with a small sparkle.
- * Production has no agent icon, so it is drawn in lucide's system (24 grid,
- * stroke 2, round caps and joins): lucide's message-square with a
- * four-point sparkle in its middle.
+ * The Agent entry in Mar's proposal: a chat bubble with a small sparkle on
+ * its top-right corner, half in and half out. The bubble's outline breaks
+ * around the sparkle (a 1.5px knockout) so the two never touch. Production
+ * has no agent icon, so it is drawn in lucide's system (24 grid, stroke 2,
+ * round caps and joins): lucide's message-square, a step smaller.
  */
 const BUBBLE =
-  'M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z'
-const SPARKLE = 'M12 7q.6 3.4 4 4q-3.4.6-4 4q-.6-3.4-4-4q3.4-.6 4-4z'
+  'M19 18a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 22.286V8a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z'
+const SPARKLE = 'M18.5 1q.7 3.8 4.5 4.5q-3.8.7-4.5 4.5q-.7-3.8-4.5-4.5q3.8-.7 4.5-4.5z'
+// Stroke 2 plus 1.5 of gap on each side.
+const KNOCKOUT = 5
+
+let uid = 0
 
 export const AgentChat = defineComponent({
   name: 'AgentChat',
@@ -17,6 +22,7 @@ export const AgentChat = defineComponent({
     strokeWidth: { type: [Number, String], default: 2 }
   },
   setup(props) {
+    const mask = `mar-agent-chat-${++uid}`
     return () =>
       h(
         'svg',
@@ -32,7 +38,14 @@ export const AgentChat = defineComponent({
           'stroke-linejoin': 'round',
           'aria-hidden': 'true'
         },
-        [h('path', { d: BUBBLE }), h('path', { d: SPARKLE })]
+        [
+          h('mask', { id: mask, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: 24, height: 24 }, [
+            h('rect', { width: 24, height: 24, fill: 'white', stroke: 'none' }),
+            h('path', { d: SPARKLE, fill: 'black', stroke: 'black', 'stroke-width': KNOCKOUT })
+          ]),
+          h('path', { d: BUBBLE, mask: `url(#${mask})` }),
+          h('path', { d: SPARKLE })
+        ]
       )
   }
 })
