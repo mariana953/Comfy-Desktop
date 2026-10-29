@@ -126,15 +126,22 @@ export const tuner = reactive({ open: false })
 
 // ⌘. (Ctrl+. on Windows) shows and hides the tuner, so you can look at
 // what a tweak did without the panel in the way; Esc closes it.
-window.addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === '.') {
-    e.preventDefault()
-    tuner.open = !tuner.open
-  } else if (e.key === 'Escape' && tuner.open) {
-    const t = e.target as HTMLElement | null
-    if (!t?.closest('[role="listbox"], [role="menu"], [role="dialog"]')) tuner.open = false
-  }
-})
+// Listened in the capture phase so a focused field or a component that
+// stops the event can't swallow it; matched by key or physical key, so
+// it works on any keyboard layout.
+window.addEventListener(
+  'keydown',
+  (e) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === '.' || e.code === 'Period')) {
+      e.preventDefault()
+      tuner.open = !tuner.open
+    } else if (e.key === 'Escape' && tuner.open) {
+      const t = e.target as HTMLElement | null
+      if (!t?.closest('[role="listbox"], [role="menu"], [role="dialog"]')) tuner.open = false
+    }
+  },
+  { capture: true }
+)
 
 export function resetTuning(): void {
   Object.assign(tuning, DEFAULTS)

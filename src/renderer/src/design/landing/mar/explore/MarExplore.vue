@@ -6,6 +6,7 @@ import Select from '../../ui/Select.vue'
 import TemplateCard from '../../parts/TemplateCard.vue'
 import { APPS, ROUTER_MODELS, TEMPLATES, TUTORIALS, thumb } from '../../mock'
 import { go, toast } from '../../useProto'
+import FavoriteStar from '../FavoriteStar.vue'
 
 /**
  * Explore in Mar's proposal. One line holds everything that narrows the
@@ -165,7 +166,10 @@ const empty = computed(
         class="mar-ex-card group"
         @click="go(`app:${a.id}` as never)"
       >
-        <span class="mar-ex-media"><img :src="thumb(a.thumbId)" alt="" loading="lazy" /></span>
+        <span class="mar-ex-media"
+          ><img :src="thumb(a.thumbId)" alt="" loading="lazy" /><span class="mar-ex-star"
+            ><FavoriteStar :id="a.id" kind="app" /></span
+        ></span>
         <span class="flex flex-col gap-0.5 px-2 pt-2.5 pb-2 text-left">
           <span class="truncate text-ui font-medium text-base-foreground">{{ a.name }}</span>
           <span class="truncate text-ui text-subtle-foreground"
@@ -214,7 +218,7 @@ const empty = computed(
   display: flex;
   gap: 2px;
   padding: 3px;
-  border-radius: 10px;
+  border-radius: var(--mar-tab-radius, 10px);
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
 .mar-ex-count {
@@ -229,7 +233,7 @@ const empty = computed(
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  border-radius: 10px;
+  border-radius: var(--mar-tab-radius, 10px);
   background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
   color: var(--color-subtle-foreground);
 }
@@ -285,6 +289,11 @@ const empty = computed(
   object-fit: cover;
   transition: transform 500ms ease;
 }
+.mar-ex-star {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
 .mar-ex-play,
 .mar-ex-time {
   position: absolute;
@@ -317,7 +326,7 @@ const empty = computed(
   width: auto;
   height: 28px;
   padding: 0 12px;
-  border-radius: 7px;
+  border-radius: var(--mar-tab-item-radius, 7px);
   color: var(--color-muted-foreground);
   font-size: 13px;
 }
@@ -363,7 +372,7 @@ const empty = computed(
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  border-radius: 10px;
+  border-radius: var(--mar-tab-radius, 10px);
   background-color: color-mix(
     in oklch,
     color-mix(in oklch, var(--color-base-foreground) 9%, var(--color-card-background)) 82%,

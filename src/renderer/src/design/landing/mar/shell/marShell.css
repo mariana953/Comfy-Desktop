@@ -1058,7 +1058,7 @@
    - Other filter buttons (Folders): the same pill. */
 :root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) {
   border-color: transparent;
-  border-radius: 10px;
+  border-radius: var(--mar-tab-radius);
   padding: 3px;
   background-color: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   box-shadow: none;
@@ -1066,7 +1066,7 @@
 :root .proto-ui.proto-ui.proto-ui .proto-main [role='group']:has(> button[data-state]) > button {
   height: 28px;
   padding: 0 12px;
-  border-radius: 7px;
+  border-radius: var(--mar-tab-item-radius);
 }
 :root[data-mar-ui='on'] .proto-main [role='group'] > button[data-state='on'] {
   background-color: color-mix(in oklch, var(--color-base-foreground) 11%, transparent);
@@ -1183,7 +1183,7 @@
 
 /* The sliding pill behind scope tabs takes the tabs' shape. */
 :root[data-mar-ui='on'] .proto-main [role='group']:has(> button[data-state]) > .mar-tab-pill {
-  border-radius: 7px;
+  border-radius: var(--mar-tab-item-radius);
 }
 
 /* Form fields (inside cards: settings, dialogs) are not filters: a soft
@@ -1616,4 +1616,12 @@
    tab tracks), so a search reads as a field, not a chip. */
 :root[data-mar-ui='on'] .proto-main label:has(> input[type='search'], > input:not([type])) {
   border-radius: 10px;
+}
+
+/* Tab tracks and search fields follow UI Playground › Corners: Soft (the
+   default) gives 10 / 7; Default gives 6 / 3. The item nests inside the
+   track's 3px padding (inner = outer - padding). */
+:root[data-mar-ui='on'] {
+  --mar-tab-radius: calc(var(--radius-control) - 2px);
+  --mar-tab-item-radius: calc(var(--mar-tab-radius) - 3px);
 }
