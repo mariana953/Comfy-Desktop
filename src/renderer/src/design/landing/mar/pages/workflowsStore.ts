@@ -3,8 +3,9 @@ import { collection } from './collection'
 import type { ItemStatus } from './MarStatus.vue'
 
 /** Workflows in Mar's proposal: the gallery's, with the states the
- *  product shows on a workflow (running, queued, failed last run,
- *  unsaved changes, shared). */
+ *  product shows on a workflow (ComfyUI_frontend WorkflowTab: running,
+ *  completed, failed; plus unsaved changes and shared). No percentage
+ *  or queue position: those live in the queue. */
 export interface MarWorkflow {
   id: string
   name: string
@@ -21,8 +22,8 @@ export interface MarWorkflow {
 }
 
 const STATES: [ItemStatus, string?][] = [
-  ['running', 'Running · 62%'],
-  ['queued', 'Queued · 2nd'],
+  ['executing'],
+  ['completed'],
   ['failed'],
   ['draft', 'Unsaved']
 ]

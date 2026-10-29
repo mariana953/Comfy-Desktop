@@ -1,12 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AlertTriangle, ArrowUpCircle, Clock, Loader2, Users } from 'lucide-vue-next'
+import {
+  ArrowUpCircle,
+  CircleCheck,
+  Clock,
+  Loader2,
+  LoaderCircle,
+  OctagonAlert,
+  Users
+} from 'lucide-vue-next'
 
 /**
  * One item's state, as a small pill (Mar's pages). Running and Live
  * breathe; Failed is the only red; Draft and Paused stay quiet.
+ * A workflow's last run uses production's three (ComfyUI_frontend
+ * WorkflowTab): executing spins, completed checks, failed is an octagon
+ * alert (used for every Failed); no percentage, that lives in the queue.
  */
 export type ItemStatus =
+  | 'executing'
+  | 'completed'
   | 'running'
   | 'queued'
   | 'failed'
@@ -28,6 +41,8 @@ const { status, label, onMedia } = defineProps<{
 }>()
 
 const WORDS: Record<ItemStatus, string> = {
+  executing: 'Running',
+  completed: 'Completed',
   running: 'Running',
   queued: 'Queued',
   failed: 'Failed',
@@ -41,7 +56,7 @@ const WORDS: Record<ItemStatus, string> = {
   changes: 'Unpublished changes'
 }
 const tone = computed(() =>
-  status === 'running' || status === 'live'
+  status === 'running' || status === 'live' || status === 'executing'
     ? 'is-go'
     : status === 'failed'
       ? 'is-bad'
@@ -53,9 +68,11 @@ const tone = computed(() =>
 
 <template>
   <span class="mar-status" :class="[tone, onMedia && 'on-media']">
-    <Loader2 v-if="status === 'launching'" :size="11" class="animate-spin" />
+    <LoaderCircle v-if="status === 'executing'" :size="11" class="motion-safe:animate-spin" />
+    <CircleCheck v-else-if="status === 'completed'" :size="11" />
+    <OctagonAlert v-else-if="status === 'failed'" :size="11" />
+    <Loader2 v-else-if="status === 'launching'" :size="11" class="animate-spin" />
     <Clock v-else-if="status === 'queued'" :size="11" />
-    <AlertTriangle v-else-if="status === 'failed'" :size="11" />
     <Users v-else-if="status === 'shared'" :size="11" />
     <ArrowUpCircle v-else-if="status === 'update'" :size="11" />
     <i v-else-if="status !== 'draft'" class="mar-status-dot" />
