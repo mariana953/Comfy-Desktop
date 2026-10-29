@@ -21,6 +21,7 @@ import {
   type Payer
 } from '../../spaces'
 import { go, proto, toast } from '../../useProto'
+import { isMariana } from '../../mar/proposal'
 import { APPS, BRAND_SWATCHES, thumb } from '../../mock'
 
 /**
@@ -123,18 +124,32 @@ const PAYERS: { value: Payer; label: string }[] = [
 
 <template>
   <DialogRoot v-model:open="open">
-    <DialogContent size="lg" class="grid h-[600px] grid-cols-[200px_minmax(0,1fr)] p-0">
+    <DialogContent
+      size="lg"
+      :class="
+        cn(
+          'grid h-[600px] grid-cols-[200px_minmax(0,1fr)] p-0',
+          isMariana &&
+            'mar-wizard h-[500px] w-[min(860px,calc(100vw-48px))] grid-cols-[224px_minmax(0,1fr)]'
+        )
+      "
+    >
       <!-- Steps -->
-      <aside class="flex flex-col gap-1 border-r border-border-default p-5">
-        <DialogTitle class="mb-4 text-heading font-semibold">New space</DialogTitle>
+      <aside class="mar-wizard-rail flex flex-col gap-1 border-r border-border-default p-5">
+        <DialogTitle :class="cn('mb-4 text-heading font-semibold', isMariana && 'mb-0')"
+          >New space</DialogTitle
+        >
+        <p v-if="isMariana" class="mar-wizard-count">Step {{ step + 1 }} of {{ STEPS.length }}</p>
         <button
           v-for="(s, i) in STEPS"
           :key="s"
           type="button"
+          :data-step="i < step ? 'done' : i === step ? 'current' : 'todo'"
+          :aria-current="step === i ? 'step' : undefined"
           :disabled="i > 0 && !name.trim()"
           :class="
             cn(
-              'flex h-8 items-center gap-2.5 rounded-control px-2 text-left text-ui text-muted-foreground outline-none hover:bg-secondary-background disabled:opacity-40',
+              'mar-step flex h-8 items-center gap-2.5 rounded-control px-2 text-left text-ui text-muted-foreground outline-none hover:bg-secondary-background disabled:opacity-40',
               step === i && 'bg-secondary-background-hover text-base-foreground'
             )
           "
@@ -150,13 +165,13 @@ const PAYERS: { value: Payer; label: string }[] = [
             ><Check v-if="i < step" :size="11" /><template v-else>{{ i + 1 }}</template></span
           >{{ s }}
         </button>
-        <p class="mt-auto text-ui text-subtle-foreground">
+        <p v-if="!isMariana" class="mt-auto text-ui text-subtle-foreground">
           Starts as a draft. Nobody sees it until you go live.
         </p>
       </aside>
 
-      <section class="flex min-h-0 flex-col">
-        <div class="min-h-0 flex-1 overflow-y-auto p-6">
+      <section class="mar-wizard-main flex min-h-0 flex-col">
+        <div class="mar-wizard-body min-h-0 flex-1 overflow-y-auto p-6">
           <!-- 1 Name -->
           <template v-if="step === 0">
             <h3 class="text-title font-semibold">Name your space</h3>
@@ -168,7 +183,7 @@ const PAYERS: { value: Payer; label: string }[] = [
             <label class="mt-5 block text-ui font-medium">Address</label>
             <Input v-model="slug" mono class="mt-2" @update:model-value="slugEdited = true"
               ><template #trailing
-                ><span class="text-ui text-subtle-foreground">.comfy.app</span></template
+                ><span class="mar-suffix text-ui text-subtle-foreground">.comfy.app</span></template
               ></Input
             >
             <p class="mt-1.5 text-ui text-subtle-foreground">
@@ -320,7 +335,9 @@ const PAYERS: { value: Payer; label: string }[] = [
           </template>
         </div>
 
-        <footer class="flex items-center gap-2 border-t border-border-default px-6 py-4">
+        <footer
+          class="mar-wizard-foot flex items-center gap-2 border-t border-border-default px-6 py-4"
+        >
           <Button v-if="step > 0" variant="ghost" @click="step--">Back</Button>
           <span class="flex-1" />
           <template v-if="step < STEPS.length - 1">
