@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Search, X } from 'lucide-vue-next'
+import { savedAssets } from './savedAssets'
 
 /**
  * The Assets panel (rail › Assets): everything made or brought in, to
@@ -19,7 +20,7 @@ const FILTERS = ['All', 'Generated', 'Imported'] as const
 const filter = ref<(typeof FILTERS)[number]>('All')
 const query = ref('')
 const shown = computed(() =>
-  ALL.filter(
+  [...savedAssets.map((a) => ({ ...a, kind: 'Generated' })), ...ALL].filter(
     (a) =>
       (filter.value === 'All' || a.kind === filter.value) &&
       a.name.toLowerCase().includes(query.value.trim().toLowerCase())

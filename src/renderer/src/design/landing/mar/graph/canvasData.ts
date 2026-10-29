@@ -1,6 +1,7 @@
 import garden from '../assets/portrait-garden.jpg'
 import sun from '../assets/portrait-sun.jpg'
 import windowLight from '../assets/portrait-window.jpg'
+import type { NodeRunState } from './runEngine'
 
 /**
  * The Canvas mode's graph: a simpler layer over ComfyUI (Node Banana's
@@ -20,12 +21,13 @@ export interface Socket {
   type: string
 }
 
+/** A widget. `key` names its value in what a run is given. */
 export type Control =
-  | { kind: 'model'; provider: string; value: string }
-  | { kind: 'combo'; name: string; value: string }
-  | { kind: 'seg'; name: string; options: string[]; value: string }
-  | { kind: 'slider'; name: string; value: string; fill: number }
-  | { kind: 'button'; label: string }
+  | { kind: 'model'; key: string; value: string; options: { value: string; provider: string }[] }
+  | { kind: 'combo'; key: string; name: string; value: string; options: string[] }
+  | { kind: 'seg'; key: string; name: string; options: string[]; value: string }
+  | { kind: 'slider'; key: string; name: string; value: number }
+  | { kind: 'button'; key: string; label: string }
 
 export interface SNode {
   id: string
@@ -41,9 +43,15 @@ export interface SNode {
   text?: string
   image?: string
   chip?: string
-  /** Running: a progress over the preview, 0 to 1, and what it says. */
-  progress?: number
-  status?: string
+  /** What its progress says while it runs, e.g. "Relighting". */
+  verb?: string
+  /** Where the last run left it. */
+  state?: NodeRunState
+  step?: number
+  steps?: number
+  error?: string
+  /** Its result no longer matches its inputs: they changed since. */
+  stale?: boolean
   ins: Socket[]
   outs: Socket[]
   controls: Control[]
@@ -99,17 +107,33 @@ export const createCanvas = (): SNode[] => [
     w: 290,
     body: 362,
     image: sun,
-    chip: '4:5 · 1K · 8 s',
+    chip: '4:5 · 1K',
+    verb: 'Generating',
     ins: [
       { name: 'prompt', type: 'TEXT' },
       { name: 'image', type: 'IMAGE' }
     ],
     outs: [{ name: 'image', type: 'IMAGE' }],
     controls: [
-      { kind: 'model', provider: 'Gemini', value: 'Nano Banana Pro' },
-      { kind: 'seg', name: 'Aspect', options: ['1:1', '4:5', '16:9'], value: '4:5' },
-      { kind: 'combo', name: 'Resolution', value: '1K' },
-      { kind: 'combo', name: 'Seed', value: 'Random' }
+      {
+        kind: 'model',
+        key: 'model',
+        value: 'Nano Banana Pro',
+        options: [
+          { value: 'Nano Banana Pro', provider: 'Gemini' },
+          { value: 'Seedream 4', provider: 'ByteDance' },
+          { value: 'Flux 1.1 Pro', provider: 'Black Forest Labs' }
+        ]
+      },
+      { kind: 'seg', key: 'aspect', name: 'Aspect', options: ['1:1', '4:5', '16:9'], value: '4:5' },
+      {
+        kind: 'combo',
+        key: 'resolution',
+        name: 'Resolution',
+        value: '1K',
+        options: ['1K', '2K', '4K']
+      },
+      { kind: 'combo', key: 'seed', name: 'Seed', value: 'Random', options: ['Random', 'Fixed'] }
     ]
   },
   {
@@ -134,14 +158,25 @@ export const createCanvas = (): SNode[] => [
     w: 290,
     body: 362,
     image: sun,
-    progress: 0.45,
-    status: 'Relighting · 9 of 20',
+    verb: 'Relighting',
     ins: [{ name: 'image', type: 'IMAGE' }],
     outs: [{ name: 'image', type: 'IMAGE' }],
     controls: [
-      { kind: 'combo', name: 'Runs on', value: 'Comfy Cloud' },
-      { kind: 'combo', name: 'Light', value: 'Window, left' },
-      { kind: 'slider', name: 'Intensity', value: '0.60', fill: 0.6 }
+      {
+        kind: 'combo',
+        key: 'runsOn',
+        name: 'Runs on',
+        value: 'Comfy Cloud',
+        options: ['Comfy Cloud', 'This computer']
+      },
+      {
+        kind: 'combo',
+        key: 'light',
+        name: 'Light',
+        value: 'Window, left',
+        options: ['Window, left', 'Window, right', 'Golden hour', 'Studio softbox']
+      },
+      { kind: 'slider', key: 'intensity', name: 'Intensity', value: 0.6 }
     ]
   },
   {
@@ -157,8 +192,14 @@ export const createCanvas = (): SNode[] => [
     ins: [{ name: 'image', type: 'IMAGE' }],
     outs: [],
     controls: [
-      { kind: 'combo', name: 'Format', value: 'PNG' },
-      { kind: 'button', label: 'Save to Assets' }
+      {
+        kind: 'combo',
+        key: 'format',
+        name: 'Format',
+        value: 'PNG',
+        options: ['PNG', 'JPEG', 'WebP']
+      },
+      { kind: 'button', key: 'save', label: 'Save to Assets' }
     ]
   }
 ]

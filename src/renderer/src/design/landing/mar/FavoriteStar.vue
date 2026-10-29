@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { Star } from 'lucide-vue-next'
-import { isFavorite, toggleFavorite } from './favorites'
+import { isFavorite, toggleFavorite, type FavoriteKind } from './favorites'
 
-/** The star in a template card's corner (Mar's proposal): shows on hover,
- *  stays once starred. */
-const { id } = defineProps<{ id: string }>()
+/** The star in a card's corner (Mar's proposal): shows on hover, stays
+ *  once starred. Templates, apps and assets can be starred. */
+const { id, kind = 'template' } = defineProps<{ id: string; kind?: FavoriteKind }>()
 </script>
 
 <template>
   <button
     type="button"
     class="mar-star"
-    :class="isFavorite(id) && 'is-on'"
-    :aria-pressed="isFavorite(id)"
-    :aria-label="isFavorite(id) ? 'Remove from favorites' : 'Add to favorites'"
-    @click.stop="toggleFavorite(id)"
+    :class="isFavorite(id, kind) && 'is-on'"
+    :aria-pressed="isFavorite(id, kind)"
+    :aria-label="isFavorite(id, kind) ? 'Remove from favorites' : 'Add to favorites'"
+    @click.stop="toggleFavorite(id, kind)"
     @keydown.enter.stop
   >
-    <Star :size="13" :fill="isFavorite(id) ? 'currentColor' : 'none'" />
+    <Star :size="13" :fill="isFavorite(id, kind) ? 'currentColor' : 'none'" />
   </button>
 </template>
 

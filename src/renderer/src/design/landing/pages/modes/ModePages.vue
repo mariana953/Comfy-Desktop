@@ -19,6 +19,7 @@ import AdminPages from './AdminPages.vue'
 import BuildOverview from '../../mar/build/BuildEntry.vue'
 import BuildStart from './BuildStart.vue'
 import CreateHome from '../../mar/HomeEntry.vue'
+import MarFavoritesPage from '../../mar/MarFavoritesPage.vue'
 import DeploymentDetail from './DeploymentDetail.vue'
 import DeploymentsPage from './DeploymentsPage.vue'
 import EnvironmentDetail from './EnvironmentDetail.vue'
@@ -32,6 +33,7 @@ import { spaceById } from '../../spaces'
 import { deploymentById, envById } from '../../parts/env/env'
 import { proto, toast } from '../../useProto'
 import { can } from '../../milestones'
+import { isMariana } from '../../mar/proposal'
 
 /** Router for the Create / Build IA. */
 const envId = computed(() => (proto.page.startsWith('environment:') ? proto.page.slice(12) : ''))
@@ -51,6 +53,7 @@ const ADMIN = ['usage', 'billing', 'limits', 'people', 'provider-keys']
 
 <template>
   <CreateHome v-if="proto.page === 'overview' && can.home" />
+  <MarFavoritesPage v-else-if="proto.page === 'favorites' && isMariana" />
   <!-- First run: libraries are empty, so show what will live there. -->
   <div
     v-else-if="proto.fresh && ['workflows', 'apps', 'assets'].includes(proto.page)"

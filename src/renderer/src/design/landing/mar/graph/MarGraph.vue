@@ -21,6 +21,7 @@ import {
   Minus,
   PanelRight,
   MousePointer2,
+  Pause,
   Play,
   Plus,
   Search,
@@ -45,8 +46,11 @@ import {
   SOCKETS,
   canvasNodeHeight,
   createCanvas,
-  socketY
+  socketY,
+  type SNode
 } from './canvasData'
+import { createMockEngine, type RunEngine, type RunGraph, type RunJob } from './runEngine'
+import { savedAssets } from './savedAssets'
 
 /**
  * ComfyUI's graph editor as a mock, in Mar's proposal (a build's tab): a
@@ -81,7 +85,8 @@ const links = computed(() =>
     return {
       d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`,
       color: SOCKETS[from.outs[ai]!.type]!,
-      live: b === 'relight'
+      // The link into what is running carries the run.
+      live: to.state === 'running' || to.state === 'paused'
     }
   })
 )
@@ -231,16 +236,166 @@ watch(
 )
 const assets = ref(false)
 
-// The queue as the run block shows it (ComfyUI_frontend#17679): one run
-// going, the rest waiting their turn.
-const JOBS: { title: string; sub: string; progress?: number }[] = [
-  { title: 'Portrait in late sun', sub: '7:42 PM · 45%', progress: 45 },
-  { title: 'Background swap', sub: 'Queued · next up' },
-  { title: 'Add reflections', sub: 'Queued · #2' }
-]
-
+// ── Running. The UI only talks to the engine (runEngine.ts): today a mock
+// on timers, later ComfyUI's queue. The graph opens idle: nothing runs and
+// nothing waits until Run is pressed. ──
+const engine: RunEngine = createMockEngine()
+/** The runs in the queue, the running one first, as the engine reports. */
+const jobs = ref<RunJob[]>([])
+/** Runs per press of Run (the action bar's stepper). */
+const batch = ref(1)
+/** Runs finished this session (Results in the job rows). */
+const results = ref(0)
 /** The graph opens with the job rows folded; the pill opens them. */
 const jobsOpen = ref(false)
+
+const activeJob = computed(() =>
+  jobs.value.find((j) => j.status === 'running' || j.status === 'paused')
+)
+const waiting = computed(() => jobs.value.filter((j) => j.status === 'queued'))
+
+/** What a run is given: every node's values as they are now. */
+function snapshot(): RunGraph {
+  return {
+    title: workflow,
+    nodes: sNodes.map((n) => {
+      const params: Record<string, string> = {}
+      for (const c of n.controls) if (c.kind !== 'button') params[c.key] = String(c.value)
+      if (n.kind === 'prompt') params.text = n.text ?? ''
+      if (n.kind === 'image' && n.image) params.image = n.image
+      return { id: n.id, kind: n.kind, title: n.title, params }
+    }),
+    links: CANVAS_LINKS.map(([a, , b]) => [a, b])
+  }
+}
+
+/** A job row's second line: where it is, or its place in the queue. */
+function jobSub(job: RunJob): string {
+  if (job.status === 'paused') return 'Paused · waiting for you'
+  if (job.status === 'running') {
+    const at = job.nodeId ? sById.value[job.nodeId]?.title : undefined
+    return `${at ? `${at} · ` : ''}${Math.round(job.progress * 100)}%`
+  }
+  const place = waiting.value.indexOf(job)
+  return place === 0 ? 'Queued · next up' : `Queued · #${place + 1}`
+}
+
+function run(): void {
+  engine.queue(snapshot(), batch.value)
+}
+
+function param(n: SNode, key: string): string {
+  const c = n.controls.find((x) => x.key === key)
+  return c && c.kind !== 'button' ? String(c.value) : ''
+}
+
+let settle: ReturnType<typeof setTimeout> | undefined
+const offEngine = engine.on((e) => {
+  if (e.type === 'job') {
+    const i = jobs.value.findIndex((j) => j.id === e.job.id)
+    if (i < 0) jobs.value.push(e.job)
+    else jobs.value[i] = e.job
+    if (e.job.status === 'done') results.value++
+    clearTimeout(settle)
+  } else if (e.type === 'removed') {
+    jobs.value = jobs.value.filter((j) => j.id !== e.jobId)
+    // Back to idle: the Done marks fade after a moment.
+    if (!jobs.value.length)
+      settle = setTimeout(() => {
+        for (const n of sNodes) if (n.state === 'done') n.state = undefined
+      }, 4000)
+  } else if (e.type === 'node') {
+    const n = sById.value[e.nodeId]
+    if (!n) return
+    n.state = e.state === 'idle' ? undefined : e.state
+    n.step = e.step
+    n.steps = e.steps
+    n.error = e.error
+  } else {
+    const n = sById.value[e.nodeId]
+    if (!n) return
+    n.image = e.image
+    n.stale = false
+    if (n.kind === 'generate') n.chip = `${param(n, 'aspect')} · ${param(n, 'resolution')}`
+    if (n.kind === 'output') n.chip = 'Just now'
+  }
+})
+watch(
+  () => jobs.value.length,
+  (len) => !len && (jobsOpen.value = false)
+)
+
+// ── Editing. Values are the graph's own; changing one makes the results
+// that depend on it out of date until the next run. ──
+const HOLDS_RESULT = new Set(['generate', 'workflow', 'output'])
+/** Settings that change how a result is kept or where it runs, not what it is. */
+const NO_STALE = new Set(['format', 'runsOn'])
+
+function downstream(id: string): string[] {
+  const out: string[] = []
+  const walk = (from: string): void => {
+    for (const [a, , b] of CANVAS_LINKS)
+      if (a === from && !out.includes(b)) {
+        out.push(b)
+        walk(b)
+      }
+  }
+  walk(id)
+  return out
+}
+
+function edited(n: SNode, key?: string): void {
+  if (key && NO_STALE.has(key)) return
+  const ids = [
+    ...(HOLDS_RESULT.has(n.kind) && n.kind !== 'output' ? [n.id] : []),
+    ...downstream(n.id)
+  ]
+  for (const id of ids) {
+    const d = sById.value[id]!
+    if (d.state === 'error') d.state = undefined
+    if (HOLDS_RESULT.has(d.kind) && d.state !== 'running' && d.state !== 'queued') d.stale = true
+  }
+}
+
+function setControl(n: SNode, key: string, value: string | number): void {
+  const c = n.controls.find((x) => x.key === key)
+  if (!c || c.kind === 'button' || c.value === value) return
+  ;(c as { value: string | number }).value = value
+  edited(n, key)
+}
+
+function setText(n: SNode, text: string): void {
+  n.text = text
+  edited(n)
+}
+
+// Save to Assets: the Output's picture joins the assets, with a toast.
+const toast = ref<{ text: string; image?: string }>()
+let toastTimer: ReturnType<typeof setTimeout> | undefined
+let saves = 0
+function save(n: SNode): void {
+  if (!n.image) return
+  savedAssets.unshift({ name: `${workflow}-${++saves}`, src: n.image })
+  toast.value = { text: 'Saved to Assets', image: n.image }
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => (toast.value = undefined), 3200)
+}
+
+// Another workflow in this tab: a fresh graph, nothing running.
+watch(
+  () => workflow,
+  () => {
+    engine.cancelAll()
+    sNodes.splice(0, sNodes.length, ...createCanvas())
+    nextTick(fit)
+  }
+)
+onBeforeUnmount(() => {
+  offEngine()
+  engine.dispose()
+  clearTimeout(settle)
+  clearTimeout(toastTimer)
+})
 
 const RAIL: { icon: Component; label: string }[] = [
   { icon: History, label: 'Queue' },
@@ -333,6 +488,10 @@ const RAIL: { icon: Component; label: string }[] = [
           :labels="labels"
           :selected="selected === n.id"
           :style="{ '--sg-delay': `${-i * 1.3}s` }"
+          @set="(key, value) => setControl(n, key, value)"
+          @text="(text) => setText(n, text)"
+          @resume="activeJob && engine.resume(activeJob.id)"
+          @save="save(n)"
         />
       </div>
     </div>
@@ -346,13 +505,28 @@ const RAIL: { icon: Component; label: string }[] = [
       <div class="mg-actionbar">
         <span class="mg-grip" aria-hidden="true" />
         <span class="mg-batch">
-          <span class="mg-batch-n">1</span>
-          <span class="mg-batch-step" aria-hidden="true">
-            <ChevronUp :size="12" /><ChevronDown :size="12" />
+          <span class="mg-batch-n" aria-label="Runs per press">{{ batch }}</span>
+          <span class="mg-batch-step">
+            <button
+              type="button"
+              aria-label="More runs per press"
+              :disabled="batch >= 9"
+              @click="batch++"
+            >
+              <ChevronUp :size="12" />
+            </button>
+            <button
+              type="button"
+              aria-label="Fewer runs per press"
+              :disabled="batch <= 1"
+              @click="batch--"
+            >
+              <ChevronDown :size="12" />
+            </button>
           </span>
         </span>
         <span class="mg-run-group">
-          <button type="button" class="mg-run"><Play :size="15" />Run</button>
+          <button type="button" class="mg-run" @click="run"><Play :size="15" />Run</button>
           <button type="button" class="mg-run-more" aria-label="Run options">
             <ChevronDown :size="15" />
           </button>
@@ -361,43 +535,62 @@ const RAIL: { icon: Component; label: string }[] = [
           <PanelRight :size="17" />
         </button>
       </div>
-      <div class="mg-status">
+      <!-- Only while something runs or waits: the graph opens idle. -->
+      <div v-if="jobs.length" class="mg-status">
         <button
           type="button"
           class="mg-pill"
           :aria-expanded="jobsOpen"
           @click="jobsOpen = !jobsOpen"
         >
-          <i class="mg-spin" aria-hidden="true" />
-          <span>Running</span>
-          <span class="mg-badge">Queued {{ JOBS.length - 1 }}</span>
-          <span class="mg-hairline" :style="{ width: `${JOBS[0]!.progress}%` }" />
+          <span v-if="activeJob?.status === 'paused'" class="mg-paused" aria-hidden="true">
+            <Pause :size="9" fill="currentColor" />
+          </span>
+          <i v-else class="mg-spin" aria-hidden="true" />
+          <span>{{ activeJob?.status === 'paused' ? 'Paused' : 'Running' }}</span>
+          <span v-if="waiting.length" class="mg-badge">Queued {{ waiting.length }}</span>
+          <span class="mg-hairline" :style="{ width: `${(activeJob?.progress ?? 0) * 100}%` }" />
         </button>
         <template v-if="jobsOpen">
-          <div v-for="job in JOBS" :key="job.title" class="mg-job">
-            <i v-if="job.progress !== undefined" class="mg-spin is-small" aria-hidden="true" />
+          <div v-for="job in jobs" :key="job.id" class="mg-job">
+            <span v-if="job.status === 'paused'" class="mg-paused is-small" aria-hidden="true">
+              <Pause :size="8" fill="currentColor" />
+            </span>
+            <i v-else-if="job.status === 'running'" class="mg-spin is-small" aria-hidden="true" />
             <i v-else class="mg-job-dot" aria-hidden="true" />
             <span class="mg-job-text">
               <span class="mg-job-title">{{ job.title }}</span>
-              <span class="mg-job-sub">{{ job.sub }}</span>
+              <span class="mg-job-sub">{{ jobSub(job) }}</span>
             </span>
-            <button type="button" class="mg-job-stop" :aria-label="`Stop this run ${job.title}`">
+            <button
+              type="button"
+              class="mg-job-stop"
+              :aria-label="`Stop this run ${job.title}`"
+              @click="engine.cancel(job.id)"
+            >
               <i />
             </button>
             <span
-              v-if="job.progress !== undefined"
+              v-if="job.status !== 'queued'"
               class="mg-hairline"
-              :style="{ width: `${job.progress}%` }"
+              :style="{ width: `${job.progress * 100}%` }"
             />
           </div>
           <div class="mg-job-foot">
-            <button type="button" class="mg-foot-btn">
-              <Images :size="12" />Results (4)<ChevronDown :size="12" />
+            <button type="button" class="mg-foot-btn" @click="assets = true">
+              <Images :size="12" />Results ({{ results }})<ChevronDown :size="12" />
             </button>
             <span class="mg-foot-group">
-              <button type="button" class="mg-foot-btn">Clear queue</button>
+              <button
+                type="button"
+                class="mg-foot-btn"
+                :disabled="!waiting.length"
+                @click="engine.clearQueue()"
+              >
+                Clear queue
+              </button>
               <span class="mg-foot-sep" />
-              <button type="button" class="mg-foot-btn">
+              <button type="button" class="mg-foot-btn" @click="engine.cancelAll()">
                 <i class="mg-foot-square" />Cancel all
               </button>
             </span>
@@ -408,6 +601,15 @@ const RAIL: { icon: Component; label: string }[] = [
     <button v-if="current" type="button" class="mg-search" aria-label="Search nodes">
       <Search :size="14" />
     </button>
+
+    <!-- What Save to Assets says. -->
+    <Transition name="mg-toast">
+      <div v-if="toast" class="mg-toast" role="status">
+        <img v-if="toast.image" :src="toast.image" alt="" />
+        <span>{{ toast.text }}</span>
+        <button type="button" class="mg-toast-btn" @click="assets = true">View</button>
+      </div>
+    </Transition>
 
     <!-- Canvas controls and minimap. -->
     <div class="mg-corner">
@@ -668,8 +870,21 @@ const RAIL: { icon: Component; label: string }[] = [
   box-shadow: inset 1px 0 0 color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
   color: var(--mg-dim);
 }
-.mg-batch-step svg + svg {
-  margin-top: -2px;
+:root .proto-ui.proto-ui.proto-ui .mg-batch-step button {
+  display: flex;
+  height: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--mg-dim);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-batch-step button:hover:not(:disabled) {
+  color: var(--mg-text);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-batch-step button:disabled {
+  opacity: 0.35;
 }
 .mg-run-group {
   display: inline-flex;
@@ -753,6 +968,91 @@ const RAIL: { icon: Component; label: string }[] = [
   left: 0;
   height: 2px;
   background: color-mix(in oklch, var(--color-base-foreground) 70%, transparent);
+  transition: width 0.2s linear;
+}
+.mg-paused {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 14%, transparent);
+  color: var(--mg-text);
+}
+.mg-paused.is-small {
+  width: 13px;
+  height: 13px;
+  margin: 0 1.5px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-foot-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Save to Assets' toast: bottom centre, over the canvas. */
+.mg-toast {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+  border-radius: 14px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.22);
+  color: var(--mg-text);
+  font-size: 13px;
+  translate: -50% 0;
+}
+.mg-toast img {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  object-fit: cover;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-toast-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: var(--mg-hover);
+  color: var(--mg-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+.is-current .mg-toast {
+  border-radius: 8px;
+  background: var(--mg-chrome-2);
+  box-shadow:
+    0 0 0 1px var(--mg-chrome-line),
+    0 8px 20px rgb(0 0 0 / 0.3);
+  backdrop-filter: none;
+}
+.mg-toast-enter-active,
+.mg-toast-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.mg-toast-enter-from,
+.mg-toast-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mg-hairline,
+  .mg-toast-enter-active,
+  .mg-toast-leave-active {
+    transition: none;
+  }
+  .mg-spin {
+    animation-duration: 2.4s;
+  }
 }
 .mg-spin {
   width: 15px;

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Aperture, ChevronDown, Download, Image, Pause, Play, Type } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { Aperture, Check, ChevronDown, Download, Image, Pause, Play, Type } from 'lucide-vue-next'
 import { ComfyWorkflow } from '../icons/comfyIcons'
 import {
   SOCKETS,
   canvasNodeHeight,
   controlsHeight,
   type CanvasGeometry,
+  type Control,
   type SNode
 } from './canvasData'
 
@@ -15,7 +16,8 @@ import {
  * sits above it, its result fills it, its controls hang below in their
  * own panel, and its typed sockets stick out of the preview's edges.
  * Socket names show where a node takes more than one input, or all of
- * them with the socket labels switch (canvas controls).
+ * them with the socket labels switch (canvas controls). Its widgets are
+ * live: the graph owns the values, the node only reports edits.
  */
 const { node, g, current, labels, selected } = defineProps<{
   node: SNode
@@ -23,6 +25,12 @@ const { node, g, current, labels, selected } = defineProps<{
   current: boolean
   labels: boolean
   selected: boolean
+}>()
+const emit = defineEmits<{
+  set: [key: string, value: string | number]
+  text: [value: string]
+  resume: []
+  save: []
 }>()
 
 const ICONS = {
@@ -35,6 +43,43 @@ const ICONS = {
 }
 const height = computed(() => canvasNodeHeight(node, g))
 const controls = computed(() => controlsHeight(node, g))
+
+const running = computed(() => node.state === 'running')
+/** The step count over the preview, for the nodes that take a while. */
+const showProgress = computed(() => running.value && (node.steps ?? 0) > 1)
+
+/** A word beside the title for where the node stands. */
+const tag = computed(() => {
+  if (node.state === 'queued') return 'Queued'
+  if (node.state === 'error') return 'Error'
+  if (node.state === 'running' && !showProgress.value) return 'Running'
+  if (node.stale) return 'Outdated'
+  if (node.state === 'done') return 'Done'
+  return ''
+})
+
+// A combo's or the model's options open under it; a click elsewhere
+// (which selects another node, or none) closes them.
+const open = ref<number | null>(null)
+watch(
+  () => selected,
+  (on) => !on && (open.value = null)
+)
+function choose(c: Control, value: string): void {
+  emit('set', c.key, value)
+  open.value = null
+}
+const menuTop = (i: number): string => `${6 + (i + 1) * (g.control + g.gap)}px`
+
+// Sliders follow the pointer, in steps of 0.05.
+function slide(c: Control, e: PointerEvent): void {
+  if (e.type === 'pointermove' && !(e.buttons & 1)) return
+  const el = e.currentTarget as HTMLElement
+  if (e.type === 'pointerdown') el.setPointerCapture(e.pointerId)
+  const r = el.getBoundingClientRect()
+  const v = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))
+  emit('set', c.key, Math.round(v * 20) / 20)
+}
 </script>
 
 <template>
@@ -43,7 +88,9 @@ const controls = computed(() => controlsHeight(node, g))
     :class="[
       `is-${node.kind}`,
       selected && 'is-selected',
-      node.progress !== undefined && 'is-running'
+      running && 'is-running',
+      node.state === 'error' && 'is-error',
+      open !== null && 'is-menu'
     ]"
     :data-node="node.id"
     :style="{
@@ -59,33 +106,65 @@ const controls = computed(() => controlsHeight(node, g))
       <span v-else class="sg-dot" />
       <span class="sg-head-title">{{ node.title }}</span>
       <span v-if="node.badge" class="sg-badge">{{ node.badge }}</span>
+      <span
+        v-if="tag"
+        class="sg-state"
+        :class="`is-${node.state === 'error' ? 'error' : node.stale && !running ? 'stale' : node.state}`"
+      >
+        <Check v-if="tag === 'Done'" :size="11" />{{ tag }}
+      </span>
     </header>
 
     <!-- The main element: the result, or the prompt's text. -->
     <div class="sg-body" :style="{ height: `${node.body}px` }">
-      <p v-if="node.kind === 'prompt'" class="sg-text">{{ node.text }}</p>
+      <textarea
+        v-if="node.kind === 'prompt'"
+        class="sg-text"
+        :value="node.text"
+        aria-label="Prompt"
+        spellcheck="false"
+        placeholder="Describe the image"
+        @input="emit('text', ($event.target as HTMLTextAreaElement).value)"
+      />
       <div v-else-if="node.kind === 'pause'" class="sg-pause">
         <span class="sg-pause-icon"><Pause :size="14" fill="currentColor" /></span>
-        <span class="sg-pause-title">Paused</span>
-        <span class="sg-pause-note">Refine, then resume</span>
-        <button type="button" class="sg-resume">
-          <Play :size="11" fill="currentColor" />Resume
-        </button>
+        <template v-if="node.state === 'paused'">
+          <span class="sg-pause-title">Paused</span>
+          <span class="sg-pause-note">Refine, then resume</span>
+          <button type="button" class="sg-resume" @click="emit('resume')">
+            <Play :size="11" fill="currentColor" />Resume
+          </button>
+        </template>
+        <template v-else>
+          <span class="sg-pause-title">Pause</span>
+          <span class="sg-pause-note">The run waits here for you</span>
+        </template>
       </div>
       <template v-else>
-        <img
-          :src="node.image"
-          alt=""
-          draggable="false"
-          class="sg-img"
-          :class="node.progress !== undefined && 'is-working'"
-        />
+        <Transition name="sg-swap">
+          <img
+            :key="node.image"
+            :src="node.image"
+            alt=""
+            draggable="false"
+            class="sg-img"
+            :class="showProgress && 'is-working'"
+          />
+        </Transition>
         <span v-if="node.chip" class="sg-chip">{{ node.chip }}</span>
-        <div v-if="node.progress !== undefined" class="sg-progress">
-          <span class="sg-progress-label">{{ node.status }}</span>
+        <div v-if="showProgress" class="sg-progress">
+          <span class="sg-progress-label"
+            >{{ node.verb }} · {{ node.step }} of {{ node.steps }}</span
+          >
           <span class="sg-progress-track">
-            <span class="sg-progress-fill" :style="{ width: `${node.progress * 100}%` }" />
+            <span
+              class="sg-progress-fill"
+              :style="{ width: `${((node.step ?? 0) / (node.steps ?? 1)) * 100}%` }"
+            />
           </span>
+        </div>
+        <div v-else-if="node.state === 'error'" class="sg-progress" role="alert">
+          <span class="sg-progress-label">Couldn't run · {{ node.error }}</span>
         </div>
       </template>
     </div>
@@ -96,35 +175,124 @@ const controls = computed(() => controlsHeight(node, g))
       class="sg-controls"
       :style="{ height: `${controls}px`, gap: `${g.gap}px`, marginTop: `${g.under}px` }"
     >
-      <div
-        v-for="(c, i) in node.controls"
-        :key="i"
-        class="sg-c"
-        :class="`is-${c.kind}`"
-        :style="{ height: `${g.control}px` }"
-      >
-        <template v-if="c.kind === 'model'">
-          <span class="sg-model-dot" />
-          <span class="sg-c-value is-strong">{{ c.value }}</span>
-          <span class="sg-c-name">{{ c.provider }}</span>
+      <template v-for="(c, i) in node.controls" :key="i">
+        <button
+          v-if="c.kind === 'model' || c.kind === 'combo'"
+          type="button"
+          class="sg-c"
+          :class="[`is-${c.kind}`, open === i && 'is-open']"
+          :style="{ height: `${g.control}px` }"
+          :aria-expanded="open === i"
+          @click="open = open === i ? null : i"
+        >
+          <template v-if="c.kind === 'model'">
+            <span class="sg-model-dot" />
+            <span class="sg-c-value is-strong">{{ c.value }}</span>
+            <span class="sg-c-name">{{
+              c.options.find((o) => o.value === c.value)?.provider
+            }}</span>
+          </template>
+          <template v-else>
+            <span class="sg-c-name">{{ c.name }}</span>
+            <span class="sg-c-value">{{ c.value }}</span>
+          </template>
           <ChevronDown :size="12" class="sg-c-arrow" />
-        </template>
-        <template v-else-if="c.kind === 'seg'">
+        </button>
+        <button
+          v-else-if="c.kind === 'button'"
+          type="button"
+          class="sg-c is-button"
+          :style="{ height: `${g.control}px` }"
+          @click="emit('save')"
+        >
+          <span class="sg-c-button"><Download :size="12" />{{ c.label }}</span>
+        </button>
+        <div
+          v-else-if="c.kind === 'seg'"
+          class="sg-c is-seg"
+          :style="{ height: `${g.control}px` }"
+          role="radiogroup"
+          :aria-label="c.name"
+        >
           <span class="sg-c-name">{{ c.name }}</span>
           <span class="sg-seg">
-            <span v-for="o in c.options" :key="o" :class="o === c.value && 'is-on'">{{ o }}</span>
+            <button
+              v-for="o in c.options"
+              :key="o"
+              type="button"
+              role="radio"
+              :aria-checked="o === c.value"
+              :class="o === c.value && 'is-on'"
+              @click="emit('set', c.key, o)"
+            >
+              {{ o }}
+            </button>
           </span>
-        </template>
-        <template v-else-if="c.kind === 'button'">
-          <span class="sg-c-button"><Download :size="12" />{{ c.label }}</span>
-        </template>
-        <template v-else>
-          <span v-if="c.kind === 'slider'" class="sg-fill" :style="{ width: `${c.fill * 100}%` }" />
+        </div>
+        <div
+          v-else
+          class="sg-c is-slider"
+          :style="{ height: `${g.control}px` }"
+          role="slider"
+          :aria-label="c.name"
+          :aria-valuenow="c.value"
+          aria-valuemin="0"
+          aria-valuemax="1"
+          tabindex="0"
+          @pointerdown="slide(c, $event)"
+          @pointermove="slide(c, $event)"
+          @keydown.left.prevent="
+            emit('set', c.key, Math.max(0, Math.round((c.value - 0.05) * 20) / 20))
+          "
+          @keydown.right.prevent="
+            emit('set', c.key, Math.min(1, Math.round((c.value + 0.05) * 20) / 20))
+          "
+        >
+          <span class="sg-fill" :style="{ width: `${c.value * 100}%` }" />
           <span class="sg-c-name">{{ c.name }}</span>
-          <span class="sg-c-value">{{ c.value }}</span>
-          <ChevronDown v-if="c.kind === 'combo'" :size="12" class="sg-c-arrow" />
-        </template>
-      </div>
+          <span class="sg-c-value">{{ c.value.toFixed(2) }}</span>
+        </div>
+      </template>
+
+      <!-- The open combo's options, under it. -->
+      <template v-for="(c, i) in node.controls" :key="`m${i}`">
+        <div
+          v-if="open === i && (c.kind === 'combo' || c.kind === 'model')"
+          class="sg-menu"
+          role="listbox"
+          :style="{ top: menuTop(i) }"
+        >
+          <template v-if="c.kind === 'model'">
+            <button
+              v-for="o in c.options"
+              :key="o.value"
+              type="button"
+              role="option"
+              :aria-selected="o.value === c.value"
+              class="sg-menu-item"
+              @click="choose(c, o.value)"
+            >
+              <span>{{ o.value }}</span
+              ><span class="sg-c-name">{{ o.provider }}</span>
+              <Check v-if="o.value === c.value" :size="12" />
+            </button>
+          </template>
+          <template v-else>
+            <button
+              v-for="o in c.options"
+              :key="o"
+              type="button"
+              role="option"
+              :aria-selected="o === c.value"
+              class="sg-menu-item"
+              @click="choose(c, o)"
+            >
+              <span>{{ o }}</span
+              ><Check v-if="o === c.value" :size="12" />
+            </button>
+          </template>
+        </div>
+      </template>
     </div>
 
     <!-- Sockets: outside the node, on the preview's edge. -->
@@ -173,6 +341,13 @@ const controls = computed(() => controlsHeight(node, g))
     animation: none;
   }
 }
+/* The one being worked on, or with a menu open, sits over its neighbours. */
+.sg-node.is-selected {
+  z-index: 2;
+}
+.sg-node.is-menu {
+  z-index: 3;
+}
 .sg-head {
   display: flex;
   flex: none;
@@ -198,6 +373,31 @@ const controls = computed(() => controlsHeight(node, g))
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.sg-state {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  color: var(--mg-dim);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.sg-state.is-running,
+.sg-state.is-queued {
+  color: var(--mg-muted);
+}
+.sg-state.is-stale::before {
+  width: 6px;
+  height: 6px;
+  margin-right: 2px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  content: '';
+}
+.sg-state.is-error {
+  color: var(--color-status-danger, #e5484d);
+}
 .sg-badge {
   padding: 2px 7px;
   border-radius: 999px;
@@ -216,23 +416,63 @@ const controls = computed(() => controlsHeight(node, g))
 .sg-node.is-selected .sg-body {
   box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--color-base-foreground) 36%, transparent);
 }
+.sg-node.is-error .sg-body {
+  box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--color-status-danger, #e5484d) 70%, transparent);
+}
 .sg-text {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 14px 16px;
+  border: 0;
+  outline: none;
+  background: transparent;
   color: var(--mg-text);
+  font: inherit;
   font-size: 13px;
   line-height: 20px;
+  resize: none;
   user-select: text;
 }
+.sg-text::placeholder {
+  color: var(--mg-dim);
+}
 .sg-img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition:
+    filter 0.4s ease,
+    transform 0.4s ease;
 }
 .sg-img.is-working {
   filter: blur(6px) saturate(0.8) brightness(0.8);
   transform: scale(1.06);
+}
+/* A new result fades in over the last one. */
+.sg-swap-enter-active,
+.sg-swap-leave-active {
+  transition: opacity 0.45s ease;
+}
+.sg-swap-enter-from,
+.sg-swap-leave-to {
+  opacity: 0;
+}
+.sg-progress-fill {
+  transition: width 0.15s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-img,
+  .sg-progress-fill,
+  .sg-swap-enter-active,
+  .sg-swap-leave-active {
+    transition: none;
+  }
 }
 .sg-chip {
   position: absolute;
@@ -323,6 +563,7 @@ const controls = computed(() => controlsHeight(node, g))
 }
 
 .sg-controls {
+  position: relative;
   display: flex;
   flex: none;
   flex-direction: column;
@@ -331,7 +572,9 @@ const controls = computed(() => controlsHeight(node, g))
   background: var(--mg-node);
   backdrop-filter: blur(24px) saturate(1.15);
 }
-.sg-c {
+/* Widgets are buttons where they open or act: the triple root beats the
+   app's button reset. */
+:root .proto-ui.proto-ui.proto-ui .sg-c {
   position: relative;
   display: flex;
   flex: none;
@@ -341,7 +584,17 @@ const controls = computed(() => controlsHeight(node, g))
   overflow: hidden;
   border-radius: var(--mg-radius-in);
   background: var(--mg-well);
+  color: var(--mg-text);
   font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+}
+:root .proto-ui.proto-ui.proto-ui :is(button.sg-c:hover, .sg-c.is-open) {
+  background: var(--mg-hover);
+}
+.sg-c.is-slider {
+  cursor: ew-resize;
+  touch-action: none;
 }
 .sg-fill {
   position: absolute;
@@ -385,15 +638,65 @@ const controls = computed(() => controlsHeight(node, g))
   justify-content: flex-end;
   gap: 2px;
 }
-.sg-seg span {
+:root .proto-ui.proto-ui.proto-ui .sg-seg button {
+  height: auto;
   padding: 2px 7px;
   border-radius: 6px;
+  background: transparent;
   color: var(--mg-dim);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-.sg-seg span.is-on {
+:root .proto-ui.proto-ui.proto-ui .sg-seg button:hover {
+  color: var(--mg-text);
+}
+:root .proto-ui.proto-ui.proto-ui .sg-seg button.is-on {
   background: var(--mg-hover);
   color: var(--mg-text);
+}
+.sg-menu {
+  position: absolute;
+  right: 6px;
+  left: 6px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--color-content-background) 82%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.28);
+  animation: sg-menu 0.14s ease-out;
+}
+@keyframes sg-menu {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-menu {
+    animation: none;
+  }
+}
+:root .proto-ui.proto-ui.proto-ui .sg-menu-item {
+  display: flex;
+  height: 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mg-text);
+  font-size: 12px;
+  text-align: left;
+}
+.sg-menu-item > span:first-child {
+  flex: 1;
+}
+:root .proto-ui.proto-ui.proto-ui .sg-menu-item:hover {
+  background: var(--mg-hover);
 }
 .sg-c.is-button {
   justify-content: center;
@@ -456,6 +759,14 @@ const controls = computed(() => controlsHeight(node, g))
   box-shadow:
     0 0 0 1.5px #fff,
     3px 4px 10px rgb(0 0 0 / 0.35);
+}
+.is-current .sg-node.is-error {
+  box-shadow:
+    0 0 0 2px #e5484d,
+    3px 4px 10px rgb(0 0 0 / 0.35);
+}
+.is-current .sg-node.is-error .sg-body {
+  box-shadow: none;
 }
 .is-current .sg-node.is-running {
   box-shadow:
@@ -538,21 +849,35 @@ const controls = computed(() => controlsHeight(node, g))
   background: transparent;
   backdrop-filter: none;
 }
-.is-current .sg-c {
+:root .proto-ui.proto-ui.proto-ui .is-current .sg-c {
   padding: 0 8px;
   border-radius: 999px;
   box-shadow: inset 0 0 0 1px var(--mg-well-line);
   font-size: 11.5px;
 }
+.is-current .sg-menu {
+  border-radius: 6px;
+  background: var(--mg-chrome-2);
+  box-shadow:
+    0 0 0 1px var(--mg-chrome-line),
+    0 8px 20px rgb(0 0 0 / 0.3);
+  backdrop-filter: none;
+}
+:root .proto-ui.proto-ui.proto-ui .is-current .sg-menu-item {
+  border-radius: 4px;
+}
 .is-current .sg-c-arrow {
   color: var(--mg-text);
 }
-.is-current .sg-seg span {
+:root .proto-ui.proto-ui.proto-ui .is-current .sg-seg button {
   padding: 0 6px;
   border-radius: 999px;
 }
-.is-current .sg-c.is-button {
+:root .proto-ui.proto-ui.proto-ui .is-current .sg-c.is-button {
   background: var(--mg-head-bg);
+}
+:root .proto-ui.proto-ui.proto-ui .is-current .sg-c.is-button:hover {
+  background: var(--mg-hover);
 }
 .is-current .sg-socket i {
   box-shadow: none;

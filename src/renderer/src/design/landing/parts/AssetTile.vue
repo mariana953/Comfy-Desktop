@@ -8,6 +8,8 @@ import CloudDownloadMenu from './CloudDownloadMenu.vue'
 import { localFolders, type GalleryAsset } from '../gallery'
 import { instanceById, proto } from '../useProto'
 import { thumb } from '../mock'
+import { isMariana } from '../mar/proposal'
+import FavoriteStar from '../mar/FavoriteStar.vue'
 
 const {
   asset,
@@ -69,7 +71,12 @@ const bars = computed(() =>
         @click.stop
       />
     </template>
-    <template v-if="asset.source === 'cloud'" #top-right><CloudDownloadMenu :asset /></template>
+    <template v-if="asset.source === 'cloud' || isMariana" #top-right
+      ><span class="flex items-center gap-1"
+        ><FavoriteStar v-if="isMariana" :id="asset.id" kind="asset" /><CloudDownloadMenu
+          v-if="asset.source === 'cloud'"
+          :asset /></span
+    ></template>
     <template v-if="asset.type === 'video' || asset.type === '3d'" #bottom-right>
       <Badge variant="overlay" size="md" class="px-1.5" :aria-label="asset.type">
         <Play v-if="asset.type === 'video'" :size="11" /><Box v-else :size="11" />

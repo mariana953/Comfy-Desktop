@@ -22,6 +22,7 @@ import { can, landingPage } from '../milestones'
 import { agentIcon, isMariana } from '../mar/proposal'
 import MarBackdrop from '../mar/shell/MarBackdrop.vue'
 import MarSidebarToggle from '../mar/shell/MarSidebarToggle.vue'
+import MarFavoritesGroup from '../mar/shell/MarFavoritesGroup.vue'
 import { marSidebarClosed } from '../mar/shell/marShell'
 import MarLensSwitch from '../mar/shell/MarLensSwitch.vue'
 import MarModeSwitch from '../mar/modes/MarModeSwitch.vue'
@@ -91,6 +92,7 @@ const MODES = computed(() => [
         <ModeNav v-else-if="can.home || proto.mode === 'build'" :mode="proto.mode" />
         <!-- The builds (or projects). New users have none yet (Home walks them
            through). -->
+        <MarFavoritesGroup v-if="isMariana && proto.mode === 'create' && !proto.fresh" />
         <SidebarGroup v-if="proto.mode === 'create' && !proto.fresh" />
         <SpacesGroup v-if="proto.mode === 'create' && can.spaces && !proto.fresh" />
 
