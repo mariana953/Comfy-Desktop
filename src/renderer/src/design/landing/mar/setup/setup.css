@@ -1,0 +1,605 @@
+/* Mar's proposed local setup (MarSetupFlow.vue). Neutral surfaces from the
+ * prototype's tokens; brand yellow only on install progress, the one
+ * "moment" the design system allows it. */
+/* In a layer: the prototype's control reset (ui/tokens.css) reverts to
+ * layered styles, so buttons, labels and inputs here keep theirs. */
+@layer components {
+  .mss {
+    --mss-brand: oklch(0.93 0.19 110);
+    --mss-line: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+    --mss-line-hi: color-mix(in oklch, var(--color-base-foreground) 16%, transparent);
+    --mss-fill: color-mix(in oklch, var(--color-base-foreground) 4%, transparent);
+    --mss-fill-hi: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: start center;
+    overflow-y: auto;
+    padding: 72px 24px 96px;
+    background:
+      radial-gradient(
+        60% 45% at 50% 0%,
+        color-mix(in oklch, var(--color-base-foreground) 7%, transparent),
+        transparent 70%
+      ),
+      var(--color-content-background);
+    color: var(--color-base-foreground);
+    animation: mss-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes mss-in {
+    from {
+      transform: translateY(6px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mss {
+      animation: none;
+    }
+  }
+  .mss-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-control);
+    color: var(--color-muted-foreground);
+  }
+  .mss-close:hover {
+    background: var(--mss-fill-hi);
+    color: var(--color-base-foreground);
+  }
+  .mss-col {
+    display: grid;
+    width: min(560px, 100%);
+    gap: 18px;
+  }
+  .mss-wide {
+    display: grid;
+    width: min(980px, 100%);
+    gap: 20px;
+  }
+  .mss-title {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .mss-title h2 {
+    font-size: var(--text-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .mss-title p {
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+  }
+
+  /* Local / Cloud */
+  .mss-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mss-choice {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+    padding: 14px;
+    border-radius: var(--radius-card);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    text-align: left;
+    color: var(--color-muted-foreground);
+  }
+  .mss-choice:hover {
+    box-shadow: inset 0 0 0 1px var(--mss-line-hi);
+  }
+  .mss-choice b {
+    color: var(--color-base-foreground);
+    font-size: var(--text-ui);
+    font-weight: 600;
+  }
+  .mss-choice span {
+    font-size: var(--text-ui);
+  }
+  .mss-choice.is-on {
+    background: var(--mss-fill-hi);
+    box-shadow: inset 0 0 0 1.5px var(--color-base-foreground);
+  }
+  .mss-choice.is-off {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .mss-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    border-radius: 999px;
+    padding: 1px 8px;
+    background: var(--mss-fill-hi);
+    font-size: 11px !important;
+    line-height: 18px;
+  }
+
+  /* Summary of what was detected */
+  .mss-sum {
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+  }
+  .mss-sum-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--mss-line);
+    font-size: var(--text-ui);
+    font-weight: 600;
+  }
+  .mss-row {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 14px;
+    font-size: var(--text-ui);
+  }
+  .mss-row + .mss-row {
+    border-top: 1px solid color-mix(in oklch, var(--color-base-foreground) 4%, transparent);
+  }
+  .mss-row .k {
+    color: var(--color-subtle-foreground);
+  }
+  .mss-row .v {
+    display: grid;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .mss-row small {
+    color: var(--color-subtle-foreground);
+    font-size: 12px;
+  }
+  .mss-ok {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-status-running);
+    color: var(--color-inverted-foreground);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .mss-row.is-bad {
+    background: color-mix(in oklch, var(--color-status-danger) 9%, transparent);
+  }
+  .mss-row.is-bad small {
+    color: var(--color-status-danger);
+  }
+  .mss-row.is-bad .mss-ok {
+    background: var(--color-status-danger);
+  }
+  .mss-fix {
+    display: flex;
+    gap: 8px;
+    padding: 0 14px 12px 110px;
+    background: color-mix(in oklch, var(--color-status-danger) 9%, transparent);
+  }
+
+  .mss-note {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-card);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    font-size: var(--text-ui);
+  }
+  .mss-note b {
+    font-weight: 600;
+  }
+  .mss-note p {
+    color: var(--color-muted-foreground);
+  }
+  .mss-note.is-err {
+    background: color-mix(in oklch, var(--color-status-danger) 8%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-status-danger) 35%, transparent);
+  }
+  .mss-dot {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: var(--color-base-foreground);
+    color: var(--color-inverted-foreground);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .mss-note.is-err .mss-dot {
+    background: var(--color-status-danger);
+    color: var(--color-base-foreground);
+  }
+  .mss-check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+    cursor: pointer;
+  }
+  .mss-check u {
+    color: var(--color-base-foreground);
+    text-decoration-color: var(--mss-line-hi);
+    text-underline-offset: 3px;
+  }
+  .mss-link {
+    color: var(--color-base-foreground);
+    font-size: var(--text-ui);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--mss-line-hi);
+    text-underline-offset: 3px;
+  }
+
+  /* Change setup */
+  .mss-field {
+    display: grid;
+    gap: 6px;
+  }
+  .mss-field > span {
+    color: var(--color-muted-foreground);
+    font-size: 12px;
+  }
+  .mss-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 4px 4px 4px 10px;
+    border-radius: var(--radius-control);
+    background: var(--color-secondary-background);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    font-size: var(--text-ui);
+  }
+  .mss-input small {
+    color: var(--color-subtle-foreground);
+    white-space: nowrap;
+  }
+  .mss-seg {
+    display: inline-flex;
+    padding: 2px;
+    border-radius: var(--radius-control);
+    background: var(--color-secondary-background);
+  }
+  .mss-seg button {
+    padding: 0 12px;
+    border-radius: 6px;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+  }
+  .mss-seg button.on {
+    background: var(--color-secondary-background-hover);
+    color: var(--color-base-foreground);
+  }
+  .mss-hw {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1px 12px;
+    padding: 9px 12px;
+    border-radius: var(--radius-control);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    font-size: var(--text-ui);
+  }
+  .mss-hw small {
+    color: var(--color-subtle-foreground);
+    font-size: 12px;
+  }
+  .mss-hw em {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+    color: var(--color-muted-foreground);
+    font-size: 11px;
+    font-style: normal;
+  }
+  .mss-hw.is-on {
+    box-shadow: inset 0 0 0 1.5px var(--color-base-foreground);
+  }
+
+  /* Installing */
+  .mss-prog {
+    display: grid;
+    gap: 10px;
+    padding: 16px 18px;
+    border-radius: var(--radius-panel);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+  }
+  .mss-prog-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .mss-prog-top b {
+    font-size: var(--text-title);
+    font-weight: 600;
+  }
+  .mss-prog-top span {
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+    font-variant-numeric: tabular-nums;
+  }
+  .mss-bar {
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--mss-line);
+  }
+  .mss-bar i {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--mss-brand);
+    transition: width 180ms linear;
+  }
+  .mss-bar.is-err i {
+    background: var(--color-status-danger);
+  }
+  .mss-phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    color: var(--color-subtle-foreground);
+    font-size: 12px;
+  }
+  .mss-phases span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mss-phases span::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+  .mss-phases .done {
+    color: var(--color-muted-foreground);
+  }
+  .mss-phases .done::before {
+    border-color: var(--color-status-running);
+    background: var(--color-status-running);
+  }
+  .mss-phases .now {
+    color: var(--color-base-foreground);
+  }
+  .mss-phases .now::before {
+    border-color: var(--mss-brand);
+    background: var(--mss-brand);
+  }
+  .mss-phases .fail {
+    color: var(--color-status-danger);
+  }
+  .mss-phases .fail::before {
+    border-color: var(--color-status-danger);
+    background: var(--color-status-danger);
+  }
+  .mss-pick {
+    display: grid;
+    gap: 12px;
+  }
+  .mss-pick-h {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .mss-pick-h > div:first-child {
+    display: grid;
+    gap: 2px;
+  }
+  .mss-pick-h b {
+    font-size: var(--text-title);
+    font-weight: 600;
+  }
+  .mss-pick-h p {
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+  }
+  .mss-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .mss-tabs button {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--radius-control);
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+  }
+  .mss-tabs button.on {
+    background: var(--color-secondary-background);
+    color: var(--color-base-foreground);
+  }
+  .mss-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .mss-card {
+    display: grid;
+    grid-template-rows: 132px auto;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    text-align: left;
+    transition: box-shadow 150ms ease;
+  }
+  .mss-card:hover {
+    box-shadow: inset 0 0 0 1px var(--mss-line-hi);
+  }
+  .mss-card.is-on {
+    box-shadow: 0 0 0 2px var(--color-base-foreground);
+  }
+  .mss-card.is-nofit {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .mss-thumb {
+    position: relative;
+    background-position: center;
+    background-size: cover;
+  }
+  .mss-chip {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    border-radius: 6px;
+    padding: 2px 7px;
+    background: var(--color-media-overlay);
+    backdrop-filter: blur(8px);
+    color: var(--color-base-foreground);
+    font-size: 11px;
+  }
+  .mss-card-b {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px 12px;
+  }
+  .mss-card-b b {
+    font-size: var(--text-ui);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .mss-card-b small {
+    color: var(--color-subtle-foreground);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mss-picked {
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+  }
+  .mss-picked b {
+    color: var(--color-base-foreground);
+    font-weight: 600;
+  }
+  .mss-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+  }
+  .mss .mss-danger {
+    color: var(--color-status-danger);
+  }
+  .mss-logs {
+    max-height: 140px;
+    overflow: auto;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: var(--radius-control);
+    background: color-mix(in oklch, black 40%, var(--color-content-background));
+    color: var(--color-subtle-foreground);
+    font:
+      11px/1.6 ui-monospace,
+      Menlo,
+      monospace;
+    white-space: pre-wrap;
+  }
+  .mss-logs .e {
+    color: var(--color-status-danger);
+  }
+
+  /* New Instance */
+  .mss-opts {
+    display: grid;
+    gap: 8px;
+  }
+  .mss-opt {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: var(--radius-card);
+    background: var(--mss-fill);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    text-align: left;
+  }
+  .mss-opt:hover {
+    background: var(--mss-fill-hi);
+    box-shadow: inset 0 0 0 1px var(--mss-line-hi);
+  }
+  .mss-opt b {
+    display: block;
+    font-size: var(--text-ui);
+    font-weight: 600;
+  }
+  .mss-opt small {
+    color: var(--color-subtle-foreground);
+    font-size: 12px;
+  }
+  .mss-gl {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--color-secondary-background);
+    color: var(--color-muted-foreground);
+  }
+  .mss-arr {
+    color: var(--color-subtle-foreground);
+  }
+
+  /* Background pill */
+  .mss-pill {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 65;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 10px 12px;
+    border-radius: var(--radius-panel);
+    background: var(--color-card-background);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 10%, transparent),
+      var(--shadow-popover);
+  }
+  .mss-pill-ring {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: conic-gradient(
+      oklch(0.93 0.19 110) calc(var(--p) * 1%),
+      color-mix(in oklch, var(--color-base-foreground) 12%, transparent) 0
+    );
+    mask: radial-gradient(circle, transparent 7px, black 7.5px);
+  }
+  @media (max-width: 760px) {
+    .mss-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .mss-choices {
+      grid-template-columns: 1fr;
+    }
+  }
+}
