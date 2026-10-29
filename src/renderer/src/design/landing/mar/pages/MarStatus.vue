@@ -107,6 +107,17 @@ const tone = computed(() =>
 .on-media.is-quiet {
   color: rgb(255 255 255 / 0.88);
 }
+/* On a picture the tint is lost: the words go light, the colour stays
+   in the dot or icon. */
+.on-media.is-bad {
+  color: oklch(0.86 0.08 25);
+}
+.on-media.is-go {
+  color: oklch(0.9 0.1 155);
+}
+.on-media.is-warn {
+  color: oklch(0.9 0.1 80);
+}
 @keyframes mar-breathe {
   50% {
     opacity: 0.35;
