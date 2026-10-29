@@ -367,7 +367,13 @@ function newChat(): void {
       </template>
     </nav>
 
-    <MarCreditsFlyout v-if="creditsStyle.id === 'row' || (!open && creditsStyle.id !== 'meter')">
+    <!-- Signed out with From Pablo › Account: no balance to show. -->
+    <MarCreditsFlyout
+      v-if="
+        (proto.signedIn || !ports.navAccount) &&
+        (creditsStyle.id === 'row' || (!open && creditsStyle.id !== 'meter'))
+      "
+    >
       <button type="button" class="mar-side-credits" :title="open ? undefined : 'Credits'">
         <Coins :size="16" /><template v-if="open"
           ><span class="flex-1 text-left">Credits</span><span>{{ USER.credits }}</span></template
