@@ -4,7 +4,6 @@ import { Plus, ReceiptText } from 'lucide-vue-next'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import DropdownMenuContent from '../ui/DropdownMenuContent.vue'
 import DropdownMenuItem from '../ui/DropdownMenuItem.vue'
-import DropdownMenuSeparator from '../ui/DropdownMenuSeparator.vue'
 import { go, toast } from '../useProto'
 import { shownCredits, shownWorkspace as workspace } from '../account'
 
@@ -37,24 +36,26 @@ const canTopUp = computed(() => workspace.value.role?.toUpperCase() !== 'MEMBER'
   <DropdownMenuRoot :modal="false">
     <DropdownMenuTrigger as-child><slot /></DropdownMenuTrigger>
     <DropdownMenuContent :side :align :side-offset="8" class="mar-cf w-64">
-      <div class="mar-cf-pool">
-        <span class="mar-cf-line">
-          <span>Plan credits</span>
-          <span class="tabular-nums"
-            ><span class="font-medium text-base-foreground">{{ fmt(PLAN_LEFT) }}</span> of
-            {{ fmt(PLAN_TOTAL) }}</span
-          >
-        </span>
-        <span class="mar-cf-bar"><span :style="{ width: planBar }" /></span>
-        <span class="mar-cf-note">Refills November 1</span>
+      <!-- Both pools are the flyout's raised panel (mar/menus/layers.css). -->
+      <div class="mar-menu-panel">
+        <div class="mar-cf-pool">
+          <span class="mar-cf-line">
+            <span>Plan credits</span>
+            <span class="tabular-nums"
+              ><span class="font-medium text-base-foreground">{{ fmt(PLAN_LEFT) }}</span> of
+              {{ fmt(PLAN_TOTAL) }}</span
+            >
+          </span>
+          <span class="mar-cf-bar"><span :style="{ width: planBar }" /></span>
+          <span class="mar-cf-note">Refills November 1</span>
+        </div>
+        <div class="mar-cf-pool">
+          <span class="mar-cf-line">
+            <span>Top-up credits</span>
+            <span class="font-medium text-base-foreground tabular-nums">{{ fmt(topUp) }}</span>
+          </span>
+        </div>
       </div>
-      <div class="mar-cf-pool">
-        <span class="mar-cf-line">
-          <span>Top-up credits</span>
-          <span class="font-medium text-base-foreground tabular-nums">{{ fmt(topUp) }}</span>
-        </span>
-      </div>
-      <DropdownMenuSeparator />
       <DropdownMenuItem v-if="canTopUp" @select="toast('Add credits')">
         <Plus :size="15" class="text-subtle-foreground" />Add credits
       </DropdownMenuItem>
@@ -71,11 +72,10 @@ const canTopUp = computed(() => workspace.value.role?.toUpperCase() !== 'MEMBER'
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 10px 6px;
+  padding: 10px;
 }
 .mar-cf .mar-cf-pool + .mar-cf-pool {
-  padding-top: 6px;
-  padding-bottom: 10px;
+  border-top: 1px solid color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
 }
 .mar-cf .mar-cf-line {
   display: flex;
