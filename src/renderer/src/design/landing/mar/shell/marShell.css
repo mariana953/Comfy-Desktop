@@ -859,6 +859,27 @@
     var(--color-content-background);
   background-attachment: local;
 }
+/* In light mode a grey light reads as dirt: the same light is a faint
+   lavender instead (the palette's hue), both at the top and down the page. */
+:root[data-mar-ui='on'][data-ds-theme='light'] .mar-backdrop.is-spotlight .mar-bg {
+  background: radial-gradient(
+    ellipse 55% 85% at 50% -15%,
+    oklch(0.84 0.06 290 / 0.45),
+    transparent 70%
+  );
+}
+:root[data-mar-ui='on'][data-ds-theme='light'] .proto-main:has(> .mar-backdrop.is-spotlight) {
+  background:
+    radial-gradient(
+      ellipse 90% 100% at 50% 0%,
+      oklch(0.9 0.04 290 / 0.3),
+      oklch(0.92 0.03 290 / 0.14) 40%,
+      oklch(0.94 0.02 290 / 0.05) 70%,
+      transparent 100%
+    ),
+    var(--color-content-background);
+  background-attachment: local;
+}
 /* Aurora: slow, wide bands of muted light drifting sideways. */
 :root[data-mar-ui='on'] .mar-backdrop.is-aurora .mar-bg {
   inset: -20%;
