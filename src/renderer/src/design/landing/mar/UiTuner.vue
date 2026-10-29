@@ -18,6 +18,8 @@ import { CREDITS_STYLES, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 import { FIRST_RUNS, firstRun } from './firstRun'
+import { LOOKS, marLook } from './looks/looks'
+import MarLookFx from './looks/MarLookFx.vue'
 
 /** The UI tuner panel (Prototype menu › UI Playground): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
@@ -121,14 +123,12 @@ function set(key: keyof Tuning, value: string): void {
         </div>
       </div>
 
-      <!-- Surface and theme share one row. -->
-      <div class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">{{
-          isMariana ? 'Surface and theme' : 'Theme'
-        }}</span>
+      <!-- Mar's proposal: Surface on its own row; palette and light/dark
+           share the next one, since both set the colour. -->
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Surface</span>
         <div class="flex items-center gap-1.5">
           <div
-            v-if="isMariana"
             class="mar-seg flex min-w-0 flex-1 gap-1 rounded-control bg-secondary-background p-0.5"
           >
             <button
@@ -147,6 +147,19 @@ function set(key: keyof Tuning, value: string): void {
               {{ sf.value === 'desktop' ? 'Desktop' : 'Cloud' }}
             </button>
           </div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">{{
+          isMariana ? 'Palette and theme' : 'Theme'
+        }}</span>
+        <div class="flex items-center gap-1.5">
+          <Select
+            v-if="isMariana"
+            v-model="palette.id"
+            :options="paletteOptions"
+            class="min-w-0 flex-1"
+          />
           <div
             class="mar-seg ml-auto flex shrink-0 gap-0.5 rounded-control bg-secondary-background p-0.5"
           >
@@ -172,8 +185,8 @@ function set(key: keyof Tuning, value: string): void {
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">Palette</span>
-        <Select v-model="palette.id" :options="paletteOptions" class="w-full" />
+        <span class="text-ui text-subtle-foreground">Look</span>
+        <Select v-model="marLook.id" :options="LOOKS" class="w-full" />
       </div>
 
       <div class="flex flex-col gap-1.5">
@@ -350,4 +363,6 @@ function set(key: keyof Tuning, value: string): void {
       <Button variant="ghost" size="sm" class="self-start" @click="reset">Reset</Button>
     </aside>
   </Teleport>
+  <!-- Look (looks/): the shader and pointer light, only while a look needs them. -->
+  <MarLookFx v-if="isMariana" />
 </template>
