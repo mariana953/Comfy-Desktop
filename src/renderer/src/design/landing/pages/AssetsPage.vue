@@ -126,14 +126,14 @@ function addFolder(path: string): void {
         size: '3.4 MB',
         modified: 'Last month',
         kind: 'image',
-        thumbId: 'image_krea2_turbo_t2i'
+        thumbId: 'image_krea2_turbo_t2i~moodboard-01'
       },
       {
         name: 'moodboard_02.jpg',
         size: '2.9 MB',
         modified: 'Last month',
         kind: 'image',
-        thumbId: 'image_flux2'
+        thumbId: 'image_flux2~moodboard-02'
       }
     ]
   })

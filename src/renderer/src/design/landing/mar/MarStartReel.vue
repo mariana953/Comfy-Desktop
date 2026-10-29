@@ -6,13 +6,11 @@ import MediaCard from '../ui/MediaCard.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
 import SectionHeader from '../ui/SectionHeader.vue'
 import MarStartWhere from './MarStartWhere.vue'
-import cloudLoop from './assets/banner-cloud.mp4'
-import cloudPoster from './assets/banner-cloud.jpg'
-import bloomLoop from './assets/banner-bloom.mp4'
-import bloomPoster from './assets/banner-bloom.jpg'
-import ribbonLoop from './assets/banner-ribbon.mp4'
-import ribbonPoster from './assets/banner-ribbon.jpg'
-import portraitSun from './assets/portrait-sun.jpg'
+import { mock } from './assets/mock'
+
+// Real ComfyUI outputs (the install showcase's clips), not the What's new
+// banner's loops: both sit on the first-run Home at once.
+const CLIPS = './install-showcase-scene/Assets'
 
 /**
  * First run · Reel (UI Playground › First run): the sections of the
@@ -31,35 +29,35 @@ interface Piece {
 }
 const PIECES: Piece[] = [
   {
-    idea: 'Pastel clouds',
-    prompt: 'A slow drift through pastel clouds at sunrise',
-    title: 'Pastel clouds at sunrise',
+    idea: 'Cloud shapes',
+    prompt: 'Clouds drifting into shapes over a blue sky, painterly',
+    title: 'Clouds at play',
     kind: 'Video',
-    src: cloudPoster,
-    video: cloudLoop
+    src: mock('clip-clouds'),
+    video: `${CLIPS}/clouds.webm`
   },
   {
-    idea: 'Slow-motion flower',
-    prompt: 'A peony opening in slow motion, soft light',
-    title: 'A peony opening',
+    idea: 'A flower at night',
+    prompt: 'A single flower blooming in a field at night, sparks of light',
+    title: 'A flower blooms at night',
     kind: 'Video',
-    src: bloomPoster,
-    video: bloomLoop
+    src: mock('clip-flower'),
+    video: `${CLIPS}/flower.webm`
   },
   {
     idea: 'Portrait',
     prompt: 'A portrait at golden hour, warm light, shallow depth',
     title: 'Golden hour portrait',
     kind: 'Image',
-    src: portraitSun
+    src: mock('reel-golden-hour-portrait')
   },
   {
-    idea: 'Silk ribbons',
-    prompt: 'Pastel silk ribbons moving in the wind',
-    title: 'Silk in the wind',
+    idea: 'Misty mountains',
+    prompt: 'Mist rolling over pine mountains at dusk, violet sky',
+    title: 'Mountains at dusk',
     kind: 'Video',
-    src: ribbonPoster,
-    video: ribbonLoop
+    src: mock('clip-dusk-mountains'),
+    video: `${CLIPS}/dusk_mountains.webm`
   }
 ]
 

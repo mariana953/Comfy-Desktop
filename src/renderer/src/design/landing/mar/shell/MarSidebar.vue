@@ -50,11 +50,7 @@ import MarSpacesInvite from '../userStates/MarSpacesInvite.vue'
 import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
 import { search } from '../search/search'
-import portraitSeaside from '../assets/portrait-seaside.jpg'
-import lakeFog from '../assets/lake-fog.jpg'
-import portraitWindow from '../assets/portrait-window.jpg'
-import portraitGrass from '../assets/portrait-grass.jpg'
-import hillsFog from '../assets/hills-fog.jpg'
+import { PROJECT_ART } from '../assets/mock'
 
 /**
  * Mar's sidebar (Navigation: Sidebar or Floating): the lens switch and the
@@ -124,7 +120,7 @@ const favs = computed(() =>
   favorites.ids.map((id) => TEMPLATES.find((t) => t.id === id)).filter((t) => t !== undefined)
 )
 
-const ART = [portraitSeaside, lakeFog, portraitWindow, portraitGrass, hillsFog]
+const ART = PROJECT_ART
 const projects = computed(() => PROJECTS.map((p, i) => ({ ...p, art: ART[i % ART.length]! })))
 
 const LENSES: { value: Mode; label: string; icon: Component }[] = [

@@ -61,6 +61,8 @@ const INTERVAL = 7000
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const index = ref(0)
 const paused = ref(false)
+/** The slide whose loop is playing; until then its still shows. */
+const playing = ref('')
 const slide = computed(() => SLIDES[index.value]!)
 
 // How far the current slide is through its time (0 to 1); it fills the
@@ -98,30 +100,40 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
     >
       <Transition name="banner-fade">
         <div :key="slide.id" class="absolute inset-0">
-          <template v-if="slide.video && !reduced">
-            <video
-              :src="slide.video"
-              :poster="slide.image"
-              autoplay
-              muted
-              loop
-              playsinline
-              class="absolute inset-0 size-full object-cover"
-            />
-            <span class="banner-veil is-soft absolute inset-0" aria-hidden="true" />
-          </template>
-          <template v-else-if="slide.image">
-            <img
-              :src="slide.image"
-              alt=""
-              class="banner-drift absolute inset-0 size-full object-cover"
-            />
-            <span class="banner-veil absolute inset-0" aria-hidden="true" />
-          </template>
+          <!-- Layered so a slide is never flat: the gradient, then the
+               still, then the loop, which fades in only once it plays. A
+               clip that is slow, blocked or broken leaves the still. -->
           <div
-            v-else
             class="banner-gradient absolute inset-0"
             :style="{ backgroundImage: slide.gradient }"
+          />
+          <img
+            v-if="slide.image"
+            :src="slide.image"
+            alt=""
+            :class="[
+              'absolute inset-0 size-full object-cover',
+              !slide.video || reduced ? 'banner-drift' : ''
+            ]"
+          />
+          <video
+            v-if="slide.video && !reduced"
+            :src="slide.video"
+            :poster="slide.image"
+            autoplay
+            muted
+            loop
+            playsinline
+            :class="[
+              'absolute inset-0 size-full object-cover transition-opacity duration-500',
+              playing === slide.id ? 'opacity-100' : 'opacity-0'
+            ]"
+            @playing="playing = slide.id"
+          />
+          <span
+            v-if="slide.image"
+            :class="['banner-veil absolute inset-0', slide.video ? 'is-soft' : '']"
+            aria-hidden="true"
           />
           <span class="banner-grain absolute inset-0" aria-hidden="true" />
           <div
@@ -192,8 +204,8 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
     radial-gradient(70% 90% at 50% 50%, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.2)),
     linear-gradient(to bottom, rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.35));
 }
-/* The loops are pale pastel: a lighter veil keeps their colour and still
-   holds the white message. */
+/* The loops and their stills are pale pastel: a lighter veil keeps their
+   colour and still holds the white message. */
 .banner-veil.is-soft {
   background: radial-gradient(55% 75% at 50% 50%, rgb(20 16 32 / 0.38), rgb(20 16 32 / 0.08));
 }
@@ -212,7 +224,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 }
 .banner-gradient {
   background-size: 140% 140%;
-  animation: banner-drift 18s ease-in-out infinite alternate;
+  animation: banner-pan 18s ease-in-out infinite alternate;
 }
 
 /* Film grain over the gradient, as in the brand's banners. */
@@ -222,7 +234,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
   opacity: 0.35;
 }
 
-@keyframes banner-drift {
+@keyframes banner-pan {
   from {
     background-position: 0% 30%;
   }

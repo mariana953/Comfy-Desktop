@@ -13,10 +13,26 @@ import SectionHeader from '../ui/SectionHeader.vue'
  * Cloud or on this computer.
  */
 const STARTERS = [
-  { label: 'Remove a background', thumbId: 'api_google_nano_banana2_image_edit', kind: 'Image' },
-  { label: 'Turn a photo into video', thumbId: 'video_ltx2_5_i2v', kind: 'Video' },
-  { label: 'Reshoot your product', thumbId: 'template_product_placement', kind: 'Image' },
-  { label: 'Upscale to 4K', thumbId: 'utility_seedvr2_image_upscale', kind: 'Image' }
+  {
+    label: 'Remove a background',
+    thumbId: 'api_google_nano_banana2_image_edit~start-remove-a-background',
+    kind: 'Image'
+  },
+  {
+    label: 'Turn a photo into video',
+    thumbId: 'video_ltx2_5_i2v~start-turn-a-photo-into-video',
+    kind: 'Video'
+  },
+  {
+    label: 'Reshoot your product',
+    thumbId: 'template_product_placement~start-reshoot-your-product',
+    kind: 'Image'
+  },
+  {
+    label: 'Upscale to 4K',
+    thumbId: 'utility_seedvr2_image_upscale~start-upscale-to-4k',
+    kind: 'Image'
+  }
 ]
 function run(label: string): void {
   const cloud = instances.value.find((i) => i.kind === 'cloud') ?? INSTANCES[0]!

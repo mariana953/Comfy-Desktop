@@ -52,17 +52,8 @@ import {
   recentInstances
 } from '../useProto'
 import { can } from '../milestones'
-import { TEMPLATES } from '../mock'
-import portraitSeaside from './assets/portrait-seaside.jpg'
-import portraitGarden from './assets/portrait-garden.jpg'
-import lakeFog from './assets/lake-fog.jpg'
-import portraitSun from './assets/portrait-sun.jpg'
-import hillsSunset from './assets/hills-sunset.jpg'
-import portraitSmile from './assets/portrait-smile.jpg'
-import forestFog from './assets/forest-fog.jpg'
-import portraitGrass from './assets/portrait-grass.jpg'
-import hillsFog from './assets/hills-fog.jpg'
-import portraitWindow from './assets/portrait-window.jpg'
+import { TEMPLATES, thumb } from '../mock'
+import { mock } from './assets/mock'
 
 /**
  * Mar's Home on Pablo's v10 content: the sections and order of
@@ -114,7 +105,7 @@ const builds = computed(() => recentInstances.value.slice(0, 3))
 const tight = computed(() => parts.value.top === 'mar')
 
 // Example workflows as compact rows (Exploration 17): photo, title, what it does.
-const EXAMPLE_ART = [portraitGarden, lakeFog, portraitSun, hillsSunset, portraitSmile]
+const EXAMPLE_ART = [1, 2, 3, 4, 5].map((n) => mock(`home-example-${n}`))
 const exampleRows = computed(() =>
   TEMPLATES.filter((t) => t.kind === 'graph')
     .slice(0, 5)
@@ -124,28 +115,17 @@ const exampleRows = computed(() =>
     })
 )
 
-const RECENT_ART = [
-  portraitSeaside,
-  forestFog,
-  portraitGrass,
-  hillsFog,
-  portraitWindow,
-  portraitGarden,
-  lakeFog,
-  portraitSun,
-  hillsSunset,
-  portraitSmile
-]
 const recent = computed(() =>
   [...allWorkflows.value]
     .sort((a, b) => a.age - b.age)
     .slice(0, 8)
-    .map((w, i) => {
+    .map((w) => {
       const env = w.envId ? instanceById(w.envId) : undefined
       return {
         w,
         env,
-        src: RECENT_ART[i % RECENT_ART.length]!,
+        // The workflow's own picture, the one it has everywhere.
+        src: thumb(w.thumbId),
         title: w.name.replace(/\.json$/, '')
       }
     })

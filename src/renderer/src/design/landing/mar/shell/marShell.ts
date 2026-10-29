@@ -2,14 +2,7 @@ import { computed, reactive, watch } from 'vue'
 import { proto } from '../../useProto'
 import { isMariana } from '../proposal'
 import { active } from '../marParts'
-import forestFog from '../assets/forest-fog.jpg'
-import hillsFog from '../assets/hills-fog.jpg'
-import hillsSunset from '../assets/hills-sunset.jpg'
-import lakeFog from '../assets/lake-fog.jpg'
-import portraitGrass from '../assets/portrait-grass.jpg'
-import portraitSeaside from '../assets/portrait-seaside.jpg'
-import portraitSun from '../assets/portrait-sun.jpg'
-import portraitWindow from '../assets/portrait-window.jpg'
+import { mock } from '../assets/mock'
 
 /**
  * Mar's shell (Figma "Exploration 01 · Cinema hero"): the sidebar floats
@@ -154,22 +147,22 @@ export const marSidebarClosed = computed(() => marShellOn.value && !marShell.ope
 
 // Not every page gets a photo: tools (builds, the agent, admin) stay plain.
 const HERO: Record<string, string> = {
-  overview: lakeFog,
-  explore: portraitSun,
-  tutorials: hillsFog,
-  workflows: hillsSunset,
-  apps: portraitGrass,
-  assets: forestFog,
-  projects: portraitSeaside,
-  spaces: portraitWindow
+  overview: mock('hero-overview'),
+  explore: mock('hero-explore'),
+  tutorials: mock('hero-tutorials'),
+  workflows: mock('hero-workflows'),
+  apps: mock('hero-apps'),
+  assets: mock('hero-assets'),
+  projects: mock('hero-projects'),
+  spaces: mock('hero-spaces')
 }
 
 /** The photo behind the top of the current page, if it has one. */
 export const heroImage = computed<string | undefined>(() => {
   if (!isMariana.value) return undefined
   const page = proto.page
-  if (page.startsWith('project:')) return portraitSeaside
-  if (page.startsWith('space:')) return portraitWindow
+  if (page.startsWith('project:')) return HERO.projects
+  if (page.startsWith('space:')) return HERO.spaces
   return HERO[page]
 })
 

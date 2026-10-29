@@ -10,27 +10,27 @@ const text = ref('')
 const APPS: (Starter & { prompt: string })[] = [
   {
     label: 'Product relight',
-    thumbId: 'template_product_placement',
+    thumbId: 'template_product_placement~app-product-relight',
     prompt: 'An app that relights product photos in three light setups'
   },
   {
     label: 'Photo to video',
-    thumbId: 'video_ltx2_5_i2v',
+    thumbId: 'video_ltx2_5_i2v~app-photo-to-video',
     prompt: 'An app that turns a photo into a 5 second video'
   },
   {
     label: 'Reshoot a photo',
-    thumbId: 'api_google_nano_banana2_image_edit',
+    thumbId: 'api_google_nano_banana2_image_edit~app-reshoot-a-photo',
     prompt: 'An app that reshoots a photo in a new place'
   },
   {
     label: 'Room stager',
-    thumbId: 'image_qwen_image_edit_2511',
+    thumbId: 'image_qwen_image_edit_2511~app-room-stager',
     prompt: 'An app that stages an empty room with furniture'
   },
   {
     label: '4K upscaler',
-    thumbId: 'utility_seedvr2_image_upscale',
+    thumbId: 'utility_seedvr2_image_upscale~app-4k-upscaler',
     prompt: 'An app that upscales any render to clean 4K'
   }
 ]

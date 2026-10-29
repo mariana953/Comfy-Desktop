@@ -1,10 +1,6 @@
 import { PROJECTS, TEMPLATES, thumb, type Template } from '../../mock'
-import portraitSeaside from '../assets/portrait-seaside.jpg'
-import lakeFog from '../assets/lake-fog.jpg'
-import portraitWindow from '../assets/portrait-window.jpg'
-import portraitGrass from '../assets/portrait-grass.jpg'
-import hillsFog from '../assets/hills-fog.jpg'
 import { collection } from './collection'
+import { PROJECT_ART } from '../assets/mock'
 
 /**
  * Projects in Mar's proposal: a shared place that always runs on one
@@ -24,7 +20,7 @@ export interface MarProject {
   status?: 'running' | 'failed'
 }
 
-const ART = [portraitSeaside, lakeFog, portraitWindow, portraitGrass, hillsFog]
+const ART = PROJECT_ART
 const PEOPLE = [
   ['Pablo'],
   ['Pablo', 'Mariana'],

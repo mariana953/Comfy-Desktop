@@ -29,7 +29,7 @@ with Comfy() as client:
         model_provider="fal",
     )`,
     cta: 'Browse models',
-    thumbId: 'image_flux2',
+    thumbId: 'image_flux2~dev-one-api-key',
     model: 'Seedream 5.0 Pro'
   },
   api: {
@@ -39,7 +39,7 @@ with Comfy() as client:
   -H "Authorization: Bearer $COMFY_API_KEY" \\
   -d '{"inputs": {"product": "shoe.png"}}'`,
     cta: 'View deployments',
-    thumbId: 'template_product_placement',
+    thumbId: 'template_product_placement~dev-your-workflow-as-an-endpoint',
     model: 'product-shots · v2'
   },
   cloud: {
@@ -52,7 +52,7 @@ job = cloud.workflows.queue("hero-shot-v4.json",
     inputs={"seed": 42})
 print(job.wait().outputs)`,
     cta: 'Open Comfy Cloud',
-    thumbId: 'video_ltx2_5_i2v',
+    thumbId: 'video_ltx2_5_i2v~dev-comfyui-in-the-cloud',
     model: 'hero-shot-v4'
   }
 }

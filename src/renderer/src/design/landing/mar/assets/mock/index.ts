@@ -1,0 +1,37 @@
+import { thumbSource } from '../../../mock'
+import { isMariana } from '../../proposal'
+
+/**
+ * Mar's mock pictures: one per slot, so no picture shows twice in the
+ * proposal (design-shots/media-audit.md lists where each one appears).
+ * A file's name is its slot: `hero-explore.webp` is the Explore page's
+ * header, `hero-shot-v4.webp` the workflow hero-shot-v4.json. Mock data
+ * names its slot after the template id (`image_flux2~flux-portraits`);
+ * Pablo's proposal keeps the template's thumbnail.
+ */
+const files = import.meta.glob<string>('./*.{webp,jpg}', { eager: true, import: 'default' })
+
+export const MOCK: Record<string, string> = Object.fromEntries(
+  Object.entries(files).map(([path, url]) => [path.replace(/^\.\/|\.(webp|jpg)$/g, ''), url])
+)
+
+/** A slot's picture; missing slots fail loudly in development. */
+export function mock(slot: string): string {
+  const url = MOCK[slot]
+  if (!url && import.meta.env.DEV) console.warn(`mar/assets/mock: no picture for "${slot}"`)
+  return url ?? ''
+}
+
+thumbSource.pick = (id) => {
+  const slot = id.split('~')[1]
+  return slot && isMariana.value ? MOCK[slot] : undefined
+}
+
+/** Project covers, in PROJECTS order (sidebar and Projects page). */
+export const PROJECT_ART = [
+  'project-hero-shots',
+  'project-my-first-project',
+  'project-flux-tests',
+  'project-product-campaign',
+  'project-explorations'
+].map(mock)
