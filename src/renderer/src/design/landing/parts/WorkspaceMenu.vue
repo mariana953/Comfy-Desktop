@@ -13,7 +13,7 @@ import MarWorkspaceMenu from '../mar/MarWorkspaceMenu.vue'
 import { isMariana } from '../mar/proposal'
 import MarCredits from '../mar/MarCredits.vue'
 import MarCreditsFlyout from '../mar/MarCreditsFlyout.vue'
-import { creditsStyle } from '../mar/credits'
+import { creditsStyle, creditsTotal } from '../mar/credits'
 import { Gauge, KeyRound, ShieldAlert } from 'lucide-vue-next'
 import { go, proto, toast, type Page } from '../useProto'
 import {
@@ -52,7 +52,7 @@ function signOut(): void {
       >
         <Coins :size="15" class="shrink-0 text-[#ddbd31]" />
         <span class="sidebar-label text-left">Credits</span>
-        <span class="tabular-nums">{{ shownCredits }}</span>
+        <span class="tabular-nums">{{ creditsTotal }}</span>
       </Button>
     </MarCreditsFlyout>
     <Button

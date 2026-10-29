@@ -14,7 +14,7 @@ import { MODE_STYLES, modeStyle } from './modes/modeStyle'
 import { COVERS, cover } from './cover'
 import { HOME_BUILDS, homeBuilds } from './homeBuilds'
 import { TEMPLATE_STYLES, templateStyle } from './brand/templateStyle'
-import { CREDITS_STYLES, creditsStyle } from './credits'
+import { CREDITS_STATES, CREDITS_STYLES, creditsState, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 import { FIRST_RUNS, firstRun } from './firstRun'
@@ -295,6 +295,11 @@ function set(key: keyof Tuning, value: string): void {
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">Credits</span>
         <Select v-model="creditsStyle.id" :options="CREDITS_STYLES" class="w-full" />
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">Credits state</span>
+        <Select v-model="creditsState.id" :options="CREDITS_STATES" class="w-full" />
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">

@@ -1,32 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Coins } from 'lucide-vue-next'
 import { shownCredits } from '../account'
-import { creditsStyle } from './credits'
+import { creditsShort, creditsStyle, creditsTotal } from './credits'
 import MarCreditsFlyout from './MarCreditsFlyout.vue'
 
 /** Credits at the foot of Pablo's sidebar in Mar's proposal (Classic),
  *  in the picked style: a meter under the workspace, or a small chip.
  *  The Row style is Pablo's own Credits row, so nothing renders here.
  *  Either opens the credits flyout. */
-const short = computed(() => {
-  const n = Number(String(shownCredits.value ?? '0').replace(/,/g, ''))
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
-})
 </script>
 
 <template>
   <MarCreditsFlyout v-if="shownCredits && creditsStyle.id === 'meter'">
     <button type="button" class="mar-credits-meter">
       <span class="flex items-center justify-between">
-        <span>{{ shownCredits }} credits</span><span class="text-subtle-foreground">Top up</span>
+        <span>{{ creditsTotal }} credits</span><span class="text-subtle-foreground">Top up</span>
       </span>
       <span class="mar-credits-bar"><span /></span>
     </button>
   </MarCreditsFlyout>
   <MarCreditsFlyout v-else-if="shownCredits && creditsStyle.id === 'chip'">
-    <button type="button" class="mar-credits-chip" :title="`${shownCredits} credits`">
-      <Coins :size="13" />{{ short }} credits
+    <button type="button" class="mar-credits-chip" :title="`${creditsTotal} credits`">
+      <Coins :size="13" />{{ creditsShort }} credits
     </button>
   </MarCreditsFlyout>
 </template>
