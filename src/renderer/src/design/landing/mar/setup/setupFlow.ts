@@ -176,6 +176,8 @@ export const flow = reactive({
   /** Location after "Install on Studio SSD" in the low-space state. */
   movedDisk: false,
   confirmCancel: false,
+  /** The install log, folded under the progress while it runs. */
+  logs: false,
   /** The failing machine fails once; Retry then goes through. */
   retried: false,
   /** Earlier install: bring its files over (asked once, inline). */
@@ -239,6 +241,7 @@ export function openSetup(): boolean {
   flow.picked = null
   flow.movedDisk = false
   flow.confirmCancel = false
+  flow.logs = false
   flow.open = true
   return true
 }
@@ -251,6 +254,7 @@ export function startInstall(): void {
   flow.percent = 0
   flow.retried = false
   flow.confirmCancel = false
+  flow.logs = false
   flow.running = true
   timer = setInterval(tick, 180)
 }
