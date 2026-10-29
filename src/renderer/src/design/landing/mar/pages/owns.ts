@@ -11,7 +11,11 @@ export const MAR_PAGES = [
   'environments',
   'instances',
   'projects',
-  'project:'
+  'project:',
+  'spaces',
+  'space:',
+  'settings',
+  'favorites'
 ]
 
 export const marOwns = (page: string): boolean =>

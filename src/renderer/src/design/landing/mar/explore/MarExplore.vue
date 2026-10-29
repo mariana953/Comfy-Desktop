@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Clock, Play, Search, X } from 'lucide-vue-next'
+import { Clock, Play, Search, SearchX, X } from 'lucide-vue-next'
+import Button from '../../ui/Button.vue'
 import PageHeader from '../../ui/PageHeader.vue'
 import Select from '../../ui/Select.vue'
 import TemplateCard from '../../parts/TemplateCard.vue'
@@ -201,9 +202,15 @@ const empty = computed(
       </button>
     </div>
 
-    <p v-if="empty" class="py-16 text-center text-ui text-subtle-foreground">
-      Nothing matches. Try another word or type.
-    </p>
+    <!-- Nothing matches: say so, and offer the way back to everything. -->
+    <section v-if="empty" class="flex flex-col items-center gap-4 py-16 text-center">
+      <span class="mar-ex-none"><SearchX :size="20" /></span>
+      <div class="flex flex-col gap-1">
+        <h2 class="m-0 text-[17px] font-semibold text-base-foreground">Nothing matches</h2>
+        <p class="m-0 text-ui text-muted-foreground">Try another word, or clear the filters.</p>
+      </div>
+      <Button @click="((type = 'all'), (query = ''))">Clear filters</Button>
+    </section>
   </div>
 </template>
 
@@ -268,6 +275,16 @@ const empty = computed(
   background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
   font-size: 15px;
   font-weight: 600;
+}
+.mar-ex-none {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  color: var(--color-muted-foreground);
 }
 .mar-ex-chip {
   border-radius: 999px;
