@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { AppWindow, ChevronDown, Images, Plus, Search, Server, Workflow } from 'lucide-vue-next'
 import CreateMenu from '../CreateMenu.vue'
 import TabsAccount from './TabsAccount.vue'
-import { ports } from '../pabloPorts'
+import { firstRunKeeps, firstRunLabel, ports } from '../pabloPorts'
 import { go, goIn, proto, toast, type Mode, type Page } from '../../useProto'
 import { can, landingPage } from '../../milestones'
 import { PROJECTS } from '../../mock'
@@ -59,7 +59,9 @@ const AGENT: Tab[] = [{ key: 'agent', label: 'Chat', page: 'agent' }]
 const tabs = computed<Tab[]>(() => {
   // From Pablo › Docs: his Build nav ends with Docs (docs.comfy.org).
   if (proto.mode === 'build')
-    return ports.navDocs ? [...BUILD, { key: 'docs', label: 'Docs', href: 'docs' }] : BUILD
+    return [...BUILD, ...(ports.navDocs ? [{ key: 'docs', label: 'Docs', href: 'docs' }] : [])]
+      .filter((t) => firstRunKeeps(t.page))
+      .map((t) => ({ ...t, label: firstRunLabel(t.page, t.label) }))
   if (proto.mode === 'agent') return AGENT
   return [
     ...CREATE,
@@ -102,7 +104,7 @@ const menuItems = computed(() =>
   menu.value === 'library'
     ? {
         all: undefined,
-        items: LIBRARY.map((l) => ({
+        items: LIBRARY.filter((l) => firstRunKeeps(l.page)).map((l) => ({
           id: l.id,
           name: l.name,
           page: l.page,

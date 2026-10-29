@@ -52,7 +52,7 @@ import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
 import { search } from '../search/search'
 import { PROJECT_ART } from '../assets/mock'
-import { ports } from '../pabloPorts'
+import { firstRunKeeps, firstRunLabel, ports } from '../pabloPorts'
 import MarSignIn from './MarSignIn.vue'
 
 /**
@@ -118,7 +118,14 @@ const withDocs = (gs: typeof BUILD): typeof BUILD =>
     ? gs.map((g, i) => (i === gs.length - 1 ? { ...g, items: [...g.items, DOCS] } : g))
     : gs
 const groups = computed(() =>
-  proto.mode === 'build' ? withDocs(BUILD) : proto.mode === 'create' ? CREATE : []
+  (proto.mode === 'build' ? withDocs(BUILD) : proto.mode === 'create' ? CREATE : [])
+    .map((g) => ({
+      ...g,
+      items: g.items
+        .filter((i) => firstRunKeeps(i.page))
+        .map((i) => ({ ...i, label: firstRunLabel(i.page, i.label) }))
+    }))
+    .filter((g) => g.items.length)
 )
 // Builds count what this user has (none, one or several local, plus Cloud).
 const countOf = (i: Item): number | undefined =>

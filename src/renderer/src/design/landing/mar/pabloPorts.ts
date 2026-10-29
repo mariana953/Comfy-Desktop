@@ -1,4 +1,5 @@
 import { reactive, watch } from 'vue'
+import { isNewUser, proto } from '../useProto'
 
 /**
  * Pablo's features brought into Mar's proposal, restyled (UI Playground ›
@@ -6,12 +7,13 @@ import { reactive, watch } from 'vue'
  * its own switch and starts Off: the proposal looks as it did until one is
  * turned on. Audit: design-shots/pablo-gaps.md.
  */
-export type Port = 'buildDetails' | 'navAccount' | 'navDocs'
+export type Port = 'buildDetails' | 'navAccount' | 'navDocs' | 'firstRunNav'
 
 export const PORTS: { key: Port; label: string }[] = [
   { key: 'buildDetails', label: 'Compact builds · GPU, disk and actions' },
   { key: 'navAccount', label: 'Account · Log in card, workspace in Tabs' },
-  { key: 'navDocs', label: 'Build nav · Docs link' }
+  { key: 'navDocs', label: 'Build nav · Docs link' },
+  { key: 'firstRunNav', label: 'First-time nav · only what a first call needs' }
 ]
 
 const KEY = 'comfy.design.mar.pabloPorts'
@@ -39,3 +41,18 @@ watch(
     }
   }
 )
+
+/** From Pablo › First-time nav (his ModeNav): a new user sees only what
+ *  helps a first call. No Builds in Create before any install; in Build
+ *  no Deployments, Builds or Logs, and Overview is Get started. */
+const FIRST_RUN_HIDES = ['deployments', 'environments', 'logs']
+const firstRunOn = (): boolean => ports.firstRunNav && isNewUser.value
+
+export function firstRunKeeps(page: string | undefined): boolean {
+  if (!firstRunOn()) return true
+  if (proto.mode === 'build') return !FIRST_RUN_HIDES.includes(page ?? '')
+  return !(proto.fresh && page === 'environments')
+}
+
+export const firstRunLabel = (page: string | undefined, label: string): string =>
+  firstRunOn() && page === 'build-overview' ? 'Get started' : label
