@@ -844,6 +844,25 @@
       transparent 70%
     );
 }
+/* The spotlight carries on down the whole page: the same light, weaker
+   the further down you go, so the content never sits on a flat band. */
+:root[data-mar-ui='on'] .mar-backdrop.is-spotlight ~ .mar-home {
+  position: relative;
+  isolation: isolate;
+}
+:root[data-mar-ui='on'] .mar-backdrop.is-spotlight ~ .mar-home::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 75% 100% at 50% 0%,
+    color-mix(in oklch, var(--color-base-foreground) 7%, transparent),
+    color-mix(in oklch, var(--color-base-foreground) 3%, transparent) 45%,
+    transparent 100%
+  );
+}
 /* Aurora: slow, wide bands of muted light drifting sideways. */
 :root[data-mar-ui='on'] .mar-backdrop.is-aurora .mar-bg {
   inset: -20%;
