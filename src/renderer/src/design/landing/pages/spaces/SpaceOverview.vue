@@ -10,6 +10,8 @@ import Sparkline from '../../ui/Sparkline.vue'
 import StatTile from '../../parts/env/StatTile.vue'
 import { fmt } from '../../parts/env/env'
 import type { Space, SpaceRequest } from '../../spaces'
+import MarActivityTimeline from '../../mar/activity/MarActivityTimeline.vue'
+import { isMariana } from '../../mar/proposal'
 
 /** How the space is doing, what they asked for, and the isolation
  *  guarantees of their space. */
@@ -99,11 +101,15 @@ const ISOLATION = computed(() => [
           <p class="flex-1 text-ui font-medium">Recent activity</p>
           <Button variant="link" size="sm" @click="emit('tab', 'activity')">All</Button>
         </div>
-        <p v-for="(a, i) in space.activity.slice(0, 4)" :key="i" class="py-1.5 text-ui">
-          <span class="font-medium">{{ a.who }}</span>
-          <span class="ml-1 text-muted-foreground">{{ a.what }}</span>
-          <span class="block text-ui text-subtle-foreground">{{ a.when }}</span>
-        </p>
+        <!-- Mar's proposal: the activity as milestones on a line (mar/). -->
+        <MarActivityTimeline v-if="isMariana" :items="space.activity.slice(0, 5)" />
+        <template v-else>
+          <p v-for="(a, i) in space.activity.slice(0, 4)" :key="i" class="py-1.5 text-ui">
+            <span class="font-medium">{{ a.who }}</span>
+            <span class="ml-1 text-muted-foreground">{{ a.what }}</span>
+            <span class="block text-ui text-subtle-foreground">{{ a.when }}</span>
+          </p>
+        </template>
       </Card>
     </div>
   </div>
