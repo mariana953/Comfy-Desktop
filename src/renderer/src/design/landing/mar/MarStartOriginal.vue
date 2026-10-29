@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ArrowRight, Cloud, Laptop, Play } from 'lucide-vue-next'
-import PromptBox from '../parts/PromptBox.vue'
-import { hostActions, instances, proto } from '../useProto'
+import { go, hostActions, instances, proto } from '../useProto'
 import { INSTANCES, thumb } from '../mock'
 import { can } from '../milestones'
+import SectionHeader from '../ui/SectionHeader.vue'
 
 /**
- * First run · Original (UI Playground › First run): the same Home a returning user gets, only
- * emptier. Say what you want (the prompt), or run an example as a row of
- * pictures named by what they do, or, for those who already know
- * ComfyUI, open the node editor on Cloud or on this computer.
+ * First run · Original (UI Playground › First run): the same Home a
+ * returning user gets, only emptier: under the same greeting and prompt
+ * (MarHomeV10.vue), run an example as a row of pictures named by what they
+ * do, or, for those who already know ComfyUI, open the node editor on
+ * Cloud or on this computer.
  */
 const STARTERS = [
   { label: 'Remove a background', thumbId: 'api_google_nano_banana2_image_edit', kind: 'Image' },
@@ -28,17 +29,19 @@ function openCloud(): void {
 </script>
 
 <template>
-  <section class="mar-start mx-auto flex w-full max-w-240 flex-col items-center">
-    <h1 class="mar-start-title">Welcome to Comfy</h1>
-    <p class="mar-start-sub">Images, video and 3D, with every open and partner model.</p>
-
-    <div v-if="can.agent" class="mar-prompt-slot w-full max-w-180">
-      <PromptBox target class="mar-prompt" />
-    </div>
-
-    <div class="mar-start-head">
-      <Play :size="13" />Or run an example · it runs on Comfy Cloud, nothing to set up
-    </div>
+  <section class="mt-10">
+    <SectionHeader
+      title="Run an example on Comfy Cloud"
+      :link="can.explore ? 'See all' : undefined"
+      @link="go('explore')"
+    >
+      <template #controls>
+        <span
+          class="inline-flex h-5 items-center rounded-full bg-secondary-background px-2 text-ui text-muted-foreground"
+          >{{ STARTERS.length }}</span
+        >
+      </template>
+    </SectionHeader>
     <div class="mar-start-grid">
       <button
         v-for="s in STARTERS"
@@ -53,8 +56,10 @@ function openCloud(): void {
         <span class="mar-start-run"><Play :size="12" fill="currentColor" />Run</span>
       </button>
     </div>
+  </section>
 
-    <div class="mar-start-head mt-10">Know ComfyUI? Open the node editor</div>
+  <section class="mt-10">
+    <SectionHeader title="Know ComfyUI? Open the node editor" />
     <div class="mar-start-ways">
       <button type="button" class="mar-start-way" @click="openCloud">
         <span class="mar-start-icon"><Cloud :size="17" /></span>
@@ -77,31 +82,6 @@ function openCloud(): void {
 </template>
 
 <style scoped>
-.mar-start {
-  padding-top: 6vh;
-  padding-bottom: 48px;
-}
-.mar-start-title {
-  font-size: 40px;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  text-align: center;
-}
-.mar-start-sub {
-  margin: 10px 0 28px;
-  color: var(--color-muted-foreground);
-  font-size: 15px;
-  text-align: center;
-}
-.mar-start-head {
-  display: flex;
-  align-self: stretch;
-  align-items: center;
-  gap: 8px;
-  margin: 36px 4px 12px;
-  color: var(--color-subtle-foreground);
-  font-size: 13px;
-}
 .mar-start-grid {
   display: grid;
   width: 100%;
@@ -211,12 +191,7 @@ function openCloud(): void {
 </style>
 
 <style>
-/* Global: these are buttons, past the prototype's button reset; and the
-   title, past the Home's larger greeting rule. */
-:root .mar-home h1.mar-start-title.mar-start-title {
-  margin: 0;
-  font-size: 40px;
-}
+/* Global: these are buttons, past the prototype's button reset. */
 :root .proto-ui.proto-ui.proto-ui .mar-start-card {
   position: relative;
   width: auto;

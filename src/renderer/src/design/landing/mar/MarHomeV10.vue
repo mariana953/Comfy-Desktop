@@ -14,6 +14,7 @@ import TemplatesRow from '../parts/TemplatesRow.vue'
 import MarSpacesRow from './MarSpacesRow.vue'
 import MarBuildsRow from './MarBuildsRow.vue'
 import { homeBuilds } from './homeBuilds'
+import { onCloud } from './shell/surface'
 import { p20 } from './p20/p20'
 import CommandHome from './p20/CommandHome.vue'
 import BentoHome from './p20/BentoHome.vue'
@@ -152,19 +153,20 @@ const recent = computed(() =>
     </template>
   </div>
   <component :is="layout" v-if="layout && !noLocal" />
-  <div v-else :class="['mar-home mx-auto w-full max-w-300 px-10', noLocal ? 'pb-10' : 'pb-16']">
-    <section :class="['flex flex-col', noLocal ? 'h-full' : tight ? 'pt-14 pb-4' : 'pt-12 pb-4']">
-      <div :class="['flex flex-1 flex-col', noLocal || !tight ? 'justify-center pt-10' : '']">
-        <MarStart v-if="noLocal" />
-        <template v-else>
-          <Greeting
-            text="Hi Mar. Let's create"
-            :class="['mar-greeting', tight ? 'mb-4! pt-0!' : '']"
-          />
-          <!-- One line tall; while you type it grows over what's below. -->
-          <div v-if="can.agent" class="mar-prompt-slot">
-            <PromptBox target class="mar-prompt" />
-          </div>
+  <div v-else class="mar-home mx-auto w-full max-w-300 px-10 pb-16">
+    <!-- First run or not, the top is the same: the greeting and the prompt
+         sit where a returning user finds them. -->
+    <section :class="['flex flex-col', tight ? 'pt-14 pb-4' : 'pt-12 pb-4']">
+      <div :class="['flex flex-1 flex-col', !tight ? 'justify-center pt-10' : '']">
+        <Greeting
+          :text="noLocal ? `Welcome, Mar. Let's create` : `Hi Mar. Let's create`"
+          :class="['mar-greeting', tight ? 'mb-4! pt-0!' : '']"
+        />
+        <!-- One line tall; while you type it grows over what's below. -->
+        <div v-if="can.agent" class="mar-prompt-slot">
+          <PromptBox target class="mar-prompt" />
+        </div>
+        <template v-if="!noLocal">
           <PulseStrip v-if="p20.pulse === 'on'" />
           <BuildHealthRow v-if="p20.builds === 'health'" />
           <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-210">
@@ -181,7 +183,10 @@ const recent = computed(() =>
       </div>
     </section>
 
-    <div v-if="!noLocal">
+    <!-- First run: the same sections, filled with ways to start instead of
+         your work (UI Playground › First run). -->
+    <MarStart v-if="noLocal" />
+    <div v-else>
       <section v-if="parts.examples === 'mar'" class="mx-auto mt-8 w-full max-w-180">
         <SectionHeader
           title="Example workflows"
@@ -227,7 +232,7 @@ const recent = computed(() =>
         </ScrollRow>
       </section>
       <RecentWork v-else-if="parts.recent === 'pablo'" />
-      <MarBuildsRow v-if="homeBuilds.id === 'on'" />
+      <MarBuildsRow v-if="homeBuilds.id === 'on' && !onCloud" />
 
       <section v-if="parts.examples === 'rows'" class="mt-10">
         <SectionHeader
@@ -255,19 +260,18 @@ const recent = computed(() =>
           </button>
         </div>
       </section>
-
-      <template v-if="can.explore">
-        <SpotlightCarousel v-if="p20.news === 'spotlight'" />
-        <WhatsNew v-else-if="parts.news === 'mar'" />
-        <LaunchBanner v-else-if="parts.news === 'banner'" />
-        <LaunchesRow v-else />
-      </template>
-      <GradientSpacesRow v-if="can.spaces && proto.signedIn && p20.spaces === 'gradient'" />
-      <MarSpacesRow v-else-if="can.spaces && proto.signedIn" />
     </div>
+
+    <template v-if="can.explore">
+      <SpotlightCarousel v-if="p20.news === 'spotlight'" />
+      <WhatsNew v-else-if="parts.news === 'mar'" />
+      <LaunchBanner v-else-if="parts.news === 'banner'" />
+      <LaunchesRow v-else />
+    </template>
+    <GradientSpacesRow v-if="can.spaces && proto.signedIn && p20.spaces === 'gradient'" />
+    <MarSpacesRow v-else-if="can.spaces && proto.signedIn" />
   </div>
   <div
-    v-if="!noLocal"
     aria-hidden="true"
     class="pointer-events-none sticky bottom-0 -mt-32 h-32 bg-[linear-gradient(to_top,var(--color-content-background)_15%,transparent)]"
   />
