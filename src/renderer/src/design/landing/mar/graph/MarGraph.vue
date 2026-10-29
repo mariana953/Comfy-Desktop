@@ -10,12 +10,17 @@ import {
   type Component
 } from 'vue'
 import {
+  Bot,
   ChevronDown,
   ChevronUp,
+  Copy,
+  Group as GroupIcon,
   Hand,
   History,
   Images,
   Keyboard,
+  Lock,
+  LockOpen,
   Map as MapIcon,
   Maximize,
   Minus,
@@ -24,9 +29,12 @@ import {
   Pause,
   Play,
   Plus,
+  Redo2,
   Search,
   Settings,
   Tag,
+  Trash2,
+  Undo2,
   X
 } from 'lucide-vue-next'
 import {
@@ -40,14 +48,23 @@ import { onCloud } from '../shell/surface'
 import { graphStyle } from './graphStyle'
 import CanvasNode from './CanvasNode.vue'
 import AssetsPanel from './AssetsPanel.vue'
+import NodeSearch from './NodeSearch.vue'
+import MediaViewer from './MediaViewer.vue'
+import AgentPanel from './AgentPanel.vue'
 import {
   CANVAS_GEOMETRY,
-  CANVAS_LINKS,
   SOCKETS,
   canvasNodeHeight,
   createCanvas,
+  createNode,
+  uid,
   socketY,
-  type SNode
+  type Group,
+  type Link,
+  type NodeKind,
+  type Recipe,
+  type SNode,
+  type SocketType
 } from './canvasData'
 import { createMockEngine, type RunEngine, type RunGraph, type RunJob } from './runEngine'
 import { savedAssets } from './savedAssets'
@@ -57,44 +74,74 @@ import { savedAssets } from './savedAssets'
  * simpler layer over ComfyUI (Node Banana's approach: few nodes, results on
  * the nodes, workflows as nodes). Two looks: Glass, the Home's language
  * (translucent borderless nodes on a calm dot grid), and Current, ComfyUI
- * as it looks today (frontend v1) in the same new structure. The canvas
- * pans (drag the background), zooms (wheel, the zoom pill) and nodes move
- * by their title, so it reads as the real thing.
+ * as it looks today (frontend v1) in the same new structure.
+ *
+ * It works as an editor: the canvas pans (drag the background) and zooms
+ * (wheel, the zoom pill); nodes move by their title; a double-click, "/" or
+ * the rail's Nodes adds one; sockets wire by dragging (dropped on empty
+ * canvas, the link offers the nodes that take it); shift-drag selects
+ * several, to group, run, duplicate or delete; a locked group is skipped
+ * by runs; undo and redo cover every edit; the agent builds workflows from
+ * words; assets drop in as Image nodes.
  */
 const { workflow = 'portrait-sun' } = defineProps<{ workflow?: string }>()
 
 const current = computed(() => graphStyle.id === 'current')
 const cg = computed(() => CANVAS_GEOMETRY[graphStyle.id])
-const sNodes = reactive(createCanvas())
+const start = createCanvas()
+const sNodes = reactive<SNode[]>(start.nodes)
+const links = reactive<Link[]>(start.links)
+const groups = reactive<Group[]>(start.groups)
 const sById = computed(() => Object.fromEntries(sNodes.map((n) => [n.id, n])))
-const selected = ref('')
+const selection = ref<string[]>([])
+const selectedLink = ref('')
 const labels = ref(false)
+const isSel = (id: string): boolean => selection.value.includes(id)
 
 /** Every node's box: the world and the minimap. */
 const boxes = computed(() => sNodes.map((n) => ({ node: n, h: canvasNodeHeight(n, cg.value) })))
 
-const links = computed(() =>
-  CANVAS_LINKS.map(([a, ai, b, bi]) => {
-    const from = sById.value[a]!
-    const to = sById.value[b]!
+function curve(x1: number, y1: number, x2: number, y2: number): string {
+  const dx = Math.max(50, Math.abs(x2 - x1) * 0.45)
+  return `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`
+}
+
+const paths = computed(() =>
+  links.flatMap((l) => {
+    const from = sById.value[l.from]
+    const to = sById.value[l.to]
+    const out = from?.outs[l.out]
+    if (!from || !to || !out) return []
     const x1 = from.x + from.w + 5
-    const y1 = socketY(from, ai, cg.value)
+    const y1 = socketY(from, l.out, cg.value)
     const x2 = to.x - 5
-    const y2 = socketY(to, bi, cg.value)
-    const dx = Math.max(50, Math.abs(x2 - x1) * 0.45)
-    return {
-      d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`,
-      color: SOCKETS[from.outs[ai]!.type]!,
-      // The link into what is running carries the run.
-      live: to.state === 'running' || to.state === 'paused'
-    }
+    const y2 = socketY(to, l.in, cg.value)
+    return [
+      {
+        id: l.id,
+        d: curve(x1, y1, x2, y2),
+        mid: { x: (x1 + x2) / 2, y: (y1 + y2) / 2 },
+        color: SOCKETS[out.type],
+        // The link into what is running carries the run.
+        live: to.state === 'running' || to.state === 'paused'
+      }
+    ]
   })
 )
 
-// The world: big enough for every node, with a margin.
+/** The graph's extent, for framing it and the minimap. */
+const bounds = computed(() => {
+  if (!boxes.value.length) return { x: 0, y: 0, w: 900, h: 560 }
+  const x0 = Math.min(...boxes.value.map((b) => b.node.x)) - 40
+  const y0 = Math.min(...boxes.value.map((b) => b.node.y)) - 40
+  const x1 = Math.max(...boxes.value.map((b) => b.node.x + b.node.w)) + 40
+  const y1 = Math.max(...boxes.value.map((b) => b.node.y + b.h)) + 40
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
+})
+// The world the links are drawn in: from the origin to the far corner.
 const world = computed(() => ({
-  w: Math.max(...boxes.value.map((b) => b.node.x + b.node.w)) + 40,
-  h: Math.max(...boxes.value.map((b) => b.node.y + b.h)) + 40
+  w: Math.max(1, bounds.value.x + bounds.value.w),
+  h: Math.max(1, bounds.value.y + bounds.value.h)
 }))
 
 // The view: pan (x, y) and zoom (k), in the canvas's CSS pixels.
@@ -133,12 +180,13 @@ function fit(): void {
     : { l: 84, t: top.value + 80, r: 32, b: 72 }
   // Leave room under the run block while its job rows are open.
   if (jobsOpen.value) pad.t += current.value ? 200 : 220
+  const b = bounds.value
   const aw = size.w - pad.l - pad.r
   const ah = size.h - pad.t - pad.b
-  const k = Math.min(1, Math.max(0.72, Math.min(aw / world.value.w, ah / world.value.h)))
+  const k = Math.min(1, Math.max(0.5, Math.min(aw / b.w, ah / b.h)))
   view.k = k
-  view.x = pad.l + Math.max(0, (aw - world.value.w * k) / 2)
-  view.y = pad.t + Math.max(0, (ah - world.value.h * k) / 2)
+  view.x = pad.l + Math.max(0, (aw - b.w * k) / 2) - b.x * k
+  view.y = pad.t + Math.max(0, (ah - b.h * k) / 2) - b.y * k
 }
 
 function zoomAt(k: number, cx = size.w / 2, cy = size.h / 2): void {
@@ -148,10 +196,14 @@ function zoomAt(k: number, cx = size.w / 2, cy = size.h / 2): void {
   view.k = nk
 }
 
-function local(e: PointerEvent | WheelEvent): { x: number; y: number } {
+function local(e: { clientX: number; clientY: number }): { x: number; y: number } {
   const r = canvas.value!.getBoundingClientRect()
   return { x: (e.clientX - r.left) / screenScale, y: (e.clientY - r.top) / screenScale }
 }
+const toWorld = (p: { x: number; y: number }): { x: number; y: number } => ({
+  x: (p.x - view.x) / view.k,
+  y: (p.y - view.y) / view.k
+})
 
 function onWheel(e: WheelEvent): void {
   e.preventDefault()
@@ -159,24 +211,161 @@ function onWheel(e: WheelEvent): void {
   zoomAt(view.k * Math.exp(-e.deltaY * 0.0015), p.x, p.y)
 }
 
-// Dragging: the background (or anything, with the hand) pans; a node's
-// title moves the node.
+// ── History: every edit can be undone. A snapshot of the graph, without
+// what runs leave on it. ──
+const past: string[] = []
+const future: string[] = []
+const canUndo = ref(false)
+const canRedo = ref(false)
+const freeze = (): string =>
+  JSON.stringify({
+    nodes: sNodes.map((n) => ({ ...n, state: undefined, step: undefined, steps: undefined })),
+    links,
+    groups
+  })
+let last = freeze()
+let textTimer: ReturnType<typeof setTimeout> | undefined
+function commit(): void {
+  const now = freeze()
+  if (now === last) return
+  past.push(last)
+  if (past.length > 80) past.shift()
+  future.length = 0
+  last = now
+  canUndo.value = true
+  canRedo.value = false
+}
+function restore(snap: string): void {
+  const s = JSON.parse(snap) as { nodes: SNode[]; links: Link[]; groups: Group[] }
+  const runState = new Map(sNodes.map((n) => [n.id, n.state]))
+  sNodes.splice(0, sNodes.length, ...s.nodes.map((n) => ({ ...n, state: runState.get(n.id) })))
+  links.splice(0, links.length, ...s.links)
+  groups.splice(0, groups.length, ...s.groups)
+  selection.value = selection.value.filter((id) => sById.value[id])
+  last = snap
+}
+function undo(): void {
+  const snap = past.pop()
+  if (!snap) return
+  future.push(freeze())
+  restore(snap)
+  canUndo.value = past.length > 0
+  canRedo.value = true
+}
+function redo(): void {
+  const snap = future.pop()
+  if (!snap) return
+  past.push(freeze())
+  restore(snap)
+  canUndo.value = true
+  canRedo.value = future.length > 0
+}
+
+// ── Pointer: pan, move, wire, select. ──
 const tool = ref<'select' | 'hand'>('select')
-let drag: { kind: 'pan' | 'node'; id?: string; x: number; y: number } | undefined
+interface Wire {
+  node: string
+  side: 'in' | 'out'
+  index: number
+  type: SocketType
+}
+type Drag =
+  | { kind: 'pan'; x: number; y: number }
+  | { kind: 'nodes'; x: number; y: number; moved: boolean }
+  | { kind: 'group'; id: string; nodes: string[]; x: number; y: number; moved: boolean }
+  | { kind: 'wire'; wire: Wire }
+  | { kind: 'marquee'; x0: number; y0: number }
+let drag: Drag | undefined
+/** The link being drawn, its loose end in world coordinates. */
+const wiring = ref<Wire & { x: number; y: number }>()
+const marquee = ref<{ x: number; y: number; w: number; h: number }>()
+
+const wirePath = computed(() => {
+  const w = wiring.value
+  if (!w) return ''
+  const n = sById.value[w.node]!
+  const sy = socketY(n, w.index, cg.value)
+  return w.side === 'out' ? curve(n.x + n.w + 5, sy, w.x, w.y) : curve(w.x, w.y, n.x - 5, sy)
+})
+
+function select(id: string, add: boolean): void {
+  selectedLink.value = ''
+  if (add)
+    selection.value = isSel(id) ? selection.value.filter((x) => x !== id) : [...selection.value, id]
+  else if (!isSel(id)) selection.value = [id]
+}
+
 function onDown(e: PointerEvent): void {
   if (e.button !== 0) return
+  menu.value = undefined
+  runMenu.value = false
   const t = e.target as HTMLElement
-  const node = tool.value === 'select' ? t.closest<HTMLElement>('[data-node]') : null
-  const head = node && t.closest<HTMLElement>('[data-node-head]')
-  selected.value = node?.dataset.node ?? ''
-  if (node && !head) return
   const p = local(e)
-  drag = head ? { kind: 'node', id: head.dataset.nodeHead, ...p } : { kind: 'pan', ...p }
+  const free = tool.value === 'select'
+  const socket = free ? t.closest<HTMLElement>('[data-socket]') : null
+  if (socket) {
+    const id = socket.dataset.socketNode!
+    const side = socket.dataset.socket as 'in' | 'out'
+    const index = Number(socket.dataset.socketIndex)
+    const n = sById.value[id]!
+    let wire: Wire = { node: id, side, index, type: (side === 'in' ? n.ins : n.outs)[index]!.type }
+    // Grabbing a wired input picks its link back up, from its source.
+    const held = side === 'in' && links.find((l) => l.to === id && l.in === index)
+    if (held) {
+      links.splice(links.indexOf(held), 1)
+      const src = sById.value[held.from]!
+      wire = { node: held.from, side: 'out', index: held.out, type: src.outs[held.out]!.type }
+    }
+    const w = toWorld(p)
+    wiring.value = { ...wire, ...w }
+    drag = { kind: 'wire', wire }
+    canvas.value!.setPointerCapture(e.pointerId)
+    return
+  }
+  const groupHead = free ? t.closest<HTMLElement>('[data-group-head]') : null
+  if (groupHead) {
+    if (t.closest('button, input')) return
+    const g = groups.find((x) => x.id === groupHead.dataset.groupHead)!
+    drag = { kind: 'group', id: g.id, nodes: inGroup(g), ...p, moved: false }
+    canvas.value!.setPointerCapture(e.pointerId)
+    return
+  }
+  const node = free ? t.closest<HTMLElement>('[data-node]') : null
+  if (node) {
+    select(node.dataset.node!, e.shiftKey || e.metaKey)
+    if (!t.closest('[data-node-head]') || t.closest('button')) return
+    drag = { kind: 'nodes', ...p, moved: false }
+    canvas.value!.setPointerCapture(e.pointerId)
+    return
+  }
+  if (t.closest('[data-link]')) return
+  selectedLink.value = ''
+  if (free && e.shiftKey) {
+    drag = { kind: 'marquee', x0: p.x, y0: p.y }
+    marquee.value = { x: p.x, y: p.y, w: 0, h: 0 }
+  } else {
+    selection.value = []
+    drag = { kind: 'pan', ...p }
+  }
   canvas.value!.setPointerCapture(e.pointerId)
 }
+
 function onMove(e: PointerEvent): void {
   if (!drag) return
   const p = local(e)
+  if (drag.kind === 'wire') {
+    Object.assign(wiring.value!, toWorld(p))
+    return
+  }
+  if (drag.kind === 'marquee') {
+    marquee.value = {
+      x: Math.min(drag.x0, p.x),
+      y: Math.min(drag.y0, p.y),
+      w: Math.abs(p.x - drag.x0),
+      h: Math.abs(p.y - drag.y0)
+    }
+    return
+  }
   const dx = p.x - drag.x
   const dy = p.y - drag.y
   drag.x = p.x
@@ -184,14 +373,342 @@ function onMove(e: PointerEvent): void {
   if (drag.kind === 'pan') {
     view.x += dx
     view.y += dy
+  } else if (drag.kind === 'nodes') {
+    drag.moved = true
+    for (const id of selection.value) {
+      const n = sById.value[id]!
+      n.x += dx / view.k
+      n.y += dy / view.k
+    }
   } else {
-    const n = sById.value[drag.id!]!
-    n.x += dx / view.k
-    n.y += dy / view.k
+    drag.moved = true
+    const g = groups.find((x) => x.id === (drag as { id: string }).id)!
+    g.x += dx / view.k
+    g.y += dy / view.k
+    for (const id of drag.nodes) {
+      const n = sById.value[id]!
+      n.x += dx / view.k
+      n.y += dy / view.k
+    }
   }
 }
-function onUp(): void {
+
+function onUp(e: PointerEvent): void {
+  const d = drag
   drag = undefined
+  if (!d) return
+  if (d.kind === 'wire') {
+    const w = wiring.value!
+    wiring.value = undefined
+    const hit = (
+      document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+    )?.closest<HTMLElement>('[data-socket]')
+    if (hit) {
+      connect(d.wire, {
+        node: hit.dataset.socketNode!,
+        side: hit.dataset.socket as 'in' | 'out',
+        index: Number(hit.dataset.socketIndex)
+      })
+      commit()
+    } else {
+      // Dropped on empty canvas: offer the nodes that take it.
+      pending = d.wire
+      openMenu(local(e), { type: d.wire.type, side: d.wire.side }, { x: w.x, y: w.y })
+      commit()
+    }
+    return
+  }
+  if (d.kind === 'marquee') {
+    const m = marquee.value!
+    marquee.value = undefined
+    const a = toWorld({ x: m.x, y: m.y })
+    const b = toWorld({ x: m.x + m.w, y: m.y + m.h })
+    const hit = boxes.value
+      .filter(({ node: n, h }) => n.x < b.x && n.x + n.w > a.x && n.y < b.y && n.y + h > a.y)
+      .map(({ node: n }) => n.id)
+    selection.value = [...new Set([...selection.value, ...hit])]
+    return
+  }
+  if ((d.kind === 'nodes' || d.kind === 'group') && d.moved) commit()
+}
+
+function onDouble(e: MouseEvent): void {
+  const t = e.target as HTMLElement
+  if (t.closest('[data-node], [data-group-head], [data-link]')) return
+  const p = local(e)
+  pending = undefined
+  openMenu(p, undefined, toWorld(p))
+}
+
+// ── Wiring. ──
+/** Every node upstream of a node: what feeds it, and what feeds those. */
+function upstream(id: string): string[] {
+  const out: string[] = []
+  const walk = (to: string): void => {
+    for (const l of links)
+      if (l.to === to && !out.includes(l.from)) {
+        out.push(l.from)
+        walk(l.from)
+      }
+  }
+  walk(id)
+  return out
+}
+function downstream(id: string): string[] {
+  const out: string[] = []
+  const walk = (from: string): void => {
+    for (const l of links)
+      if (l.from === from && !out.includes(l.to)) {
+        out.push(l.to)
+        walk(l.to)
+      }
+  }
+  walk(id)
+  return out
+}
+
+/** Wires an output to an input of the same type; an input takes one link. */
+function connect(a: Wire, b: { node: string; side: 'in' | 'out'; index: number }): boolean {
+  if (a.side === b.side || a.node === b.node) return false
+  const from = a.side === 'out' ? a : b
+  const to = a.side === 'out' ? b : a
+  const src = sById.value[from.node]!
+  const dst = sById.value[to.node]!
+  if (src.outs[from.index]?.type !== dst.ins[to.index]?.type) return false
+  // No loops: what it feeds can't feed it.
+  if (upstream(from.node).includes(to.node)) return false
+  const old = links.findIndex((l) => l.to === to.node && l.in === to.index)
+  if (old >= 0) links.splice(old, 1)
+  links.push({ id: uid('link'), from: from.node, out: from.index, to: to.node, in: to.index })
+  edited(dst)
+  return true
+}
+
+function removeLink(id: string): void {
+  const l = links.find((x) => x.id === id)
+  if (!l) return
+  links.splice(links.indexOf(l), 1)
+  selectedLink.value = ''
+  edited(sById.value[l.to]!)
+  commit()
+}
+
+// ── Adding nodes: the search menu. ──
+const menu = ref<{
+  x: number
+  y: number
+  fit?: { type: SocketType; side: 'in' | 'out' }
+  at: { x: number; y: number }
+}>()
+/** A link dropped on empty canvas, waiting for the node it will wire to. */
+let pending: Wire | undefined
+function openMenu(
+  p: { x: number; y: number },
+  fitTo: { type: SocketType; side: 'in' | 'out' } | undefined,
+  at: { x: number; y: number }
+): void {
+  menu.value = {
+    x: Math.max(8, Math.min(p.x, size.w - 310)),
+    y: Math.max(8, Math.min(p.y, size.h - 430)),
+    fit: fitTo,
+    at
+  }
+}
+function openMenuAtCentre(): void {
+  pending = undefined
+  const p = { x: size.w / 2 - 150, y: Math.max(top.value + 80, size.h / 2 - 200) }
+  openMenu(p, undefined, toWorld({ x: size.w / 2, y: size.h / 2 }))
+}
+
+function add(kind: NodeKind): void {
+  const at = menu.value!.at
+  menu.value = undefined
+  const g = cg.value
+  // A node from a dropped link sits with its socket under the drop.
+  const n = createNode(kind, at.x, at.y - g.head - 34)
+  if (pending?.side === 'in') n.x = at.x - n.w
+  sNodes.push(n)
+  if (pending) {
+    const list = pending.side === 'out' ? n.ins : n.outs
+    const index = list.findIndex((s) => s.type === pending!.type)
+    if (index >= 0)
+      connect(pending, { node: n.id, side: pending.side === 'out' ? 'in' : 'out', index })
+  }
+  pending = undefined
+  selection.value = [n.id]
+  commit()
+}
+
+/** The agent's workflow, placed below what is already there. */
+function build(recipe: Recipe): void {
+  const b = bounds.value
+  const x0 = sNodes.length ? b.x + 40 : 40
+  const y0 = sNodes.length ? b.y + b.h + 60 : 60
+  const ids: Record<string, string> = {}
+  for (const r of recipe.nodes) {
+    const n = createNode(r.kind, x0 + r.dx, y0 + r.dy)
+    if (r.text !== undefined) n.text = r.text
+    ids[r.key] = n.id
+    sNodes.push(n)
+  }
+  for (const [a, ai, b2, bi] of recipe.links)
+    links.push({ id: uid('link'), from: ids[a]!, out: ai, to: ids[b2]!, in: bi })
+  selection.value = Object.values(ids)
+  commit()
+  nextTick(() => frame(selection.value))
+}
+
+/** Brings some nodes into view. */
+function frame(ids: string[]): void {
+  const bs = boxes.value.filter((b) => ids.includes(b.node.id))
+  if (!bs.length) return
+  const x0 = Math.min(...bs.map((b) => b.node.x))
+  const y0 = Math.min(...bs.map((b) => b.node.y))
+  const x1 = Math.max(...bs.map((b) => b.node.x + b.node.w))
+  const y1 = Math.max(...bs.map((b) => b.node.y + b.h))
+  const k = Math.min(
+    1,
+    Math.max(0.5, Math.min((size.w - 160) / (x1 - x0), (size.h - top.value - 200) / (y1 - y0)))
+  )
+  view.k = k
+  view.x = size.w / 2 - ((x0 + x1) / 2) * k
+  view.y = top.value + (size.h - top.value) / 2 - ((y0 + y1) / 2) * k
+}
+
+// ── Selection actions. ──
+function remove(ids: string[]): void {
+  if (!ids.length) return
+  for (const id of ids) {
+    for (const d of downstream(id)) edited(sById.value[d]!)
+    const i = sNodes.findIndex((n) => n.id === id)
+    if (i >= 0) sNodes.splice(i, 1)
+  }
+  for (let i = links.length - 1; i >= 0; i--)
+    if (ids.includes(links[i]!.from) || ids.includes(links[i]!.to)) links.splice(i, 1)
+  selection.value = []
+  commit()
+}
+
+/** Copies nodes, and the links between them, a step down and right. */
+function duplicate(ids: string[]): void {
+  const map: Record<string, string> = {}
+  for (const id of ids) {
+    const n = sById.value[id]
+    if (!n) continue
+    const copy: SNode = JSON.parse(JSON.stringify(n))
+    copy.id = uid(n.kind)
+    copy.x += 40
+    copy.y += 40
+    copy.state = undefined
+    map[id] = copy.id
+    sNodes.push(copy)
+  }
+  for (const l of [...links])
+    if (map[l.from] && map[l.to])
+      links.push({ ...l, id: uid('link'), from: map[l.from]!, to: map[l.to]! })
+  selection.value = Object.values(map)
+  commit()
+}
+
+let clipboard: string[] = []
+
+/** Groups the selection in a frame. */
+function groupSelection(): void {
+  const bs = boxes.value.filter((b) => isSel(b.node.id))
+  if (!bs.length) return
+  const x0 = Math.min(...bs.map((b) => b.node.x)) - 28
+  const y0 = Math.min(...bs.map((b) => b.node.y)) - 52
+  const x1 = Math.max(...bs.map((b) => b.node.x + b.node.w)) + 28
+  const y1 = Math.max(...bs.map((b) => b.node.y + b.h)) + 28
+  groups.push({
+    id: uid('group'),
+    title: `Group ${groups.length + 1}`,
+    x: x0,
+    y: y0,
+    w: x1 - x0,
+    h: y1 - y0,
+    locked: false
+  })
+  selection.value = []
+  commit()
+}
+/** The nodes whose middle sits inside a group. */
+function inGroup(g: Group): string[] {
+  return boxes.value
+    .filter(({ node: n, h }) => {
+      const cx = n.x + n.w / 2
+      const cy = n.y + h / 2
+      return cx > g.x && cx < g.x + g.w && cy > g.y && cy < g.y + g.h
+    })
+    .map(({ node: n }) => n.id)
+}
+const lockedIds = computed(() => new Set(groups.filter((g) => g.locked).flatMap(inGroup)))
+function toggleLock(g: Group): void {
+  g.locked = !g.locked
+  commit()
+}
+function ungroup(g: Group): void {
+  groups.splice(groups.indexOf(g), 1)
+  commit()
+}
+
+/** Where the selection's toolbar floats: above it, in canvas pixels. */
+const selectionBar = computed(() => {
+  if (selection.value.length < 2 || drag) return undefined
+  const bs = boxes.value.filter((b) => isSel(b.node.id))
+  if (!bs.length) return undefined
+  const x0 = Math.min(...bs.map((b) => b.node.x))
+  const x1 = Math.max(...bs.map((b) => b.node.x + b.node.w))
+  const y0 = Math.min(...bs.map((b) => b.node.y))
+  return {
+    x: view.x + ((x0 + x1) / 2) * view.k,
+    y: Math.max(top.value + 70, view.y + y0 * view.k - 52)
+  }
+})
+
+// ── Keyboard, while the graph is in front and nothing is being typed. ──
+function onKey(e: KeyboardEvent): void {
+  const t = e.target as HTMLElement
+  if (t.closest('input, textarea, [contenteditable="true"]')) return
+  if (!host.value?.isConnected) return
+  const mod = e.metaKey || e.ctrlKey
+  const k = e.key.toLowerCase()
+  if (mod && k === 'z') (e.shiftKey ? redo : undo)()
+  else if (mod && k === 'y') redo()
+  else if (mod && k === 'a') selection.value = sNodes.map((n) => n.id)
+  else if (mod && k === 'd') duplicate(selection.value)
+  else if (mod && k === 'c') clipboard = [...selection.value]
+  else if (mod && k === 'v') duplicate(clipboard.filter((id) => sById.value[id]))
+  else if (mod && k === 'g') groupSelection()
+  else if (mod && k === 'enter') run()
+  else if (k === 'backspace' || k === 'delete') {
+    if (selectedLink.value) removeLink(selectedLink.value)
+    else remove(selection.value)
+  } else if (k === '/') openMenuAtCentre()
+  else if (k === 'escape') {
+    menu.value = undefined
+    selection.value = []
+    selectedLink.value = ''
+  } else return
+  e.preventDefault()
+}
+
+// ── Files and assets dropped on the canvas become Image nodes. ──
+function onDrop(e: DragEvent): void {
+  const dt = e.dataTransfer
+  if (!dt) return
+  const at = toWorld(local(e))
+  const asset = dt.getData('text/x-mg-asset')
+  const file = [...dt.files].find((f) => f.type.startsWith('image/'))
+  const src = asset || (file ? URL.createObjectURL(file) : '')
+  if (!src) return
+  e.preventDefault()
+  const n = createNode('image', at.x - 125, at.y - 140)
+  n.image = src
+  n.chip = dt.getData('text/x-mg-name') || file?.name || 'image'
+  sNodes.push(n)
+  selection.value = [n.id]
+  commit()
 }
 
 // Minimap: the whole graph, with the part in view framed. A click there
@@ -206,8 +723,8 @@ const mapView = computed(() => ({
 }))
 function onMap(e: MouseEvent): void {
   const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  const wx = ((e.clientX - r.left) / r.width) * world.value.w
-  const wy = ((e.clientY - r.top) / r.height) * world.value.h
+  const wx = bounds.value.x + ((e.clientX - r.left) / r.width) * bounds.value.w
+  const wy = bounds.value.y + ((e.clientY - r.top) / r.height) * bounds.value.h
   view.x = size.w / 2 - wx * view.k
   view.y = size.h / 2 - wy * view.k
 }
@@ -225,8 +742,12 @@ onMounted(async () => {
     if (Math.abs(was - size.w) > 40) fit()
   })
   ro.observe(host.value!)
+  window.addEventListener('keydown', onKey)
 })
-onBeforeUnmount(() => ro?.disconnect())
+onBeforeUnmount(() => {
+  ro?.disconnect()
+  window.removeEventListener('keydown', onKey)
+})
 
 // Switching look changes the geometry and the layout; switching surface
 // adds or drops the browser's bar: frame it again.
@@ -235,6 +756,8 @@ watch(
   () => nextTick(fit)
 )
 const assets = ref(false)
+const agent = ref(false)
+const viewing = ref<string>()
 
 // ── Running. The UI only talks to the engine (runEngine.ts): today a mock
 // on timers, later ComfyUI's queue. The graph opens idle: nothing runs and
@@ -248,24 +771,30 @@ const batch = ref(1)
 const results = ref(0)
 /** The graph opens with the job rows folded; the pill opens them. */
 const jobsOpen = ref(false)
+const runMenu = ref(false)
 
 const activeJob = computed(() =>
   jobs.value.find((j) => j.status === 'running' || j.status === 'paused')
 )
 const waiting = computed(() => jobs.value.filter((j) => j.status === 'queued'))
 
-/** What a run is given: every node's values as they are now. */
-function snapshot(): RunGraph {
+/** What a run is given: the nodes' values as they are now, without the
+ *  ones in locked groups (and only `only`, when given). */
+function snapshot(only?: string[]): RunGraph {
+  const keep = sNodes.filter((n) => !lockedIds.value.has(n.id) && (!only || only.includes(n.id)))
+  const ids = new Set(keep.map((n) => n.id))
   return {
     title: workflow,
-    nodes: sNodes.map((n) => {
+    nodes: keep.map((n) => {
       const params: Record<string, string> = {}
       for (const c of n.controls) if (c.kind !== 'button') params[c.key] = String(c.value)
-      if (n.kind === 'prompt') params.text = n.text ?? ''
-      if (n.kind === 'image' && n.image) params.image = n.image
-      return { id: n.id, kind: n.kind, title: n.title, params }
+      if (n.text !== undefined) params.text = n.text
+      if (n.image) params.image = n.image
+      if (n.video) params.video = n.video
+      if (n.chip) params.chip = n.chip
+      return { id: n.id, kind: n.kind, title: n.title, ins: n.ins.map((s) => s.name), params }
     }),
-    links: CANVAS_LINKS.map(([a, , b]) => [a, b])
+    links: links.filter((l) => ids.has(l.from) && ids.has(l.to))
   }
 }
 
@@ -281,14 +810,48 @@ function jobSub(job: RunJob): string {
 }
 
 function run(): void {
-  engine.queue(snapshot(), batch.value)
+  runMenu.value = false
+  if (sNodes.length) engine.queue(snapshot(), batch.value)
 }
+/** Runs some nodes and what they need. */
+function runOnly(ids: string[]): void {
+  runMenu.value = false
+  if (!ids.length) return
+  engine.queue(snapshot([...new Set([...ids, ...ids.flatMap(upstream)])]), batch.value)
+}
+
+/** What a run costs, roughly, in credits (Node Banana's cost indicator). */
+const COST: Partial<Record<NodeKind, number>> = {
+  generate: 4,
+  generateVideo: 30,
+  generateAudio: 2,
+  llm: 1,
+  removeBg: 1,
+  upscale: 2,
+  workflow: 6
+}
+const cost = computed(
+  () =>
+    sNodes.filter((n) => !lockedIds.value.has(n.id)).reduce((s, n) => s + (COST[n.kind] ?? 0), 0) *
+    batch.value
+)
 
 function param(n: SNode, key: string): string {
   const c = n.controls.find((x) => x.key === key)
   return c && c.kind !== 'button' ? String(c.value) : ''
 }
 
+/** Shows one of a node's results. */
+function pick(n: SNode, i: number): void {
+  const r = n.history[i]
+  if (!r) return
+  n.pick = i
+  if (r.src) n.image = r.src
+  if (r.text !== undefined && n.kind !== 'promptConstructor') n.text = r.text
+}
+
+/** Inputs and the Pause hand on what they hold: no results of their own. */
+const INPUTS = new Set<NodeKind>(['prompt', 'image', 'video', 'audio', 'pause'])
 let settle: ReturnType<typeof setTimeout> | undefined
 const offEngine = engine.on((e) => {
   if (e.type === 'job') {
@@ -313,11 +876,21 @@ const offEngine = engine.on((e) => {
     n.error = e.error
   } else {
     const n = sById.value[e.nodeId]
-    if (!n) return
-    n.image = e.image
+    if (!n || INPUTS.has(n.kind)) return
+    const v = e.value
     n.stale = false
+    if (n.kind === 'compare') {
+      if (v.pair) n.pair = v.pair
+      return
+    }
+    n.history.push({ src: v.src, text: v.text, run: e.run })
+    n.pick = n.history.length - 1
+    if (v.src) n.image = v.src
+    if (n.kind === 'generateVideo') n.video = undefined
+    if (v.text !== undefined && n.kind !== 'promptConstructor') n.text = v.text
+    n.cutout = v.cutout
     if (n.kind === 'generate') n.chip = `${param(n, 'aspect')} · ${param(n, 'resolution')}`
-    if (n.kind === 'output') n.chip = 'Just now'
+    if (n.kind === 'output') n.chip = `Run ${e.run}`
   }
 })
 watch(
@@ -327,33 +900,30 @@ watch(
 
 // ── Editing. Values are the graph's own; changing one makes the results
 // that depend on it out of date until the next run. ──
-const HOLDS_RESULT = new Set(['generate', 'workflow', 'output'])
+const HOLDS_RESULT = new Set<NodeKind>([
+  'generate',
+  'generateVideo',
+  'generateAudio',
+  'llm',
+  'removeBg',
+  'upscale',
+  'workflow',
+  'compare',
+  'gallery',
+  'output'
+])
 /** Settings that change how a result is kept or where it runs, not what it is. */
 const NO_STALE = new Set(['format', 'runsOn'])
 
-function downstream(id: string): string[] {
-  const out: string[] = []
-  const walk = (from: string): void => {
-    for (const [a, , b] of CANVAS_LINKS)
-      if (a === from && !out.includes(b)) {
-        out.push(b)
-        walk(b)
-      }
-  }
-  walk(id)
-  return out
-}
-
 function edited(n: SNode, key?: string): void {
   if (key && NO_STALE.has(key)) return
-  const ids = [
-    ...(HOLDS_RESULT.has(n.kind) && n.kind !== 'output' ? [n.id] : []),
-    ...downstream(n.id)
-  ]
-  for (const id of ids) {
-    const d = sById.value[id]!
+  for (const id of [n.id, ...downstream(n.id)]) {
+    const d = sById.value[id]
+    if (!d) continue
     if (d.state === 'error') d.state = undefined
-    if (HOLDS_RESULT.has(d.kind) && d.state !== 'running' && d.state !== 'queued') d.stale = true
+    const made = d.history.length > 0 || (d.image && d.kind !== 'image')
+    if (HOLDS_RESULT.has(d.kind) && made && d.state !== 'running' && d.state !== 'queued')
+      d.stale = true
   }
 }
 
@@ -362,14 +932,24 @@ function setControl(n: SNode, key: string, value: string | number): void {
   if (!c || c.kind === 'button' || c.value === value) return
   ;(c as { value: string | number }).value = value
   edited(n, key)
+  commit()
 }
 
 function setText(n: SNode, text: string): void {
   n.text = text
   edited(n)
+  clearTimeout(textTimer)
+  textTimer = setTimeout(commit, 600)
 }
 
-// Save to Assets: the Output's picture joins the assets, with a toast.
+function act(n: SNode, key: string): void {
+  if (key === 'save') save(n)
+  else if (key === 'run') runOnly([n.id])
+  else if (key === 'duplicate') duplicate([n.id])
+  else if (key === 'delete') remove([n.id])
+}
+
+// Save to Assets: the picture joins the assets, with a toast.
 const toast = ref<{ text: string; image?: string }>()
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 let saves = 0
@@ -386,7 +966,14 @@ watch(
   () => workflow,
   () => {
     engine.cancelAll()
-    sNodes.splice(0, sNodes.length, ...createCanvas())
+    const fresh = createCanvas()
+    sNodes.splice(0, sNodes.length, ...fresh.nodes)
+    links.splice(0, links.length, ...fresh.links)
+    groups.splice(0, groups.length, ...fresh.groups)
+    past.length = 0
+    future.length = 0
+    last = freeze()
+    canUndo.value = canRedo.value = false
     nextTick(fit)
   }
 )
@@ -395,6 +982,7 @@ onBeforeUnmount(() => {
   engine.dispose()
   clearTimeout(settle)
   clearTimeout(toastTimer)
+  clearTimeout(textTimer)
 })
 
 const RAIL: { icon: Component; label: string }[] = [
@@ -405,6 +993,11 @@ const RAIL: { icon: Component; label: string }[] = [
   { icon: ComfyTemplate, label: 'Templates' },
   { icon: ComfyAssets, label: 'Assets' }
 ]
+function onRail(label: string): void {
+  if (label === 'Assets') assets.value = !assets.value
+  else if (label === 'Nodes') openMenuAtCentre()
+  else if (label === 'Queue' && jobs.value.length) jobsOpen.value = !jobsOpen.value
+}
 </script>
 
 <template>
@@ -424,10 +1017,10 @@ const RAIL: { icon: Component; label: string }[] = [
         :key="r.label"
         type="button"
         class="mg-rail-btn"
-        :class="r.label === 'Assets' && assets && 'is-on'"
+        :class="((r.label === 'Assets' && assets) || (r.label === 'Nodes' && menu)) && 'is-on'"
         :title="r.label"
         :aria-label="r.label"
-        @click="r.label === 'Assets' && (assets = !assets)"
+        @click="onRail(r.label)"
       >
         <component :is="r.icon" :size="current ? 18 : 17" :stroke-width="1.75" />
         <span v-if="current" class="mg-rail-label">{{ r.label }}</span>
@@ -445,7 +1038,7 @@ const RAIL: { icon: Component; label: string }[] = [
     <div
       ref="canvas"
       class="mg-canvas"
-      :class="tool === 'hand' && 'is-hand'"
+      :class="[tool === 'hand' && 'is-hand', wiring && 'is-wiring']"
       :style="{
         '--mg-gx': `${view.x}px`,
         '--mg-gy': `${view.y}px`,
@@ -456,6 +1049,9 @@ const RAIL: { icon: Component; label: string }[] = [
       @pointermove="onMove"
       @pointerup="onUp"
       @pointercancel="onUp"
+      @dblclick="onDouble"
+      @dragover.prevent
+      @drop="onDrop"
     >
       <div
         class="mg-world"
@@ -465,19 +1061,86 @@ const RAIL: { icon: Component; label: string }[] = [
           transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`
         }"
       >
+        <!-- Groups, behind the nodes. -->
+        <div
+          v-for="gr in groups"
+          :key="gr.id"
+          class="mg-group"
+          :class="gr.locked && 'is-locked'"
+          :style="{ left: `${gr.x}px`, top: `${gr.y}px`, width: `${gr.w}px`, height: `${gr.h}px` }"
+        >
+          <div class="mg-group-head" :data-group-head="gr.id">
+            <input
+              v-model="gr.title"
+              class="mg-group-title"
+              aria-label="Group name"
+              @change="commit()"
+            />
+            <span v-if="gr.locked" class="mg-group-note">Skipped when the graph runs</span>
+            <button
+              type="button"
+              class="mg-group-btn"
+              :aria-label="gr.locked ? 'Unlock group' : 'Lock group'"
+              :title="gr.locked ? 'Unlock: runs again' : 'Lock: skip when running'"
+              @click="toggleLock(gr)"
+            >
+              <Lock v-if="gr.locked" :size="12" /><LockOpen v-else :size="12" />
+            </button>
+            <button
+              type="button"
+              class="mg-group-btn"
+              aria-label="Ungroup"
+              title="Ungroup"
+              @click="ungroup(gr)"
+            >
+              <X :size="12" />
+            </button>
+          </div>
+        </div>
+
         <svg class="mg-links" :viewBox="`0 0 ${world.w} ${world.h}`" aria-hidden="true">
           <template v-if="current">
-            <path v-for="(l, i) in links" :key="`s${i}`" :d="l.d" class="mg-link-shade" />
+            <path v-for="l in paths" :key="`s${l.id}`" :d="l.d" class="mg-link-shade" />
           </template>
           <path
-            v-for="(l, i) in links"
-            :key="i"
+            v-for="l in paths"
+            :key="l.id"
             :d="l.d"
             :stroke="l.color"
             class="mg-link"
-            :class="l.live && 'is-live'"
+            :class="[l.live && 'is-live', selectedLink === l.id && 'is-on']"
+          />
+          <!-- A wider, invisible stroke to click a link by. -->
+          <path
+            v-for="l in paths"
+            :key="`h${l.id}`"
+            :d="l.d"
+            class="mg-link-hit"
+            data-link
+            @pointerdown.stop="((selectedLink = l.id), (selection = []))"
+          />
+          <path
+            v-if="wiring"
+            :d="wirePath"
+            :stroke="SOCKETS[wiring.type]"
+            class="mg-link is-wire"
           />
         </svg>
+
+        <template v-for="l in paths" :key="`x${l.id}`">
+          <button
+            v-if="selectedLink === l.id"
+            type="button"
+            class="mg-link-del"
+            data-link
+            aria-label="Remove link"
+            :style="{ left: `${l.mid.x}px`, top: `${l.mid.y}px` }"
+            @pointerdown.stop
+            @click="removeLink(l.id)"
+          >
+            <X :size="12" />
+          </button>
+        </template>
 
         <CanvasNode
           v-for="(n, i) in sNodes"
@@ -486,17 +1149,82 @@ const RAIL: { icon: Component; label: string }[] = [
           :g="cg"
           :current="current"
           :labels="labels"
-          :selected="selected === n.id"
+          :selected="isSel(n.id)"
+          :solo="selection.length === 1 && isSel(n.id)"
+          :wiring="wiring"
+          :locked="lockedIds.has(n.id)"
           :style="{ '--sg-delay': `${-i * 1.3}s` }"
           @set="(key, value) => setControl(n, key, value)"
           @text="(text) => setText(n, text)"
           @resume="activeJob && engine.resume(activeJob.id)"
-          @save="save(n)"
+          @action="(key) => act(n, key)"
+          @pick="(index) => pick(n, index)"
+          @view="viewing = n.id"
         />
       </div>
+
+      <div
+        v-if="marquee"
+        class="mg-marquee"
+        :style="{
+          left: `${marquee.x}px`,
+          top: `${marquee.y}px`,
+          width: `${marquee.w}px`,
+          height: `${marquee.h}px`
+        }"
+      />
+
+      <!-- Several selected: what can be done to all of them. -->
+      <div
+        v-if="selectionBar"
+        class="mg-selbar"
+        :style="{ left: `${selectionBar.x}px`, top: `${selectionBar.y}px` }"
+        @pointerdown.stop
+      >
+        <span class="mg-selbar-count">{{ selection.length }} nodes</span>
+        <button type="button" class="mg-selbar-btn" @click="runOnly(selection)">
+          <Play :size="12" fill="currentColor" />Run
+        </button>
+        <button type="button" class="mg-selbar-btn" @click="groupSelection">
+          <GroupIcon :size="13" />Group
+        </button>
+        <button
+          type="button"
+          class="mg-selbar-btn is-icon"
+          aria-label="Duplicate"
+          @click="duplicate(selection)"
+        >
+          <Copy :size="13" />
+        </button>
+        <button
+          type="button"
+          class="mg-selbar-btn is-icon"
+          aria-label="Delete"
+          @click="remove(selection)"
+        >
+          <Trash2 :size="13" />
+        </button>
+      </div>
+
+      <p v-if="!sNodes.length" class="mg-empty">
+        Double-click to add a node, or ask the agent to build a workflow
+      </p>
+
+      <NodeSearch
+        v-if="menu"
+        :x="menu.x"
+        :y="menu.y"
+        :fit="menu.fit"
+        @pick="add"
+        @close="menu = undefined"
+      />
     </div>
 
     <AssetsPanel v-if="assets" @close="assets = false" />
+    <AgentPanel v-if="agent" @build="build" @close="agent = false" />
+    <button v-else type="button" class="mg-agent-btn" @click="agent = true">
+      <Bot :size="15" />Agent
+    </button>
 
     <!-- Run and what is running, as designed in ComfyUI_frontend#17679:
          the action bar (batch count, the inverted split Run, the panel
@@ -527,13 +1255,36 @@ const RAIL: { icon: Component; label: string }[] = [
         </span>
         <span class="mg-run-group">
           <button type="button" class="mg-run" @click="run"><Play :size="15" />Run</button>
-          <button type="button" class="mg-run-more" aria-label="Run options">
+          <button
+            type="button"
+            class="mg-run-more"
+            aria-label="Run options"
+            :aria-expanded="runMenu"
+            @click="runMenu = !runMenu"
+          >
             <ChevronDown :size="15" />
           </button>
         </span>
         <button type="button" class="mg-panel-btn" aria-label="Toggle the right panel">
           <PanelRight :size="17" />
         </button>
+      </div>
+      <div v-if="runMenu" class="mg-runmenu" role="menu">
+        <button type="button" class="mg-runmenu-item" role="menuitem" @click="run">
+          <span>Run the graph</span><kbd>⌘↵</kbd>
+        </button>
+        <button
+          type="button"
+          class="mg-runmenu-item"
+          role="menuitem"
+          :disabled="!selection.length"
+          @click="runOnly(selection)"
+        >
+          <span>Run selected nodes</span>
+        </button>
+        <p class="mg-runmenu-cost">
+          About {{ cost }} credits{{ batch > 1 ? ` for ${batch} runs` : ' a run' }}
+        </p>
       </div>
       <!-- Only while something runs or waits: the graph opens idle. -->
       <div v-if="jobs.length" class="mg-status">
@@ -616,11 +1367,17 @@ const RAIL: { icon: Component; label: string }[] = [
       <div
         v-if="showMap"
         class="mg-map"
-        :style="{ width: `${MAP_W}px`, height: `${(world.h / world.w) * MAP_W}px` }"
+        :style="{
+          width: `${MAP_W}px`,
+          height: `${Math.min(160, (bounds.h / bounds.w) * MAP_W)}px`
+        }"
         aria-hidden="true"
         @click="onMap"
       >
-        <svg :viewBox="`0 0 ${world.w} ${world.h}`" preserveAspectRatio="none">
+        <svg
+          :viewBox="`${bounds.x} ${bounds.y} ${bounds.w} ${bounds.h}`"
+          preserveAspectRatio="none"
+        >
           <rect
             v-for="b in boxes"
             :key="b.node.id"
@@ -670,6 +1427,13 @@ const RAIL: { icon: Component; label: string }[] = [
           <Tag :size="14" />
         </button>
         <span class="mg-tools-sep" />
+        <button type="button" class="mg-tool" aria-label="Undo" :disabled="!canUndo" @click="undo">
+          <Undo2 :size="14" />
+        </button>
+        <button type="button" class="mg-tool" aria-label="Redo" :disabled="!canRedo" @click="redo">
+          <Redo2 :size="14" />
+        </button>
+        <span class="mg-tools-sep" />
         <button type="button" class="mg-tool" aria-label="Zoom out" @click="zoomAt(view.k / 1.2)">
           <Minus :size="14" />
         </button>
@@ -692,6 +1456,13 @@ const RAIL: { icon: Component; label: string }[] = [
         </button>
       </div>
     </div>
+    <MediaViewer
+      v-if="viewing && sById[viewing]"
+      :node="sById[viewing]!"
+      @close="viewing = undefined"
+      @pick="(index) => pick(sById[viewing!]!, index)"
+      @save="save(sById[viewing!]!)"
+    />
   </div>
 </template>
 
@@ -769,6 +1540,240 @@ const RAIL: { icon: Component; label: string }[] = [
 }
 .mg-link.is-live {
   opacity: 0.95;
+}
+.mg-link.is-on {
+  opacity: 1;
+  stroke-width: 3;
+}
+.mg-link.is-wire {
+  opacity: 0.9;
+  stroke-dasharray: 6 5;
+}
+.mg-link-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.mg-canvas.is-wiring {
+  cursor: crosshair;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-link-del {
+  position: absolute;
+  z-index: 4;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--mg-run);
+  color: var(--mg-run-text);
+  translate: -50% -50%;
+}
+
+/* Groups: a quiet frame behind their nodes, its name above. */
+.mg-group {
+  position: absolute;
+  border-radius: 24px;
+  background: color-mix(in oklch, var(--color-base-foreground) 3.5%, transparent);
+}
+.mg-group.is-locked {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--color-base-foreground) 4%, transparent) 0 10px,
+    transparent 10px 20px
+  );
+}
+.mg-group-head {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 14px;
+  cursor: grab;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-group-title {
+  height: auto;
+  padding: 0;
+  box-shadow: none;
+  min-width: 0;
+  width: 160px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--mg-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+.mg-group-note {
+  flex: 1;
+  color: var(--mg-dim);
+  font-size: 11.5px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-group-btn {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mg-muted);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-group-btn + .mg-group-btn {
+  margin-left: 0;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-group-btn:hover {
+  background: var(--mg-hover);
+  color: var(--mg-text);
+}
+
+.mg-marquee {
+  position: absolute;
+  z-index: 3;
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 35%, transparent);
+  pointer-events: none;
+}
+.mg-selbar {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  height: 38px;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px 0 12px;
+  border-radius: 12px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.22);
+  translate: -50% 0;
+}
+.mg-selbar-count {
+  margin-right: 6px;
+  color: var(--mg-dim);
+  font-size: 12px;
+  white-space: nowrap;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-selbar-btn {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mg-text);
+  font-size: 12.5px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-selbar-btn.is-icon {
+  width: 30px;
+  justify-content: center;
+  padding: 0;
+  color: var(--mg-muted);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-selbar-btn:hover {
+  background: var(--mg-hover);
+  color: var(--mg-text);
+}
+.mg-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  color: var(--mg-dim);
+  font-size: 13px;
+  pointer-events: none;
+  translate: -50% -50%;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-agent-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 4;
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 12px;
+  border-radius: 12px;
+  background: var(--mg-float);
+  backdrop-filter: blur(24px) saturate(1.2);
+  color: var(--mg-text);
+  font-size: 13px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-agent-btn:hover {
+  background: var(--mg-node-on);
+}
+.mg-runmenu {
+  display: flex;
+  width: 240px;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 14px;
+  background: color-mix(in oklch, var(--color-content-background) 84%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 12px 34px rgb(0 0 0 / 0.28);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-runmenu-item {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mg-text);
+  font-size: 13px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-runmenu-item:hover:not(:disabled) {
+  background: var(--mg-hover);
+}
+:root .proto-ui.proto-ui.proto-ui .mg-runmenu-item:disabled {
+  opacity: 0.4;
+}
+.mg-runmenu-item kbd {
+  color: var(--mg-dim);
+  font: inherit;
+  font-size: 11.5px;
+}
+.mg-runmenu-cost {
+  margin: 4px 0 0;
+  padding: 8px 10px 6px;
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  color: var(--mg-dim);
+  font-size: 11.5px;
+}
+:root .proto-ui.proto-ui.proto-ui .mg-tool:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.is-current :is(.mg-selbar, .mg-runmenu) {
+  border-radius: 8px;
+  background: var(--mg-chrome-2);
+  box-shadow:
+    0 0 0 1px var(--mg-chrome-line),
+    0 8px 20px rgb(0 0 0 / 0.3);
+  backdrop-filter: none;
+}
+.is-current .mg-group {
+  border-radius: 6px;
+  background: color-mix(in oklch, #8a8af0 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, #8a8af0 30%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .is-current .mg-agent-btn {
+  left: 68px;
+  border-radius: 8px;
+  background: var(--mg-chrome-2);
+  box-shadow: 0 0 0 1px var(--mg-chrome-line);
+  backdrop-filter: none;
 }
 
 /* ── Floating chrome (Glass): rail, Run bar, controls. ── */

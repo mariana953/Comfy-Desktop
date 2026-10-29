@@ -368,14 +368,15 @@ export const WORKFLOWS: Workflow[] = [
 ]
 
 /** Projects (when the product has them): a shared space that always runs
- *  on one environment. Several projects can share an environment. */
-export const PROJECTS: { id: string; name: string; envId: string }[] = [
+ *  on one environment. Several projects can share an environment.
+ *  Reactive: a first-time user (Mar's proposal) has none. */
+export const PROJECTS: { id: string; name: string; envId: string }[] = reactive([
   { id: 'hero', name: 'Hero shots', envId: 'local-1' },
   { id: 'first', name: 'My first project', envId: 'local-video' },
   { id: 'flux', name: 'Flux tests', envId: 'local-flux' },
   { id: 'campaign', name: 'Product campaign', envId: 'dep-product' },
   { id: 'explore', name: 'Explorations', envId: 'cloud' }
-]
+])
 
 // --- Assets + workflows: Local / Comfy Cloud split ----------------------
 

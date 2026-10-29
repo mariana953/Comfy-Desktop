@@ -19,6 +19,11 @@ const ALL = Object.entries(files).map(([path, src], i) => ({
 const FILTERS = ['All', 'Generated', 'Imported'] as const
 const filter = ref<(typeof FILTERS)[number]>('All')
 const query = ref('')
+/** Dragged onto the canvas, an asset becomes an Image node. */
+function drop(a: { name: string; src: string }, e: DragEvent): void {
+  e.dataTransfer?.setData('text/x-mg-asset', a.src)
+  e.dataTransfer?.setData('text/x-mg-name', `${a.name}.jpg`)
+}
 const shown = computed(() =>
   [...savedAssets.map((a) => ({ ...a, kind: 'Generated' })), ...ALL].filter(
     (a) =>
@@ -53,7 +58,14 @@ const shown = computed(() =>
       </button>
     </div>
     <div class="ga-grid">
-      <figure v-for="a in shown" :key="a.name" class="ga-item" draggable="true">
+      <figure
+        v-for="a in shown"
+        :key="a.name"
+        class="ga-item"
+        draggable="true"
+        :title="`Drag ${a.name} onto the canvas`"
+        @dragstart="drop(a, $event)"
+      >
         <img :src="a.src" alt="" />
         <figcaption>{{ a.name }}</figcaption>
       </figure>

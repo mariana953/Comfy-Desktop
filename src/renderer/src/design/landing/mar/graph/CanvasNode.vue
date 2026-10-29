@@ -1,14 +1,28 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Aperture, Check, ChevronDown, Download, Image, Pause, Play, Type } from 'lucide-vue-next'
-import { ComfyWorkflow } from '../icons/comfyIcons'
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Columns2,
+  Copy,
+  Download,
+  LayoutGrid,
+  Pause,
+  Play,
+  Trash2
+} from 'lucide-vue-next'
+import { NODE_ICONS } from './nodeIcons'
 import {
   SOCKETS,
   canvasNodeHeight,
   controlsHeight,
+  mediaOf,
   type CanvasGeometry,
   type Control,
-  type SNode
+  type SNode,
+  type SocketType
 } from './canvasData'
 
 /**
@@ -17,39 +31,47 @@ import {
  * own panel, and its typed sockets stick out of the preview's edges.
  * Socket names show where a node takes more than one input, or all of
  * them with the socket labels switch (canvas controls). Its widgets are
- * live: the graph owns the values, the node only reports edits.
+ * live: the graph owns the values, the node only reports edits. Selected,
+ * its title shows its actions (run up to here, duplicate, delete).
  */
-const { node, g, current, labels, selected } = defineProps<{
+const { node, g, current, labels, selected, wiring, locked, solo } = defineProps<{
   node: SNode
   g: CanvasGeometry
   current: boolean
   labels: boolean
   selected: boolean
+  /** A link being drawn: its type, and the side it started from. */
+  wiring?: { type: SocketType; side: 'in' | 'out'; node: string }
+  /** In a locked group: skipped by runs. */
+  locked?: boolean
+  /** The only node selected: its title shows its actions. */
+  solo?: boolean
 }>()
 const emit = defineEmits<{
   set: [key: string, value: string | number]
   text: [value: string]
   resume: []
-  save: []
+  action: [key: string]
+  pick: [index: number]
+  view: []
 }>()
 
-const ICONS = {
-  prompt: Type,
-  image: Image,
-  generate: Aperture,
-  pause: Pause,
-  workflow: ComfyWorkflow,
-  output: Download
-}
+const ICONS = NODE_ICONS
+const media = computed(() => mediaOf(node))
 const height = computed(() => canvasNodeHeight(node, g))
 const controls = computed(() => controlsHeight(node, g))
 
 const running = computed(() => node.state === 'running')
 /** The step count over the preview, for the nodes that take a while. */
 const showProgress = computed(() => running.value && (node.steps ?? 0) > 1)
+/** Text you write (a prompt, a template) or text a model wrote. */
+const editable = computed(() => node.kind === 'prompt' || node.kind === 'promptConstructor')
+const shown = computed(() => node.history[node.pick])
+const cutout = computed(() => !!node.cutout)
 
 /** A word beside the title for where the node stands. */
 const tag = computed(() => {
+  if (locked) return 'Skipped'
   if (node.state === 'queued') return 'Queued'
   if (node.state === 'error') return 'Error'
   if (node.state === 'running' && !showProgress.value) return 'Running'
@@ -80,6 +102,40 @@ function slide(c: Control, e: PointerEvent): void {
   const v = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))
   emit('set', c.key, Math.round(v * 20) / 20)
 }
+
+// Compare: the divider follows the pointer across the pictures.
+const split = ref(0.5)
+function divide(e: PointerEvent): void {
+  if (e.type === 'pointermove' && !(e.buttons & 1)) return
+  const el = e.currentTarget as HTMLElement
+  if (e.type === 'pointerdown') el.setPointerCapture(e.pointerId)
+  const r = el.getBoundingClientRect()
+  split.value = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))
+}
+
+/** The constructor's variables: its inputs, insertable as @name. */
+const area = ref<HTMLTextAreaElement>()
+function insertVar(name: string): void {
+  const el = area.value
+  const t = node.text ?? ''
+  const at = el?.selectionStart ?? t.length
+  emit('text', `${t.slice(0, at)}@${name}${t.slice(at)}`)
+}
+
+/** An audio clip's waveform, the same every time for the same node. */
+const bars = computed(() =>
+  Array.from({ length: 44 }, (_, i) => {
+    const h = Math.abs(Math.sin(i * 0.9 + node.id.length) * Math.cos(i * 0.37))
+    return 0.18 + h * 0.82
+  })
+)
+
+/** A socket a link being drawn could end on, or one it can't. */
+function socketFit(side: 'in' | 'out', type: SocketType): string {
+  if (!wiring) return ''
+  if (wiring.node === node.id || wiring.side === side) return 'is-off'
+  return wiring.type === type ? 'is-fit' : 'is-off'
+}
 </script>
 
 <template>
@@ -90,6 +146,7 @@ function slide(c: Control, e: PointerEvent): void {
       selected && 'is-selected',
       running && 'is-running',
       node.state === 'error' && 'is-error',
+      locked && 'is-locked',
       open !== null && 'is-menu'
     ]"
     :data-node="node.id"
@@ -105,28 +162,82 @@ function slide(c: Control, e: PointerEvent): void {
       <component :is="ICONS[node.kind]" v-if="!current" :size="13" class="sg-head-icon" />
       <span v-else class="sg-dot" />
       <span class="sg-head-title">{{ node.title }}</span>
-      <span v-if="node.badge" class="sg-badge">{{ node.badge }}</span>
+      <span v-if="node.badge && !solo" class="sg-badge">{{ node.badge }}</span>
       <span
-        v-if="tag"
+        v-if="tag && !solo"
         class="sg-state"
-        :class="`is-${node.state === 'error' ? 'error' : node.stale && !running ? 'stale' : node.state}`"
+        :class="`is-${locked ? 'locked' : node.state === 'error' ? 'error' : node.stale && !running ? 'stale' : node.state}`"
       >
         <Check v-if="tag === 'Done'" :size="11" />{{ tag }}
       </span>
+      <span v-if="solo" class="sg-actions">
+        <button
+          type="button"
+          class="sg-act"
+          title="Run up to here"
+          aria-label="Run up to here"
+          @click="emit('action', 'run')"
+        >
+          <Play :size="11" fill="currentColor" />
+        </button>
+        <button
+          type="button"
+          class="sg-act"
+          title="Duplicate"
+          aria-label="Duplicate"
+          @click="emit('action', 'duplicate')"
+        >
+          <Copy :size="12" />
+        </button>
+        <button
+          type="button"
+          class="sg-act"
+          title="Delete"
+          aria-label="Delete"
+          @click="emit('action', 'delete')"
+        >
+          <Trash2 :size="12" />
+        </button>
+      </span>
     </header>
 
-    <!-- The main element: the result, or the prompt's text. -->
+    <!-- The main element: the result, or the text. -->
     <div class="sg-body" :style="{ height: `${node.body}px` }">
-      <textarea
-        v-if="node.kind === 'prompt'"
-        class="sg-text"
-        :value="node.text"
-        aria-label="Prompt"
-        spellcheck="false"
-        placeholder="Describe the image"
-        @input="emit('text', ($event.target as HTMLTextAreaElement).value)"
-      />
-      <div v-else-if="node.kind === 'pause'" class="sg-pause">
+      <template v-if="media === 'text'">
+        <textarea
+          v-if="editable"
+          ref="area"
+          class="sg-text"
+          :class="node.kind === 'promptConstructor' && 'has-foot'"
+          :value="node.text"
+          :aria-label="node.title"
+          spellcheck="false"
+          :placeholder="
+            node.kind === 'prompt' ? 'Describe the image' : 'Type @ to insert a variable'
+          "
+          @input="emit('text', ($event.target as HTMLTextAreaElement).value)"
+        />
+        <p v-else-if="node.text" class="sg-text is-result">{{ node.text }}</p>
+        <p v-else class="sg-empty">
+          <component :is="ICONS[node.kind]" :size="16" />Writes here when it runs
+        </p>
+        <span v-if="node.kind === 'prompt'" class="sg-count"
+          >{{ node.text?.length ?? 0 }} chars</span
+        >
+        <span v-if="node.kind === 'promptConstructor'" class="sg-vars">
+          <button
+            v-for="s in node.ins"
+            :key="s.name"
+            type="button"
+            class="sg-var"
+            @click="insertVar(s.name)"
+          >
+            @{{ s.name }}
+          </button>
+        </span>
+      </template>
+
+      <div v-else-if="media === 'pause'" class="sg-pause">
         <span class="sg-pause-icon"><Pause :size="14" fill="currentColor" /></span>
         <template v-if="node.state === 'paused'">
           <span class="sg-pause-title">Paused</span>
@@ -140,18 +251,88 @@ function slide(c: Control, e: PointerEvent): void {
           <span class="sg-pause-note">The run waits here for you</span>
         </template>
       </div>
+
+      <div v-else-if="media === 'audio'" class="sg-audio">
+        <span class="sg-play"><Play :size="12" fill="currentColor" /></span>
+        <span class="sg-wave" :class="running && 'is-working'">
+          <i v-for="(b, i) in bars" :key="i" :style="{ height: `${b * 100}%` }" />
+        </span>
+        <span class="sg-audio-time">{{ node.text ?? node.chip ?? '0:00' }}</span>
+      </div>
+
+      <div
+        v-else-if="media === 'compare'"
+        class="sg-compare"
+        @pointerdown="divide"
+        @pointermove="divide"
+      >
+        <template v-if="node.pair">
+          <img :src="node.pair[0]" alt="" draggable="false" class="sg-img" />
+          <img
+            :src="node.pair[1]"
+            alt=""
+            draggable="false"
+            class="sg-img"
+            :style="{ clipPath: `inset(0 0 0 ${split * 100}%)` }"
+          />
+          <span class="sg-divider" :style="{ left: `${split * 100}%` }"><i /></span>
+          <span class="sg-chip">Before</span>
+          <span class="sg-chip is-right">After</span>
+        </template>
+        <p v-else class="sg-empty"><Columns2 :size="16" />Connect two images</p>
+      </div>
+
+      <div v-else-if="media === 'gallery'" class="sg-gallery">
+        <img
+          v-for="(r, i) in [...node.history].reverse()"
+          :key="i"
+          :src="r.src"
+          alt=""
+          draggable="false"
+          @dblclick="(emit('pick', node.history.length - 1 - i), emit('view'))"
+        />
+        <p v-if="!node.history.length" class="sg-empty">
+          <LayoutGrid :size="16" />Every result that reaches it
+        </p>
+      </div>
+
       <template v-else>
         <Transition name="sg-swap">
+          <video
+            v-if="media === 'video' && node.video"
+            :key="node.video"
+            :src="node.video"
+            class="sg-img"
+            autoplay
+            muted
+            loop
+            playsinline
+            @dblclick="emit('view')"
+          />
           <img
+            v-else-if="node.image"
             :key="node.image"
             :src="node.image"
             alt=""
             draggable="false"
             class="sg-img"
-            :class="showProgress && 'is-working'"
+            :class="[
+              showProgress && 'is-working',
+              media === 'video' && !showProgress && 'is-motion',
+              cutout && 'is-cutout'
+            ]"
+            @dblclick="emit('view')"
           />
+          <p v-else class="sg-empty" :class="showProgress && 'is-working'">
+            <component :is="ICONS[node.kind]" :size="16" />{{
+              node.ins.length ? 'Shows here when it runs' : 'Drop a file here'
+            }}
+          </p>
         </Transition>
         <span v-if="node.chip" class="sg-chip">{{ node.chip }}</span>
+        <span v-if="media === 'video' && (node.video || node.image)" class="sg-player">
+          <Play :size="10" fill="currentColor" /><span class="sg-player-track"><i /></span>0:05
+        </span>
         <div v-if="showProgress" class="sg-progress">
           <span class="sg-progress-label"
             >{{ node.verb }} · {{ node.step }} of {{ node.steps }}</span
@@ -163,10 +344,37 @@ function slide(c: Control, e: PointerEvent): void {
             />
           </span>
         </div>
-        <div v-else-if="node.state === 'error'" class="sg-progress" role="alert">
-          <span class="sg-progress-label">Couldn't run · {{ node.error }}</span>
-        </div>
       </template>
+
+      <div v-if="node.state === 'error'" class="sg-progress" role="alert">
+        <span class="sg-progress-label">Couldn't run · {{ node.error }}</span>
+      </div>
+
+      <!-- Earlier results: 1 of N, tagged by their run. -->
+      <span
+        v-if="node.history.length > 1 && media !== 'gallery' && !showProgress"
+        class="sg-history"
+      >
+        <button
+          type="button"
+          aria-label="Earlier result"
+          :disabled="node.pick === 0"
+          @click="emit('pick', node.pick - 1)"
+        >
+          <ChevronLeft :size="12" />
+        </button>
+        <span :title="shown ? `Run ${shown.run}` : undefined"
+          >{{ node.pick + 1 }} / {{ node.history.length }}</span
+        >
+        <button
+          type="button"
+          aria-label="Later result"
+          :disabled="node.pick === node.history.length - 1"
+          @click="emit('pick', node.pick + 1)"
+        >
+          <ChevronRight :size="12" />
+        </button>
+      </span>
     </div>
 
     <!-- Controls, under the preview in their own panel. -->
@@ -203,7 +411,7 @@ function slide(c: Control, e: PointerEvent): void {
           type="button"
           class="sg-c is-button"
           :style="{ height: `${g.control}px` }"
-          @click="emit('save')"
+          @click="emit('action', c.key)"
         >
           <span class="sg-c-button"><Download :size="12" />{{ c.label }}</span>
         </button>
@@ -295,20 +503,31 @@ function slide(c: Control, e: PointerEvent): void {
       </template>
     </div>
 
-    <!-- Sockets: outside the node, on the preview's edge. -->
+    <!-- Sockets: outside the node, on the preview's edge. Drag from one
+         to wire it. -->
     <span
       v-for="(s, i) in node.ins"
       :key="`i${i}`"
       class="sg-socket is-in"
+      :class="socketFit('in', s.type)"
+      data-socket="in"
+      :data-socket-node="node.id"
+      :data-socket-index="i"
       :style="{ top: `${g.head + 34 + i * 34}px`, '--sg-socket': SOCKETS[s.type] }"
     >
-      <span v-if="labels || node.ins.length > 1" class="sg-socket-label">{{ s.name }}</span
+      <span v-if="labels || node.ins.length > 1 || wiring" class="sg-socket-label">{{
+        s.name
+      }}</span
       ><i />
     </span>
     <span
       v-for="(s, i) in node.outs"
       :key="`o${i}`"
       class="sg-socket is-out"
+      :class="socketFit('out', s.type)"
+      data-socket="out"
+      :data-socket-node="node.id"
+      :data-socket-index="i"
       :style="{ top: `${g.head + 34 + i * 34}px`, '--sg-socket': SOCKETS[s.type] }"
     >
       <i /><span v-if="labels" class="sg-socket-label">{{ s.name }}</span>
@@ -398,6 +617,33 @@ function slide(c: Control, e: PointerEvent): void {
 .sg-state.is-error {
   color: var(--color-status-danger, #e5484d);
 }
+.sg-state.is-locked {
+  color: var(--mg-dim);
+}
+.sg-actions {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  margin-bottom: -3px;
+}
+:root .proto-ui.proto-ui.proto-ui .sg-act {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mg-muted);
+}
+:root .proto-ui.proto-ui.proto-ui .sg-act:hover {
+  background: var(--mg-hover);
+  color: var(--mg-text);
+}
+.sg-node.is-locked {
+  opacity: 0.45;
+}
 .sg-badge {
   padding: 2px 7px;
   border-radius: 999px;
@@ -436,6 +682,59 @@ function slide(c: Control, e: PointerEvent): void {
   resize: none;
   user-select: text;
 }
+.sg-text.has-foot {
+  height: calc(100% - 34px);
+}
+.sg-text.is-result {
+  overflow: auto;
+  color: var(--mg-text);
+  user-select: text;
+}
+.sg-count {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: var(--mg-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.sg-vars {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  display: flex;
+  gap: 4px;
+}
+:root .proto-ui.proto-ui.proto-ui .sg-var {
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, #e8c07a 16%, transparent);
+  color: color-mix(in oklch, #e8c07a 85%, var(--mg-text));
+  font-size: 11px;
+  font-weight: 500;
+}
+.sg-empty {
+  display: flex;
+  height: 100%;
+  margin: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--mg-dim);
+  font-size: 12px;
+  text-align: center;
+}
+.sg-empty.is-working {
+  animation: sg-breathe 1.6s ease-in-out infinite;
+}
+@keyframes sg-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
 .sg-text::placeholder {
   color: var(--mg-dim);
 }
@@ -449,6 +748,29 @@ function slide(c: Control, e: PointerEvent): void {
   transition:
     filter 0.4s ease,
     transform 0.4s ease;
+}
+.sg-img.is-motion {
+  animation: sg-motion 10s ease-in-out infinite alternate;
+}
+@keyframes sg-motion {
+  to {
+    transform: scale(1.12) translate(-3%, -2%);
+  }
+}
+/* A cut-out: the subject over a checkerboard. */
+.sg-img.is-cutout {
+  background: repeating-conic-gradient(rgb(255 255 255 / 0.1) 0 25%, transparent 0 50%) 0 0 / 16px
+    16px;
+  mask: radial-gradient(ellipse 46% 58% at 50% 46%, #000 62%, transparent 64%);
+}
+.sg-body:has(.is-cutout) {
+  background:
+    repeating-conic-gradient(
+        color-mix(in oklch, var(--color-base-foreground) 10%, transparent) 0 25%,
+        transparent 0 50%
+      )
+      0 0 / 16px 16px,
+    var(--mg-node);
 }
 .sg-img.is-working {
   filter: blur(6px) saturate(0.8) brightness(0.8);
@@ -488,6 +810,162 @@ function slide(c: Control, e: PointerEvent): void {
   color: rgb(255 255 255 / 0.92);
   font-size: 11px;
   font-weight: 500;
+}
+.sg-chip.is-right {
+  right: 10px;
+  left: auto;
+}
+.sg-player {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  height: 24px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--color-media-overlay);
+  backdrop-filter: blur(12px);
+  color: rgb(255 255 255 / 0.92);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.sg-player-track {
+  height: 3px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.25);
+}
+.sg-player-track i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  transform-origin: left;
+  animation: sg-play 5s linear infinite;
+}
+@keyframes sg-play {
+  from {
+    transform: scaleX(0);
+  }
+}
+.sg-history {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--color-media-overlay);
+  backdrop-filter: blur(12px);
+  color: rgb(255 255 255 / 0.92);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+:root .proto-ui.proto-ui.proto-ui .sg-history button {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+}
+:root .proto-ui.proto-ui.proto-ui .sg-history button:disabled {
+  opacity: 0.35;
+}
+.sg-audio {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+}
+.sg-play {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--mg-run);
+  color: var(--mg-run-text);
+}
+.sg-wave {
+  display: flex;
+  height: 36px;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+}
+.sg-wave i {
+  width: 2px;
+  flex: 1;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 45%, transparent);
+}
+.sg-wave.is-working i {
+  animation: sg-breathe 1.2s ease-in-out infinite;
+}
+.sg-audio-time {
+  color: var(--mg-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sg-compare {
+  position: relative;
+  height: 100%;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.sg-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  pointer-events: none;
+}
+.sg-divider i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+  translate: -50% -50%;
+}
+.sg-gallery {
+  display: grid;
+  height: 100%;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  padding: 6px;
+  overflow: auto;
+}
+.sg-gallery img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.sg-gallery .sg-empty {
+  grid-column: 1 / -1;
+  grid-row: 1 / 3;
 }
 .sg-progress {
   position: absolute;
@@ -731,6 +1209,34 @@ function slide(c: Control, e: PointerEvent): void {
   border-radius: 999px;
   background: var(--sg-socket);
   box-shadow: 0 0 0 2.5px var(--mg-ring);
+  cursor: crosshair;
+  transition:
+    scale 0.15s ease,
+    opacity 0.15s ease;
+}
+/* A larger target than the dot, so it is easy to grab. */
+.sg-socket i::after {
+  position: absolute;
+  inset: -6px;
+  content: '';
+}
+.sg-socket i {
+  position: relative;
+}
+.sg-socket:hover i,
+.sg-socket.is-fit i {
+  scale: 1.35;
+}
+.sg-socket.is-off {
+  opacity: 0.25;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-img.is-motion,
+  .sg-player-track i,
+  .sg-empty.is-working,
+  .sg-wave.is-working i {
+    animation: none;
+  }
 }
 .sg-socket-label {
   padding: 1px 7px;
@@ -830,6 +1336,8 @@ function slide(c: Control, e: PointerEvent): void {
   line-height: 17px;
 }
 .is-current .sg-chip,
+.is-current .sg-history,
+.is-current .sg-player,
 .is-current .sg-progress {
   border-radius: 4px;
   background: rgb(0 0 0 / 0.65);
