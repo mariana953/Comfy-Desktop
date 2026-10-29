@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Code, Palette } from 'lucide-vue-next'
 import ModeSwitch from '../parts/ModeSwitch.vue'
 import DetailSheet from '../parts/DetailSheet.vue'
+import MarTemplateModal from '../mar/templateModal/MarTemplateModal.vue'
 import LaunchOverlay from '../parts/LaunchOverlay.vue'
 import LoginPrompt from '../parts/LoginPrompt.vue'
 import WorkspaceMenu from '../parts/WorkspaceMenu.vue'
@@ -112,7 +113,8 @@ const MODES = computed(() => [
       <ModePages />
     </main>
 
-    <DetailSheet />
+    <MarTemplateModal v-if="isMariana" />
+    <DetailSheet v-if="!(isMariana && proto.detail?.kind === 'template')" />
     <LaunchOverlay />
     <LoginPrompt />
     <DeployDialog />
