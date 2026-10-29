@@ -51,6 +51,8 @@ import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
 import { search } from '../search/search'
 import { PROJECT_ART } from '../assets/mock'
+import { ports } from '../pabloPorts'
+import MarSignIn from './MarSignIn.vue'
 
 /**
  * Mar's sidebar (Navigation: Sidebar or Floating): the lens switch and the
@@ -357,8 +359,10 @@ function newChat(): void {
       </button>
     </MarCreditsFlyout>
 
+    <!-- Signed out (From Pablo › Account): his Log in card instead. -->
+    <MarSignIn v-if="ports.navAccount && !proto.signedIn" :open />
     <!-- Workspace, always last at the foot like Pablo's; credits above it. -->
-    <div class="mar-side-foot" :class="open && creditsStyle.id === 'meter' && 'is-meter'">
+    <div v-else class="mar-side-foot" :class="open && creditsStyle.id === 'meter' && 'is-meter'">
       <MarCreditsFlyout v-if="open && creditsStyle.id === 'meter'">
         <button type="button" class="mar-side-meter">
           <span class="flex items-center justify-between">

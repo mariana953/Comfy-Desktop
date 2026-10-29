@@ -2,6 +2,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { AppWindow, ChevronDown, Images, Plus, Search, Server, Workflow } from 'lucide-vue-next'
 import CreateMenu from '../CreateMenu.vue'
+import TabsAccount from './TabsAccount.vue'
+import { ports } from '../pabloPorts'
 import { go, goIn, proto, toast, type Mode, type Page } from '../../useProto'
 import { can, landingPage } from '../../milestones'
 import { PROJECTS } from '../../mock'
@@ -288,6 +290,7 @@ onBeforeUnmount(() => {
         <Search :size="14" /><span class="p08-search-text">Search</span><kbd>⌘K</kbd>
       </button>
       <CreateMenu v-if="proto.mode === 'create'" />
+      <TabsAccount v-if="ports.navAccount" />
     </div>
   </header>
 </template>
