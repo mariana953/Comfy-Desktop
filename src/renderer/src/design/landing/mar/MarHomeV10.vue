@@ -14,6 +14,10 @@ import TemplatesRow from '../parts/TemplatesRow.vue'
 import MarSpacesRow from './MarSpacesRow.vue'
 import MarBuildsRow from './MarBuildsRow.vue'
 import { homeBuilds } from './homeBuilds'
+import { firstTime } from './userStates/userState'
+import ExampleFan from './userStates/ExampleFan.vue'
+import { EXAMPLES } from './userStates/examples'
+import { SPACES } from '../spaces'
 import { onCloud } from './shell/surface'
 import { p20 } from './p20/p20'
 import CommandHome from './p20/CommandHome.vue'
@@ -101,6 +105,11 @@ const LAYOUTS = {
 } as const
 const layout = computed(() => (p20.homeLayout === 'default' ? undefined : LAYOUTS[p20.homeLayout]))
 const noLocal = computed(() => !instances.value.some((i) => i.kind === 'local'))
+// First run: a first-time user before any local install (UI Playground ›
+// User and Local install). A returning user with no local install (on
+// Cloud) gets the returning Home; a first-time user with a fresh build
+// gets it too, with examples where their work will go.
+const firstRun = computed(() => firstTime.value && noLocal.value)
 const builds = computed(() => recentInstances.value.slice(0, 3))
 const tight = computed(() => parts.value.top === 'mar')
 
@@ -152,21 +161,21 @@ const recent = computed(() =>
       </Button>
     </template>
   </div>
-  <component :is="layout" v-if="layout && !noLocal" />
+  <component :is="layout" v-if="layout && !firstTime" />
   <div v-else class="mar-home mx-auto w-full max-w-300 px-10 pb-16">
     <!-- First run or not, the top is the same: the greeting and the prompt
          sit where a returning user finds them. -->
     <section :class="['flex flex-col', tight ? 'pt-14 pb-4' : 'pt-12 pb-4']">
       <div :class="['flex flex-1 flex-col', !tight ? 'justify-center pt-10' : '']">
         <Greeting
-          :text="noLocal ? `Welcome, Mar. Let's create` : `Hi Mar. Let's create`"
+          :text="firstTime ? `Welcome, Mar. Let's create` : `Hi Mar. Let's create`"
           :class="['mar-greeting', tight ? 'mb-4! pt-0!' : '']"
         />
         <!-- One line tall; while you type it grows over what's below. -->
         <div v-if="can.agent" class="mar-prompt-slot">
           <PromptBox target class="mar-prompt" />
         </div>
-        <template v-if="!noLocal">
+        <template v-if="!firstRun">
           <PulseStrip v-if="p20.pulse === 'on'" />
           <BuildHealthRow v-if="p20.builds === 'health'" />
           <div v-if="parts.builds === 'mar'" class="mx-auto mt-8 w-full max-w-210">
@@ -185,8 +194,25 @@ const recent = computed(() =>
 
     <!-- First run: the same sections, filled with ways to start instead of
          your work (UI Playground › First run). -->
-    <MarStart v-if="noLocal" />
+    <MarStart v-if="firstRun" />
     <div v-else>
+      <!-- A first-time user with a build: nothing of theirs yet, so the
+           examples take Recently used's place, as a fan, not a row. -->
+      <section v-if="firstTime && !recent.length" class="mt-10">
+        <SectionHeader
+          title="Start from an example"
+          :link="can.explore ? 'See all' : undefined"
+          @link="go('explore')"
+        >
+          <template #controls>
+            <span
+              class="inline-flex h-5 items-center rounded-full bg-secondary-background px-2 text-ui text-muted-foreground"
+              >{{ EXAMPLES.length }}</span
+            >
+          </template>
+        </SectionHeader>
+        <ExampleFan />
+      </section>
       <section v-if="parts.examples === 'mar'" class="mx-auto mt-8 w-full max-w-180">
         <SectionHeader
           title="Example workflows"
@@ -268,8 +294,12 @@ const recent = computed(() =>
       <LaunchBanner v-else-if="parts.news === 'banner'" />
       <LaunchesRow v-else />
     </template>
-    <GradientSpacesRow v-if="can.spaces && proto.signedIn && p20.spaces === 'gradient'" />
-    <MarSpacesRow v-else-if="can.spaces && proto.signedIn" />
+    <!-- Spaces only once there are some: a first-time user has none (the
+         sidebar invites them to make one). -->
+    <template v-if="can.spaces && proto.signedIn && SPACES.length">
+      <GradientSpacesRow v-if="p20.spaces === 'gradient'" />
+      <MarSpacesRow v-else />
+    </template>
   </div>
   <div
     aria-hidden="true"

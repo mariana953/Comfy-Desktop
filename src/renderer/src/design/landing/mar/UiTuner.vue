@@ -5,7 +5,7 @@ import Button from '../ui/Button.vue'
 import { DIRECTIONS, look } from '../look'
 import { KNOBS, resetTuning, tuner, tuning, type Tuning } from './uiTuner'
 import { isMariana, proposal, PROPOSALS } from './proposal'
-import { SURFACES, surface } from './shell/surface'
+import { onCloud, SURFACES, surface } from './shell/surface'
 import { homeBackground, marNav, type HomeBackground, type MarNav } from './shell/marShell'
 import { DISPLAYS, SCREENS, ZOOMS, screen } from './screen'
 import Select from '../ui/Select.vue'
@@ -18,6 +18,7 @@ import { CREDITS_STYLES, creditsStyle } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 import { FIRST_RUNS, firstRun } from './firstRun'
+import { MAR_LOCALS, MAR_USERS, marUser, setUser } from './userStates/userState'
 import { PAGE_STATES, pageState } from './pages/pageState'
 import { LOOKS, marLook } from './looks/looks'
 import MarLookFx from './looks/MarLookFx.vue'
@@ -42,6 +43,7 @@ function reset(): void {
   marNav.id = 'classic'
   homeBackground.id = 'spotlight'
   homeBuilds.id = 'off'
+  setUser('returning')
   palette.id = 'void'
 }
 
@@ -148,6 +150,55 @@ function set(key: keyof Tuning, value: string): void {
               {{ sf.value === 'desktop' ? 'Desktop' : 'Cloud' }}
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Who is looking, and what is on this computer: two axes. A
+           first-time user starts with no local install; a returning one
+           may have none either (they work on Cloud). -->
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground">User</span>
+        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+          <button
+            v-for="u in MAR_USERS"
+            :key="u.value"
+            type="button"
+            :aria-pressed="marUser.user === u.value"
+            :class="[
+              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              marUser.user === u.value
+                ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                : 'text-muted-foreground hover:text-base-foreground'
+            ]"
+            @click="setUser(u.value)"
+          >
+            {{ u.label }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="isMariana" class="flex flex-col gap-1.5">
+        <span class="text-ui text-subtle-foreground"
+          >Local install<template v-if="onCloud"> · none in a browser</template></span
+        >
+        <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+          <button
+            v-for="l in MAR_LOCALS"
+            :key="l.value"
+            type="button"
+            :aria-pressed="marUser.local === l.value"
+            :disabled="onCloud"
+            :class="[
+              onCloud && 'opacity-50',
+              'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              marUser.local === l.value
+                ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                : 'text-muted-foreground hover:text-base-foreground'
+            ]"
+            @click="marUser.local = l.value"
+          >
+            {{ l.label }}
+          </button>
         </div>
       </div>
       <div class="flex flex-col gap-1.5">
@@ -293,7 +344,7 @@ function set(key: keyof Tuning, value: string): void {
       </div>
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
-        <span class="text-ui text-subtle-foreground">First run · no local install</span>
+        <span class="text-ui text-subtle-foreground">First run · first-time, no local install</span>
         <Select v-model="firstRun.id" :options="FIRST_RUNS" class="w-full" />
       </div>
 

@@ -18,7 +18,7 @@ import {
 } from 'lucide-vue-next'
 import Button from '../../ui/Button.vue'
 import { cn } from '../../ui/cn'
-import { go, proto, toast, type Mode, type Page } from '../../useProto'
+import { go, isNewUser, proto, toast, type Mode, type Page } from '../../useProto'
 import { can } from '../../milestones'
 
 /**
@@ -61,7 +61,8 @@ const NAV = computed<Record<Mode, Item[]>>(() => ({
           },
           { page: 'apps' as Page, label: 'Apps', icon: AppWindow, prefix: 'app:' },
           { page: 'assets' as Page, label: 'Assets', icon: Images },
-          ...(proto.fresh
+          // No builds to list: a new user before any install.
+          ...(isNewUser.value && proto.fresh
             ? []
             : [
                 {
@@ -78,10 +79,10 @@ const NAV = computed<Record<Mode, Item[]>>(() => ({
   build: [
     {
       page: 'build-overview',
-      label: proto.fresh ? 'Get started' : 'Overview',
+      label: isNewUser.value ? 'Get started' : 'Overview',
       icon: LayoutDashboard
     },
-    ...(proto.fresh
+    ...(isNewUser.value
       ? []
       : [
           {
@@ -98,7 +99,7 @@ const NAV = computed<Record<Mode, Item[]>>(() => ({
           }
         ]),
     { page: 'router', label: 'Models', icon: Boxes },
-    ...(proto.fresh ? [] : [{ page: 'logs' as Page, label: 'Logs', icon: ScrollText }]),
+    ...(isNewUser.value ? [] : [{ page: 'logs' as Page, label: 'Logs', icon: ScrollText }]),
     { page: 'keys', label: 'API keys', icon: KeyRound },
     { label: 'Docs', icon: BookOpen, href: 'docs' }
   ]

@@ -12,6 +12,8 @@ import SpaceMark from '../../parts/space/SpaceMark.vue'
 import { fmt } from '../../parts/env/env'
 import { SPACES, type Space } from '../../spaces'
 import { go, proto, toast } from '../../useProto'
+import { isMariana } from '../../mar/proposal'
+import MarSpacesEmpty from '../../mar/userStates/MarSpacesEmpty.vue'
 
 /** Every space, with billing across all of them on top. */
 const billed = (s: Space): number => Math.round(s.used * (1 + s.billing.markup / 100))
@@ -108,6 +110,8 @@ const rows = computed(() => [...SPACES].sort((a, b) => b.used - a.used))
           </div>
         </Card>
       </template>
+      <!-- Mar's proposal: none yet (a first-time user), an invitation. -->
+      <MarSpacesEmpty v-else-if="isMariana && !SPACES.length" />
       <div v-else class="mt-8 grid grid-cols-3 gap-3.5">
         <SpaceCard v-for="s in SPACES" :key="s.id" :space="s" />
       </div>

@@ -93,8 +93,12 @@ const MODES = computed(() => [
         <!-- The builds (or projects). New users have none yet (Home walks them
            through). -->
         <MarFavoritesGroup v-if="isMariana && proto.mode === 'create' && !proto.fresh" />
-        <SidebarGroup v-if="proto.mode === 'create' && !proto.fresh" />
-        <SpacesGroup v-if="proto.mode === 'create' && can.spaces && !proto.fresh" />
+        <!-- Mar's proposal keeps them for a new user, each with an empty
+             state, and shows its builds even with no local install. -->
+        <SidebarGroup v-if="proto.mode === 'create' && (isMariana || !proto.fresh)" />
+        <SpacesGroup
+          v-if="proto.mode === 'create' && can.spaces && (isMariana || !proto.fresh)"
+        />
 
         <div class="mt-auto flex flex-col gap-2 pt-3"><WorkspaceMenu /></div>
       </div>

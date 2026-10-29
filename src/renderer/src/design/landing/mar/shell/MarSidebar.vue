@@ -24,11 +24,21 @@ import {
 } from 'lucide-vue-next'
 import { AgentChat } from '../icons/agentChat'
 import { ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
-import { go, goIn, openDetail, proto, toast, workspace, type Mode, type Page } from '../../useProto'
+import {
+  go,
+  goIn,
+  instances,
+  openDetail,
+  proto,
+  toast,
+  workspace,
+  type Mode,
+  type Page
+} from '../../useProto'
 import { agent, resetAgent } from '../../agent'
 import { flow, resetFlow } from '../../appFlow'
 import { can, landingPage } from '../../milestones'
-import { INSTANCES, PROJECTS, TEMPLATES, USER, thumb } from '../../mock'
+import { PROJECTS, TEMPLATES, USER, thumb } from '../../mock'
 import { favorites } from '../favorites'
 import { creditsStyle } from '../credits'
 import MarWorkspaceMenu from '../MarWorkspaceMenu.vue'
@@ -36,6 +46,7 @@ import MarCreditsFlyout from '../MarCreditsFlyout.vue'
 import RailFlyout from '../p20/RailFlyout.vue'
 import { p20 } from '../p20/p20'
 import { SPACES } from '../../spaces'
+import MarSpacesInvite from '../userStates/MarSpacesInvite.vue'
 import { marNav } from './marShell'
 import { marTabsOn } from './titleTabs'
 import { search } from '../search/search'
@@ -77,8 +88,7 @@ const CREATE: { title?: string; items: Item[] }[] = [
         page: 'environments',
         label: 'Builds',
         icon: Server,
-        prefix: 'environment:',
-        count: INSTANCES.length
+        prefix: 'environment:'
       }
     ]
   }
@@ -103,6 +113,9 @@ const BUILD: { title?: string; items: Item[] }[] = [
 const groups = computed(() =>
   proto.mode === 'build' ? BUILD : proto.mode === 'create' ? CREATE : []
 )
+// Builds count what this user has (none, one or several local, plus Cloud).
+const countOf = (i: Item): number | undefined =>
+  i.page === 'environments' && proto.mode === 'create' ? instances.value.length : i.count
 const isOn = (i: Item): boolean =>
   proto.activeTab === 'home' &&
   (proto.page === i.page || Boolean(i.prefix && proto.page.startsWith(i.prefix)))
@@ -221,7 +234,9 @@ function newChat(): void {
           <component :is="i.icon" :size="16" />
           <template v-if="open"
             ><span class="flex-1 truncate">{{ i.label }}</span
-            ><span v-if="i.count" class="text-subtle-foreground">{{ i.count }}</span></template
+            ><span v-if="countOf(i)" class="text-subtle-foreground">{{
+              countOf(i)
+            }}</span></template
           >
         </button>
       </template>
@@ -316,7 +331,8 @@ function newChat(): void {
           /></template>
           <span v-else class="mar-side-sep" />
         </div>
-        <button v-if="open" type="button" class="mar-side-row" @click="go('spaces')">
+        <MarSpacesInvite v-if="open && !SPACES.length" />
+        <button v-else-if="open" type="button" class="mar-side-row" @click="go('spaces')">
           <LayoutGrid :size="16" /><span class="flex-1">All spaces</span
           ><span class="text-subtle-foreground">{{ SPACES.length }}</span>
         </button>
@@ -350,7 +366,8 @@ function newChat(): void {
       <MarCreditsFlyout v-if="open && creditsStyle.id === 'meter'">
         <button type="button" class="mar-side-meter">
           <span class="flex items-center justify-between">
-            <span>{{ USER.credits }} credits</span><span class="text-subtle-foreground">Top up</span>
+            <span>{{ USER.credits }} credits</span
+            ><span class="text-subtle-foreground">Top up</span>
           </span>
           <span class="mar-side-bar"><span :style="{ width: '62%' }" /></span>
         </button>

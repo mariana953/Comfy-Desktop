@@ -7,6 +7,7 @@ import { PROPOSALS, proposal as pickedProposal } from './mar/proposal'
 import { tuner } from './mar/uiTuner'
 import { isMariana } from './mar/proposal'
 import { titleTabs, type TitleBarStyle } from './mar/shell/titleTabs'
+import { marUser, setUser } from './mar/userStates/userState'
 
 /**
  * The prototype's switches, shown in the Prototype panel (DevBar, browser
@@ -27,9 +28,13 @@ const milestone = computed({
   get: () => String(proto.milestone),
   set: (v) => (proto.milestone = Number(v))
 })
+// Mar's proposal has its own user (UI Playground › User): the same switch.
 const user = computed({
-  get: () => (proto.fresh ? 'new' : 'returning'),
-  set: (v) => (proto.fresh = v === 'new')
+  get: () => ((isMariana.value ? marUser.user === 'first' : proto.fresh) ? 'new' : 'returning'),
+  set: (v) => {
+    if (isMariana.value) setUser(v === 'new' ? 'first' : 'returning')
+    else proto.fresh = v === 'new'
+  }
 })
 const data = computed({
   get: () => (proto.live ? 'mine' : 'mock'),

@@ -33,7 +33,7 @@ import SpaceAdmin from '../spaces/SpaceAdmin.vue'
 import SpacesList from '../spaces/SpacesList.vue'
 import { spaceById } from '../../spaces'
 import { deploymentById, envById } from '../../parts/env/env'
-import { proto, toast } from '../../useProto'
+import { isNewUser, proto, toast } from '../../useProto'
 import { can } from '../../milestones'
 import { isMariana } from '../../mar/proposal'
 
@@ -59,7 +59,7 @@ const ADMIN = ['usage', 'billing', 'limits', 'people', 'provider-keys']
   <MarFavoritesPage v-else-if="proto.page === 'favorites' && isMariana" />
   <!-- First run: libraries are empty, so show what will live there. -->
   <div
-    v-else-if="proto.fresh && ['workflows', 'apps', 'assets'].includes(proto.page)"
+    v-else-if="isNewUser && ['workflows', 'apps', 'assets'].includes(proto.page)"
     class="mx-auto w-full max-w-300 px-10"
   >
     <FirstEmpty :kind="libraryKind" />
@@ -90,7 +90,7 @@ const ADMIN = ['usage', 'billing', 'limits', 'people', 'provider-keys']
   <SpaceAdmin v-else-if="space && proto.spaces" :key="space.id" :space />
   <ExplorePage v-else-if="proto.page === 'explore'" />
   <TutorialsPage v-else-if="proto.page === 'tutorials'" />
-  <BuildStart v-else-if="proto.page === 'build-overview' && proto.fresh" />
+  <BuildStart v-else-if="proto.page === 'build-overview' && isNewUser" />
   <BuildOverview v-else-if="proto.page === 'build-overview'" />
   <DeploymentsPage v-else-if="proto.page === 'deployments'" />
   <DeploymentDetail v-else-if="dep" :key="dep.id" :dep />

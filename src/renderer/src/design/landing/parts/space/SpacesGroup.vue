@@ -8,6 +8,7 @@ import { SPACES } from '../../spaces'
 import { go, proto, type Page } from '../../useProto'
 import { isMariana } from '../../mar/proposal'
 import MarGroupTitle from '../../mar/shell/MarGroupTitle.vue'
+import MarSpacesInvite from '../../mar/userStates/MarSpacesInvite.vue'
 
 /** Sidebar group in the Spaces variant: the spaces this workspace runs. */
 const itemClass = (active: boolean): string =>
@@ -65,5 +66,7 @@ const itemClass = (active: boolean): string =>
       <span class="sidebar-label text-left">{{ s.name }}</span>
       <span v-if="s.status === 'draft'" class="text-ui text-subtle-foreground">Draft</span>
     </Button>
+    <!-- Mar's proposal: none yet (a first-time user), an invitation. -->
+    <MarSpacesInvite v-if="isMariana && !SPACES.length" />
   </div>
 </template>

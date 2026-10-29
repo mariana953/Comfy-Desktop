@@ -96,6 +96,13 @@ const itemClass = (page: Page): string =>
       <span class="text-ui text-subtle-foreground tabular-nums">{{ rows.length }}</span>
     </Button>
 
+    <!-- Mar's proposal: none yet (a first-time user), say what goes here. -->
+    <p
+      v-if="isMariana && !rows.length"
+      class="flex h-8 items-center gap-2.5 px-3 text-ui text-subtle-foreground"
+    >
+      <Folder :size="15" />{{ proto.projects ? 'Group work by client' : 'No builds yet' }}
+    </p>
     <Button
       v-for="r in rows"
       :key="r.page"
