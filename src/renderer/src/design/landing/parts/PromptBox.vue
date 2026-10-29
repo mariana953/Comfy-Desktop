@@ -10,6 +10,7 @@ import InstanceMenuItems from './InstanceMenuItems.vue'
 import { runTask, startAgent } from '../agent'
 import { thumb } from '../mock'
 import { activeInstance, proto, requireLogin, toast } from '../useProto'
+import { isMariana } from '../mar/proposal'
 
 /** `chat`: inside the agent view - sends to the current chat instead of
  *  starting a new one, and shows a static placeholder. */
@@ -199,7 +200,8 @@ function accept(e: KeyboardEvent): void {
             class="border border-border-default pl-1.5 text-base-foreground"
           >
             <InstanceGlyph :inst="activeInstance" size="sm" />
-            <span class="text-subtle-foreground">Run on</span>{{ activeInstance.name }}
+            <span class="text-subtle-foreground">Run on</span
+            >{{ isMariana && activeInstance.kind === 'cloud' ? 'Cloud' : activeInstance.name }}
             <span
               v-if="activeInstance.kind === 'cloud' && !proto.signedIn"
               class="text-ui text-subtle-foreground"
