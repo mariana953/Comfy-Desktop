@@ -19,11 +19,29 @@ function resolve(key: string): FavoriteItem | undefined {
   const id = rest.join(':')
   if (kind === 'template') {
     const t = TEMPLATES.find((x) => x.id === id)
-    return t && { key, kind, id, title: t.title, src: thumb(t.id), open: () => openDetail('template', t.id) }
+    return (
+      t && {
+        key,
+        kind,
+        id,
+        title: t.title,
+        src: thumb(t.id),
+        open: () => openDetail('template', t.id)
+      }
+    )
   }
   if (kind === 'app') {
     const a = APPS.find((x) => x.id === id)
-    return a && { key, kind, id, title: a.name, src: thumb(a.thumbId), open: () => go(`app:${a.id}` as Page) }
+    return (
+      a && {
+        key,
+        kind,
+        id,
+        title: a.name,
+        src: thumb(a.thumbId),
+        open: () => go(`app:${a.id}` as Page)
+      }
+    )
   }
   const a = allAssets.value.find((x) => x.id === id)
   return (

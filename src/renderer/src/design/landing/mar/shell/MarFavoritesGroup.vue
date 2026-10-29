@@ -9,7 +9,8 @@ import MarGroupTitle from './MarGroupTitle.vue'
 
 /** Favorites in the sidebar (Mar's proposal), rescued from her usertest-home
  *  prototype: what you starred, one click away, right under the libraries
- *  it comes from. The title opens the whole page; a new star slides in. */
+ *  it comes from. The title opens the whole page; a new star slides in.
+ *  Hidden while nothing is starred. */
 const MAX = 5
 const rows = computed(() => favoriteItems.value.slice(0, MAX))
 const more = computed(() => favoriteItems.value.length - rows.value.length)
@@ -17,19 +18,19 @@ const itemClass = 'h-8 w-full justify-start gap-2.5 px-3 text-ui font-normal'
 </script>
 
 <template>
-  <div class="mt-5.5 flex shrink-0 flex-col">
+  <!-- No favorites, no group: it appears with the first star and goes
+       with the last. -->
+  <div v-if="rows.length" class="mt-5.5 flex shrink-0 flex-col">
     <div class="flex h-6.5 items-center justify-between pr-1 pl-3">
-      <MarGroupTitle title="Favorites" :active="proto.page === 'favorites'" @click="go('favorites')" />
+      <MarGroupTitle
+        title="Favorites"
+        :active="proto.page === 'favorites'"
+        @click="go('favorites')"
+      />
     </div>
 
     <TransitionGroup name="mar-fav">
-      <Button
-        v-for="f in rows"
-        :key="f.key"
-        variant="ghost"
-        :class="itemClass"
-        @click="f.open()"
-      >
+      <Button v-for="f in rows" :key="f.key" variant="ghost" :class="itemClass" @click="f.open()">
         <img v-if="f.src" :src="f.src" alt="" class="mar-fav-thumb" />
         <Star v-else :size="15" />
         <span class="sidebar-label text-left">{{ f.title }}</span>
@@ -45,11 +46,6 @@ const itemClass = 'h-8 w-full justify-start gap-2.5 px-3 text-ui font-normal'
       <span class="mar-fav-thumb is-more" aria-hidden="true" />
       <span class="sidebar-label text-left">{{ more }} more</span>
     </Button>
-
-    <!-- Empty: say what lands here instead of hiding the group. -->
-    <p v-if="!rows.length" class="flex h-8 items-center gap-2.5 px-3 text-ui text-subtle-foreground">
-      <Star :size="15" />Star a card to keep it here
-    </p>
   </div>
 </template>
 

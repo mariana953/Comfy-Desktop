@@ -111,7 +111,14 @@ const FAN = ['image_z_image_turbo', 'video_ltx2_5_i2v', 'image_qwen_image_edit_2
 
     <section v-else class="flex flex-col items-center gap-6 py-24 text-center">
       <div class="relative h-32 w-56" aria-hidden="true">
-        <img v-for="(src, i) in FAN" :key="src" :src alt="" class="mar-fav-fan" :class="`is-${i}`" />
+        <img
+          v-for="(src, i) in FAN"
+          :key="src"
+          :src
+          alt=""
+          class="mar-fav-fan"
+          :class="`is-${i}`"
+        />
         <span class="mar-fav-badge"><Star :size="16" fill="currentColor" /></span>
       </div>
       <div class="flex flex-col gap-1.5">
