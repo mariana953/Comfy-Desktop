@@ -2,22 +2,13 @@
 import type { ProtoInstance } from '../../mock'
 import StatusDot from '../../ui/StatusDot.vue'
 import InstanceGlyph from '../../parts/InstanceGlyph.vue'
-import InstanceActions from '../../parts/InstanceActions.vue'
 import EnvLaunchButton from '../../parts/env/EnvLaunchButton.vue'
 import { envKind, envStatus } from '../../parts/env/env'
 import { go } from '../../useProto'
-import { ports } from '../pabloPorts'
 
 /** Builds, summarised (Mar's proposal): one line each with what you need
- *  to decide: is it on, where it runs, what's in it, and Open. With
- *  From Pablo › Compact builds on, also the GPU and disk his cards show
- *  and his actions menu (settings, update, stop, delete). */
+ *  to decide: is it on, where it runs, what's in it, and Open. */
 defineProps<{ list: ProtoInstance[] }>()
-
-function hardware(e: ProtoInstance): string {
-  if (e.kind === 'local') return [e.gpu, e.diskSize].filter(Boolean).join(' · ')
-  return [e.gpu, envKind(e) === 'managed' ? undefined : 'Pay per run'].filter(Boolean).join(' · ')
-}
 </script>
 
 <template>
@@ -39,14 +30,10 @@ function hardware(e: ProtoInstance): string {
         <StatusDot :status="envStatus(e).live ? 'running' : 'idle'" />{{ envStatus(e).label }}
       </span>
       <span class="mar-bc-meta">{{ e.kind === 'cloud' ? 'Comfy Cloud' : 'This computer' }}</span>
-      <span v-if="ports.buildDetails" class="mar-bc-meta is-wide">{{ hardware(e) }}</span>
       <span class="mar-bc-meta">{{
         envKind(e) === 'managed' ? 'Every model' : `${e.models ?? 0} models · ${e.nodes ?? 0} nodes`
       }}</span>
       <EnvLaunchButton :env="e" size="sm" @click.stop />
-      <span v-if="ports.buildDetails" class="mar-bc-more" @click.stop @keydown.enter.stop>
-        <InstanceActions :inst="e" />
-      </span>
     </div>
   </div>
 </template>
@@ -87,12 +74,5 @@ function hardware(e: ProtoInstance): string {
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.mar-bc-meta.is-wide {
-  width: 200px;
-}
-.mar-bc-more {
-  display: inline-flex;
-  margin-left: -8px;
 }
 </style>
