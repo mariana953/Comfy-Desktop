@@ -236,8 +236,8 @@ const JOBS: { title: string; sub: string; progress?: number }[] = [
   { title: 'Add reflections', sub: 'Queued · #2' }
 ]
 
-/** The job rows stay open while anything runs; the pill folds them. */
-const jobsOpen = ref(true)
+/** The graph opens with the job rows folded; the pill opens them. */
+const jobsOpen = ref(false)
 
 const RAIL: { icon: Component; label: string }[] = [
   { icon: History, label: 'Queue' },
