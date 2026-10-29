@@ -61,6 +61,9 @@ const WHERE = computed(() => [
     count: base.value.filter((w) => w.source === 'cloud').length
   }
 ])
+const WHERE_SELECT = computed(() =>
+  WHERE.value.map((o) => ({ value: o.value, label: o.value === 'all' ? 'Everywhere' : o.label }))
+)
 const TYPES = [
   { value: 'all', label: 'All types' },
   { value: 'image', label: 'Image' },
@@ -157,6 +160,7 @@ function lines(w: MarWorkflow): MenuLine[] {
   <MarPage
     title="Workflows"
     :embedded="!!fixedProject"
+    :toolbar-to="fixedProject ? '#mar-proj-tools' : undefined"
     :description="
       fixedProject
         ? undefined
@@ -189,8 +193,9 @@ function lines(w: MarWorkflow): MenuLine[] {
     </template>
 
     <template #toolbar>
-      <MarSeg v-model="where" :options="WHERE" label="Where" />
+      <MarSeg v-if="!fixedProject" v-model="where" :options="WHERE" label="Where" />
       <div class="ml-auto flex items-center gap-2">
+        <Select v-if="fixedProject" v-model="where" :options="WHERE_SELECT" class="w-36" />
         <Select v-model="type" :options="TYPES" class="w-32" />
         <Select v-if="!fixedProject" v-model="project" :options="PROJECTS" class="w-40" />
         <Select v-model="sort" :options="SORTS" label="Sort" class="w-40" />
@@ -221,6 +226,16 @@ function lines(w: MarWorkflow): MenuLine[] {
         @cancel-rename="lib.renaming.value = ''"
         @star="workflows.star(w.id)"
       />
+      <!-- A project's grid ends on the way to add more. -->
+      <div v-if="fixedProject && !filtered" class="mar-add-tile">
+        <button type="button" class="mar-add-main" @click="newWorkflow">
+          <span class="mar-add-plus"><Plus :size="18" /></span>
+          <span class="text-ui font-medium text-base-foreground">New workflow</span>
+        </button>
+        <button type="button" class="mar-add-alt" @click="toast('Pick a workflow file to import')">
+          <FileUp :size="13" />Import a file
+        </button>
+      </div>
     </div>
     <div v-else class="mar-list">
       <div class="mar-list-head">
@@ -274,3 +289,60 @@ function lines(w: MarWorkflow): MenuLine[] {
     />
   </MarPage>
 </template>
+
+<style>
+/* A project's grid ends on a quiet tile that adds to it. */
+.mar-add-tile {
+  display: flex;
+  min-height: 200px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-card, 14px);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 12%, transparent);
+  background-image: linear-gradient(
+    color-mix(in oklch, var(--color-base-foreground) 2%, transparent),
+    transparent
+  );
+}
+:root .proto-ui.proto-ui.proto-ui .mar-add-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-add-plus {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  color: var(--color-base-foreground);
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+.mar-add-main:hover .mar-add-plus {
+  background: color-mix(in oklch, var(--color-base-foreground) 14%, transparent);
+  transform: scale(1.06);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-add-alt {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: var(--radius-control);
+  color: var(--color-subtle-foreground);
+  font-size: 12px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-add-alt:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  color: var(--color-base-foreground);
+}
+</style>

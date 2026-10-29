@@ -7,50 +7,123 @@ import {
   FolderX,
   Pencil,
   Plus,
-  Server,
   Trash2,
-  UserPlus
+  UserPlus,
+  X
 } from 'lucide-vue-next'
 import Button from '../../ui/Button.vue'
+import Input from '../../ui/Input.vue'
+import Select from '../../ui/Select.vue'
 import MemberAvatar from '../../parts/MemberAvatar.vue'
-import { go, instances, toast, type Page } from '../../useProto'
+import { thumb } from '../../mock'
+import { go, instances, type Page } from '../../useProto'
 import MarPage from './MarPage.vue'
-import MarSeg from './MarSeg.vue'
 import MarItemMenu from './MarItemMenu.vue'
-import MarStatus from './MarStatus.vue'
+import MarStatus, { type ItemStatus } from './MarStatus.vue'
+import MarUndoToast from './MarUndoToast.vue'
 import MarWorkflowsPage from './MarWorkflowsPage.vue'
 import MarAssetsPage from './MarAssetsPage.vue'
 import { projects } from './projectsStore'
 import { workflows } from './workflowsStore'
 import { assets } from './assetsStore'
 import { notify } from './undo'
+import { shownState } from './pageState'
 import type { MenuLine } from './menu'
 
 /**
- * One project (Mar's proposal): its photo, name, the build it runs on and
- * who's in it, then its Workflows, Assets and People as tabs. The tabs
- * are the library pages narrowed to this project, states included.
+ * One project (Mar's proposal), as a product page: its cover, name and
+ * one line of who, where and when; Invite, + Workflow and ⋯ on the right.
+ * Then what it made last and what happened in it, and one row of tabs
+ * (Workflows · Assets · People) whose filters dock on the same row. The
+ * tabs are the library pages narrowed to this project, states included.
  */
 const { id } = defineProps<{ id: string }>()
 const p = computed(() => projects.items.find((x) => x.id === id))
 const build = computed(() => instances.value.find((i) => i.id === p.value?.envId))
 
+const mine = computed(() => workflows.items.filter((w) => w.project === p.value?.name))
+const made = computed(() => assets.items.filter((a) => a.project === p.value?.name))
+
 type Tab = 'workflows' | 'assets' | 'people'
 const tab = ref<Tab>('workflows')
+// Page state Empty shows the project as just made: nothing in it yet.
+const fresh = computed(() => shownState.value === 'empty')
 const TABS = computed(() => [
-  {
-    value: 'workflows' as const,
-    label: 'Workflows',
-    count: workflows.items.filter((w) => w.project === p.value?.name).length
-  },
-  {
-    value: 'assets' as const,
-    label: 'Assets',
-    count: assets.items.filter((a) => a.project === p.value?.name).length
-  },
+  { value: 'workflows' as const, label: 'Workflows', count: fresh.value ? 0 : mine.value.length },
+  { value: 'assets' as const, label: 'Assets', count: fresh.value ? 0 : made.value.length },
   { value: 'people' as const, label: 'People', count: p.value?.members.length ?? 0 }
 ])
 
+// "Runs on" is a quiet picker in the meta line, not a chip.
+const BUILDS = computed(() => instances.value.map((i) => ({ value: i.id, label: i.name })))
+const envId = computed({
+  get: () => p.value?.envId ?? '',
+  set: (next: string) => {
+    if (!p.value || next === p.value.envId) return
+    const project = p.value
+    const before = project.envId
+    project.envId = next
+    notify(`Now runs on ${build.value?.name ?? 'another build'}`, () => (project.envId = before))
+  }
+})
+
+const people = computed(() => {
+  const m = p.value?.members ?? []
+  if (m.length <= 1) return 'Only you'
+  return m.length === 2 ? `${m[0]} and ${m[1]}` : `${m[0]} and ${m.length - 1} others`
+})
+
+/* ---- What it made last, and what happened in it ---- */
+const latest = computed(() => {
+  const a = [...made.value].filter((x) => x.thumbId).sort((x, y) => x.age - y.age)[0]
+  if (a) return { src: thumb(a.thumbId!), name: a.name, when: a.when, status: a.status }
+  const w = [...mine.value].filter((x) => x.thumbId).sort((x, y) => x.age - y.age)[0]
+  return w ? { src: thumb(w.thumbId), name: w.name, when: w.modified, status: w.status } : undefined
+})
+
+const VERB: Partial<Record<ItemStatus, string>> = {
+  executing: 'is running',
+  running: 'is running',
+  queued: 'queued',
+  completed: 'ran',
+  failed: 'had a failed run of',
+  draft: 'started',
+  shared: 'shared'
+}
+interface Event {
+  who: string
+  verb: string
+  what: string
+  when: string
+  status?: ItemStatus
+}
+const activity = computed<Event[]>(() => {
+  const m = p.value?.members ?? ['You']
+  const rows: (Event & { age: number })[] = [
+    ...mine.value.map((w, i) => ({
+      who: m[i % m.length]!,
+      verb: (w.status && VERB[w.status]) ?? 'edited',
+      what: w.name,
+      when: w.modified,
+      status: w.status,
+      age: w.age
+    })),
+    ...made.value.slice(0, 3).map((a, i) => ({
+      who: m[(i + 1) % m.length]!,
+      verb: a.status === 'running' || a.status === 'queued' ? 'is making' : 'made',
+      what: a.name,
+      when: a.when,
+      status: a.status,
+      age: a.age
+    }))
+  ]
+  return rows.sort((a, b) => a.age - b.age).slice(0, 4)
+})
+const showOverview = computed(
+  () => shownState.value === 'live' && tab.value !== 'people' && !!latest.value
+)
+
+/* ---- Rename, new workflow, the ⋯ menu ---- */
 const renaming = ref(false)
 const draft = ref('')
 function startRename(): void {
@@ -84,30 +157,11 @@ function newWorkflow(): void {
   tab.value = 'workflows'
   notify(`New workflow in ${p.value.name}`)
 }
-function remove(): void {
-  if (!p.value) return
-  projects.remove([p.value.id])
-}
-const role = (m: string, i: number): string =>
-  i === 0 ? 'Owner' : m === 'Mariana' ? 'Can edit' : 'Can run'
 
 const lines = computed<MenuLine[]>(() =>
   p.value
     ? [
         { label: 'Rename', icon: Pencil, run: startRename },
-        {
-          label: 'Runs on',
-          icon: Server,
-          sub: instances.value.map((i) => ({
-            label: i.name,
-            checked: i.id === p.value!.envId,
-            run: () => {
-              const before = p.value!.envId
-              p.value!.envId = i.id
-              notify(`Now runs on ${i.name}`, () => (p.value!.envId = before))
-            }
-          }))
-        },
         { label: 'Duplicate', icon: Copy, run: () => projects.duplicate(p.value!.id) },
         'sep',
         {
@@ -119,10 +173,45 @@ const lines = computed<MenuLine[]>(() =>
             go('projects')
           }
         },
-        { label: 'Delete project', icon: Trash2, danger: true, run: remove }
+        {
+          label: 'Delete project',
+          icon: Trash2,
+          danger: true,
+          run: () => projects.remove([p.value!.id])
+        }
       ]
     : []
 )
+
+/* ---- People: roles you can change, an invite row on top ---- */
+type Role = 'edit' | 'run'
+const ROLES = [
+  { value: 'edit' as const, label: 'Can edit' },
+  { value: 'run' as const, label: 'Can run' }
+]
+const roles = ref<Record<string, Role>>({ Mariana: 'edit' })
+const roleOf = (m: string): Role => roles.value[m] ?? 'run'
+const invited = ref<string[]>([])
+const email = ref('')
+const inviteRole = ref<Role>('edit')
+function invite(): void {
+  const project = p.value
+  const who = email.value.trim()
+  if (!project || !who) return
+  const name = who.split('@')[0]!.replace(/^\w/, (c) => c.toUpperCase())
+  project.members.push(name)
+  roles.value[name] = inviteRole.value
+  invited.value.push(name)
+  email.value = ''
+  notify(`Invited ${who}`, () => project.members.splice(project.members.indexOf(name), 1))
+}
+function removePerson(m: string): void {
+  const project = p.value
+  if (!project) return
+  const at = project.members.indexOf(m)
+  project.members.splice(at, 1)
+  notify(`Removed ${m} from ${project.name}`, () => project.members.splice(at, 0, m))
+}
 </script>
 
 <template>
@@ -139,174 +228,468 @@ const lines = computed<MenuLine[]>(() =>
     }"
     @action="go('projects')"
   />
-  <MarPage
-    v-else
-    :title="p.name"
-    skeleton="grid"
-    error-title="Can't open this project"
-    error-text="It lives in Comfy Cloud, which is out of reach. Workflows on this computer still open from Workflows."
-  >
-    <template #lead>
-      <button
-        type="button"
-        class="mar-proj-back"
-        aria-label="All projects"
-        @click="go('projects' as Page)"
-      >
-        <ArrowLeft :size="16" />
-      </button>
-      <img :src="p.art" alt="" class="mar-proj-art" />
-    </template>
-    <template v-if="renaming" #meta>
-      <input
-        v-model="draft"
-        class="mar-proj-rename"
-        aria-label="Project name"
-        autofocus
-        @keydown.enter.prevent="commit"
-        @keydown.esc.prevent="renaming = false"
-        @blur="commit"
-      />
-    </template>
-    <template v-else #meta>
-      <button type="button" class="mar-proj-edit" aria-label="Rename project" @click="startRename">
-        <Pencil :size="13" />
-      </button>
-      <MarStatus v-if="p.archived" status="paused" label="Archived" />
-    </template>
+  <div v-else class="mar-proj mx-auto w-full max-w-300 px-10 pb-24">
+    <button type="button" class="mar-proj-crumb" @click="go('projects' as Page)">
+      <ArrowLeft :size="14" />Projects
+    </button>
 
-    <template #actions="{ state }">
-      <template v-if="state === 'live'">
-        <span class="mar-proj-runs"><Server :size="13" />Runs on {{ build?.name ?? '—' }}</span>
-        <span class="mar-proj-faces">
-          <MemberAvatar v-for="m in p.members.slice(0, 4)" :key="m" :name="m" size="sm" />
-        </span>
-        <Button variant="ghost" @click="toast(`Invite to ${p.name}`)"
-          ><UserPlus :size="15" />Invite</Button
-        >
+    <section class="mar-proj-head">
+      <img :src="p.art" alt="" class="mar-proj-cover" />
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5">
+          <input
+            v-if="renaming"
+            v-model="draft"
+            class="mar-proj-rename"
+            aria-label="Project name"
+            autofocus
+            @keydown.enter.prevent="commit"
+            @keydown.esc.prevent="renaming = false"
+            @blur="commit"
+          />
+          <template v-else>
+            <h1 class="mar-proj-title">{{ p.name }}</h1>
+            <button
+              type="button"
+              class="mar-proj-edit"
+              aria-label="Rename project"
+              @click="startRename"
+            >
+              <Pencil :size="13" />
+            </button>
+          </template>
+          <MarStatus v-if="p.archived" status="paused" label="Archived" />
+        </div>
+        <div class="mar-proj-meta">
+          <button type="button" class="mar-pj-who" @click="tab = 'people'">
+            <span class="mar-proj-faces">
+              <MemberAvatar v-for="m in p.members.slice(0, 4)" :key="m" :name="m" size="sm" />
+            </span>
+            {{ people }}
+          </button>
+          <span class="mar-proj-dot" />
+          <Select
+            v-model="envId"
+            :options="BUILDS"
+            label="Runs on"
+            variant="ghost"
+            size="sm"
+            class="mar-proj-build"
+          />
+          <span class="mar-proj-dot" />
+          <span>Updated {{ p.updated.toLowerCase() }}</span>
+        </div>
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <Button @click="tab = 'people'"><UserPlus :size="15" />Invite</Button>
         <Button variant="primary" @click="newWorkflow"><Plus :size="15" />Workflow</Button>
         <MarItemMenu :lines label="Project actions" />
-      </template>
-    </template>
-
-    <template #tabs="{ state }">
-      <div v-if="state === 'live'" class="mb-5">
-        <MarSeg v-model="tab" :options="TABS" label="In this project" />
       </div>
-    </template>
+    </section>
+
+    <!-- What it made last, and what happened in it. -->
+    <section v-if="showOverview && latest" class="mar-proj-over">
+      <button type="button" class="mar-proj-latest" @click="tab = 'assets'">
+        <img :src="latest.src" alt="" />
+        <span class="mar-proj-latest-cap">
+          <span class="mar-proj-eyebrow">Latest output</span>
+          <span class="truncate text-ui font-medium text-white">{{ latest.name }}</span>
+          <span class="text-ui text-white/70">{{ latest.when }}</span>
+        </span>
+        <MarStatus
+          v-if="latest.status && latest.status !== 'shared'"
+          :status="latest.status"
+          on-media
+          class="mar-proj-latest-status"
+        />
+      </button>
+      <div class="mar-proj-feed">
+        <h2 class="mar-proj-eyebrow">Recent activity</h2>
+        <ol class="flex flex-col">
+          <li v-for="(e, i) in activity" :key="i" class="mar-proj-event">
+            <MemberAvatar :name="e.who" size="sm" />
+            <span class="min-w-0 flex-1 truncate text-ui text-muted-foreground">
+              <b class="font-medium text-base-foreground">{{ e.who }}</b> {{ e.verb }}
+              <span class="text-base-foreground">{{ e.what }}</span>
+            </span>
+            <span class="shrink-0 text-ui text-subtle-foreground">{{ e.when }}</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- One row: the sections left, the open section's filters right. -->
+    <div class="mar-proj-row">
+      <div class="mar-proj-tabs" role="tablist" aria-label="In this project">
+        <button
+          v-for="t in TABS"
+          :key="t.value"
+          type="button"
+          role="tab"
+          :aria-selected="tab === t.value"
+          class="mar-proj-tab"
+          @click="tab = t.value"
+        >
+          {{ t.label }}<span class="mar-proj-count">{{ t.count }}</span>
+        </button>
+      </div>
+      <div id="mar-proj-tools" class="ml-auto flex min-w-0 items-center" />
+    </div>
 
     <MarWorkflowsPage v-if="tab === 'workflows'" :key="`w-${p.name}`" :project="p.name" />
     <MarAssetsPage v-else-if="tab === 'assets'" :key="`a-${p.name}`" :project="p.name" />
-    <div v-else class="mar-people">
-      <div v-for="(m, i) in p.members" :key="m" class="mar-person">
-        <MemberAvatar :name="m" />
-        <span class="flex min-w-0 flex-1 flex-col">
-          <span class="text-ui font-medium text-base-foreground"
-            >{{ m }}{{ i === 0 ? ' (you)' : '' }}</span
-          >
-          <span class="text-ui text-subtle-foreground">{{ m.toLowerCase() }}@example.com</span>
-        </span>
-        <span class="text-ui text-muted-foreground">{{ role(m, i) }}</span>
+    <MarPage
+      v-else
+      title="People"
+      embedded
+      skeleton="list"
+      :state="shownState === 'empty' ? 'live' : undefined"
+      error-text="Who's in this project lives in Comfy Cloud. It comes back when you reconnect."
+    >
+      <div class="mar-people">
+        <form class="mar-invite" @submit.prevent="invite">
+          <Input v-model="email" placeholder="Invite by email" class="flex-1" type="email">
+            <template #leading><UserPlus :size="14" class="text-subtle-foreground" /></template>
+          </Input>
+          <Select v-model="inviteRole" :options="ROLES" class="w-30" />
+          <Button variant="primary" type="submit" :disabled="!email.trim()">Invite</Button>
+        </form>
+        <p class="mar-people-note">
+          People here see this project’s workflows and assets, nothing else.
+        </p>
+        <div v-for="(m, i) in p.members" :key="m" class="mar-person">
+          <MemberAvatar :name="m" />
+          <span class="flex min-w-0 flex-1 flex-col">
+            <span class="text-ui font-medium text-base-foreground"
+              >{{ m }}<span v-if="i === 0" class="text-subtle-foreground"> (you)</span></span
+            >
+            <span class="text-ui text-subtle-foreground">{{ m.toLowerCase() }}@example.com</span>
+          </span>
+          <MarStatus v-if="invited.includes(m)" status="queued" label="Invite sent" />
+          <span v-if="i === 0" class="mar-person-role">Owner</span>
+          <template v-else>
+            <Select
+              :model-value="roleOf(m)"
+              :options="ROLES"
+              variant="ghost"
+              size="sm"
+              @update:model-value="roles[m] = $event"
+            />
+            <button
+              type="button"
+              class="mar-person-x"
+              :aria-label="`Remove ${m}`"
+              @click="removePerson(m)"
+            >
+              <X :size="14" />
+            </button>
+          </template>
+        </div>
       </div>
-      <button type="button" class="mar-person is-add" @click="toast(`Invite to ${p.name}`)">
-        <span class="mar-person-plus"><UserPlus :size="15" /></span>
-        <span class="text-ui text-muted-foreground"
-          >Invite people. They see this project’s workflows and assets, nothing else.</span
-        >
-      </button>
-    </div>
-  </MarPage>
+    </MarPage>
+
+    <MarUndoToast />
+  </div>
 </template>
 
 <style>
-.mar-proj-art {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  object-fit: cover;
+:root .proto-ui.proto-ui.proto-ui .mar-proj-crumb {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  gap: 6px;
+  margin: 36px 0 14px -8px;
+  padding: 0 8px;
+  border-radius: var(--radius-control);
+  color: var(--color-muted-foreground);
+  font-size: 13px;
 }
-:root .proto-ui.proto-ui.proto-ui :is(.mar-proj-back, .mar-proj-edit) {
+:root .proto-ui.proto-ui.proto-ui .mar-proj-crumb:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  color: var(--color-base-foreground);
+}
+.mar-proj-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 28px;
+}
+.mar-proj-cover {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--radius-card, 14px);
+  object-fit: cover;
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 10%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-base-foreground);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-edit {
   display: inline-flex;
   width: 28px;
   height: 28px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   color: var(--color-muted-foreground);
+  opacity: 0;
 }
-:root .proto-ui.proto-ui.proto-ui :is(.mar-proj-back, .mar-proj-edit):hover {
+:root .proto-ui.proto-ui.proto-ui .mar-proj-edit:hover {
   background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
   color: var(--color-base-foreground);
 }
-:root .proto-ui.proto-ui.proto-ui .mar-proj-edit {
-  opacity: 0;
-}
-:root .proto-ui.proto-ui.proto-ui .mar-page-head:hover .mar-proj-edit,
+:root .proto-ui.proto-ui.proto-ui .mar-proj-head:hover .mar-proj-edit,
 :root .proto-ui.proto-ui.proto-ui .mar-proj-edit:focus-visible {
   opacity: 1;
 }
 :root .proto-ui.proto-ui.proto-ui .mar-proj-rename {
-  width: 320px;
-  height: 36px;
+  width: min(420px, 100%);
+  height: 38px;
+  margin-left: -8px;
   padding: 0 8px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--radius-control);
   background: var(--color-content-background);
   box-shadow: inset 0 0 0 1px var(--color-border-focus);
   color: var(--color-base-foreground);
-  font-size: 20px;
+  font-size: 30px;
   font-weight: 600;
+  letter-spacing: -0.02em;
   outline: none;
 }
-.mar-proj-runs {
-  display: inline-flex;
-  height: 28px;
+.mar-proj-meta {
+  display: flex;
+  min-width: 0;
   align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+  gap: 10px;
+  margin-top: 6px;
   color: var(--color-muted-foreground);
-  font-size: 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.mar-proj-dot {
+  width: 3px;
+  height: 3px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-subtle-foreground);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-pj-who {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  gap: 8px;
+  margin-left: -4px;
+  padding: 0 6px 0 4px;
+  border-radius: var(--radius-control);
+  color: inherit;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-pj-who:hover,
+:root .proto-ui.proto-ui.proto-ui .mar-proj-meta .mar-proj-build:hover,
+:root .proto-ui.proto-ui.proto-ui .mar-proj-meta .mar-proj-build[data-state='open'] {
+  background: color-mix(in oklch, var(--color-base-foreground) 7%, transparent);
+  color: var(--color-base-foreground);
 }
 .mar-proj-faces {
   display: flex;
-  padding: 0 4px 0 10px;
+  padding-left: 6px;
 }
 .mar-proj-faces > * {
   margin-left: -6px;
   box-shadow: 0 0 0 2px var(--color-content-background);
 }
-.mar-people {
+/* Beats the shell's filled selects: this one reads as text until hovered. */
+:root .proto-ui.proto-ui.proto-ui .mar-proj-meta .mar-proj-build {
+  height: 26px;
+  margin: 0 -4px;
+  backdrop-filter: none;
+  border-color: transparent;
+  background: transparent;
+  padding: 0 6px;
+  font-size: 13px;
+}
+
+/* Latest output and recent activity */
+.mar-proj-over {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 32px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-latest {
+  position: relative;
+  display: block;
+  height: 220px;
+  overflow: hidden;
+  padding: 0;
+  border-radius: var(--radius-card, 14px);
+  text-align: left;
+}
+.mar-proj-latest img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mar-proj-latest:hover img {
+  transform: scale(1.02);
+}
+.mar-proj-latest-cap {
+  position: absolute;
+  inset: auto 0 0;
   display: flex;
-  max-width: 640px;
   flex-direction: column;
   gap: 2px;
+  padding: 40px 18px 16px;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.62), transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-latest-cap .mar-proj-eyebrow {
+  color: rgb(255 255 255 / 0.7);
+}
+.mar-proj-latest-status {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+.mar-proj-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 16px 10px;
+  border-radius: var(--radius-card, 14px);
+  background: color-mix(in oklch, var(--color-card-background) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-eyebrow {
+  margin: 0;
+  color: var(--color-subtle-foreground);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mar-proj-feed ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mar-proj-event {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 10px;
+}
+.mar-proj-event + .mar-proj-event {
+  border-top: 1px solid color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
+}
+
+/* The one row of tabs, with the filters docked right */
+.mar-proj-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+.mar-proj-row #mar-proj-tools {
+  padding-bottom: 8px;
+}
+.mar-proj-tabs {
+  display: flex;
+  gap: 22px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-tab {
+  position: relative;
+  display: inline-flex;
+  height: 42px;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  color: var(--color-muted-foreground);
+  font-size: 14px;
+  font-weight: 500;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-proj-tab:hover,
+:root .proto-ui.proto-ui.proto-ui .mar-proj-tab[aria-selected='true'] {
+  color: var(--color-base-foreground);
+}
+.mar-proj-tab[aria-selected='true']::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-base-foreground);
+  content: '';
+}
+.mar-proj-count {
+  color: var(--color-subtle-foreground);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* People */
+.mar-people {
+  display: flex;
+  max-width: 680px;
+  flex-direction: column;
+  gap: 2px;
+}
+.mar-invite {
+  display: flex;
+  gap: 8px;
+}
+.mar-people-note {
+  margin: 8px 0 14px;
+  color: var(--color-subtle-foreground);
+  font-size: 12px;
 }
 .mar-person {
   display: flex;
   height: 60px;
   align-items: center;
   gap: 12px;
+  margin: 0 -12px;
   padding: 0 12px;
-  border-radius: 12px;
-}
-:root .proto-ui.proto-ui.proto-ui .mar-person.is-add {
-  width: 100%;
-  text-align: left;
+  border-radius: var(--radius-card, 12px);
 }
 .mar-person:hover {
   background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
 }
-.mar-person-plus {
+.mar-person-role {
+  padding: 0 10px;
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-person-x {
   display: inline-flex;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--color-border-strong);
-  color: var(--color-muted-foreground);
+  padding: 0;
+  border-radius: var(--radius-control);
+  color: var(--color-subtle-foreground);
+  opacity: 0;
+}
+.mar-person:hover .mar-person-x,
+:root .proto-ui.proto-ui.proto-ui .mar-person-x:focus-visible {
+  opacity: 1;
+}
+:root .proto-ui.proto-ui.proto-ui .mar-person-x:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  color: var(--color-base-foreground);
 }
 </style>

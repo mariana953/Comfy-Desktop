@@ -31,7 +31,8 @@ const {
   errorText = "You look offline. What's on this computer still opens; the rest comes back when you reconnect.",
   noResults = false,
   state,
-  embedded = false
+  embedded = false,
+  toolbarTo
 } = defineProps<{
   title: string
   description?: string
@@ -45,6 +46,8 @@ const {
   state?: PageState
   /** Inside another page (a project's tab): no title, no page margins. */
   embedded?: boolean
+  /** Where the toolbar docks instead (a host's tab row), as a selector. */
+  toolbarTo?: string
 }>()
 const emit = defineEmits<{ action: []; second: []; clear: [] }>()
 
@@ -77,14 +80,16 @@ const rows = computed(() => (skeleton === 'grid' ? 8 : skeleton === 'cards' ? 6 
 
     <slot name="tabs" :state="shown" />
 
-    <div
-      v-if="$slots.toolbar && (shown === 'live' || shown === 'loading')"
-      class="mar-page-bar"
-      :inert="shown === 'loading'"
-      :class="shown === 'loading' && 'is-dim'"
-    >
-      <slot name="toolbar" />
-    </div>
+    <Teleport defer :to="toolbarTo" :disabled="!toolbarTo">
+      <div
+        v-if="$slots.toolbar && (shown === 'live' || shown === 'loading')"
+        class="mar-page-bar"
+        :inert="shown === 'loading'"
+        :class="[shown === 'loading' && 'is-dim', toolbarTo && 'is-docked']"
+      >
+        <slot name="toolbar" />
+      </div>
+    </Teleport>
 
     <!-- Loading: the page's own shape, shimmering. -->
     <div v-if="shown === 'loading'" aria-busy="true" aria-label="Loading">
@@ -190,6 +195,9 @@ const rows = computed(() => (skeleton === 'grid' ? 8 : skeleton === 'cards' ? 6 
   gap: 8px;
   margin-bottom: 20px;
   transition: opacity 200ms ease;
+}
+.mar-page-bar.is-docked {
+  margin: 0;
 }
 .mar-page-bar.is-dim {
   opacity: 0.45;

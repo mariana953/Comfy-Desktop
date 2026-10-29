@@ -172,16 +172,19 @@ function lines(a: MarAsset): MenuLine[] {
     skeleton="grid"
     :no-results="shown.length === 0 && filtered"
     :embedded="!!fixedProject"
+    :toolbar-to="fixedProject ? '#mar-proj-tools' : undefined"
     :state="shownState === 'live' && base.length === 0 ? 'empty' : undefined"
     :empty="{
       icon: ComfyAssets,
       title: fixedProject ? 'No assets in this project yet' : 'Nothing made yet',
-      text: 'Every image, video and sound your runs make lands here, with the workflow that made it. Run a template to see your first one.',
-      action: 'Run a template',
-      second: 'Upload files'
+      text: fixedProject
+        ? 'What this project’s workflows make lands here. Run one, or upload references to work from.'
+        : 'Every image, video and sound your runs make lands here, with the workflow that made it. Run a template to see your first one.',
+      action: fixedProject ? 'Upload files' : 'Run a template',
+      second: fixedProject ? undefined : 'Upload files'
     }"
     error-text="Cloud assets are out of reach. The ones on this computer are all here."
-    @action="go('explore')"
+    @action="fixedProject ? toast('Pick files to upload') : go('explore')"
     @second="toast('Pick files to upload')"
     @clear="clear"
   >
@@ -195,8 +198,16 @@ function lines(a: MarAsset): MenuLine[] {
     </template>
 
     <template #toolbar>
-      <MarSeg v-model="kind" :options="KINDS" label="Type" />
+      <MarSeg v-if="!fixedProject" v-model="kind" :options="KINDS" label="Type" />
       <div class="ml-auto flex items-center gap-2">
+        <Select
+          v-if="fixedProject"
+          v-model="kind"
+          :options="
+            KINDS.map((k) => ({ value: k.value, label: k.value === 'all' ? 'All types' : k.label }))
+          "
+          class="w-32"
+        />
         <Select v-model="where" :options="WHERE" class="w-36" />
         <Select v-if="!fixedProject" v-model="project" :options="PROJECTS" class="w-40" />
         <Select v-model="sort" :options="SORTS" label="Sort" class="w-34" />
