@@ -22,6 +22,7 @@ import { MAR_LOCALS, MAR_USERS, marUser, setUser } from './userStates/userState'
 import { PAGE_STATES, pageState } from './pages/pageState'
 import { LOOKS, marLook } from './looks/looks'
 import MarLookFx from './looks/MarLookFx.vue'
+import PabloPortsTuner from './PabloPortsTuner.vue'
 
 /** The UI tuner panel (Prototype menu › UI Playground): whose proposal
  *  (Pablo's branch as it is, or Mar's draft) and the UI to start from,
@@ -342,6 +343,8 @@ function set(key: keyof Tuning, value: string): void {
           </button>
         </div>
       </div>
+
+      <PabloPortsTuner v-if="isMariana" />
 
       <div v-if="isMariana" class="flex flex-col gap-1.5">
         <span class="text-ui text-subtle-foreground">First run · first-time, no local install</span>
