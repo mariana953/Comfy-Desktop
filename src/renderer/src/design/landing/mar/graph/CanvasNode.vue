@@ -1,15 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  Aperture,
-  ChevronDown,
-  Download,
-  Image,
-  Pause,
-  Play,
-  Type,
-  Workflow
-} from 'lucide-vue-next'
+import { Aperture, ChevronDown, Download, Image, Pause, Play, Type } from 'lucide-vue-next'
+import { ComfyWorkflow } from '../icons/comfyIcons'
 import {
   SOCKETS,
   canvasNodeHeight,
@@ -38,7 +30,7 @@ const ICONS = {
   image: Image,
   generate: Aperture,
   pause: Pause,
-  workflow: Workflow,
+  workflow: ComfyWorkflow,
   output: Download
 }
 const height = computed(() => canvasNodeHeight(node, g))

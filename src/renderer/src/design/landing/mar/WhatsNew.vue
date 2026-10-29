@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowRight, ArrowUpRight, Box, Sparkles } from 'lucide-vue-next'
+import { ArrowRight, ArrowUpRight, Sparkles } from 'lucide-vue-next'
+import { ComfyModel } from './icons/comfyIcons'
 import Button from '../ui/Button.vue'
 import Card from '../ui/Card.vue'
 import ScrollRow from '../ui/ScrollRow.vue'
@@ -23,7 +24,7 @@ const list = computed(() => (tab.value === 'model' ? LAUNCHES : [...LAUNCHES].re
         v-model="tab"
         variant="contained"
         :options="[
-          { value: 'model', label: 'Latest models', icon: Box },
+          { value: 'model', label: 'Latest models', icon: ComfyModel },
           { value: 'feature', label: 'New features', icon: Sparkles }
         ]"
       />
@@ -52,7 +53,7 @@ const list = computed(() => (tab.value === 'model' ? LAUNCHES : [...LAUNCHES].re
         <span
           class="absolute inset-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.25),transparent_40%,rgb(0_0_0/0.45))]"
         />
-        <MediaChip :icon="tab === 'model' ? Box : Sparkles" class="absolute top-3 left-3">
+        <MediaChip :icon="tab === 'model' ? ComfyModel : Sparkles" class="absolute top-3 left-3">
           {{ tab === 'model' ? 'Model' : 'Feature' }}
         </MediaChip>
         <span

@@ -1,24 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue'
 import {
-  AppWindow,
-  Boxes,
   Code,
   Compass,
   Folder,
   GraduationCap,
   Home,
-  Images,
   KeyRound,
   LayoutDashboard,
   LayoutGrid,
-  MessageCircle,
+  PanelsTopLeft,
   Palette,
   Rocket,
   ScrollText,
-  Server,
-  Workflow
+  Server
 } from 'lucide-vue-next'
+import { Astroid, ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
 import LocationIcon from '../../ui/LocationIcon.vue'
 import {
   go,
@@ -58,9 +55,9 @@ const CREATE: Item[][] = [
     { page: 'tutorials', label: 'Learn', icon: GraduationCap }
   ],
   [
-    { page: 'workflows', label: 'Workflows', icon: Workflow },
-    { page: 'apps', label: 'Apps', icon: AppWindow, prefix: 'app:' },
-    { page: 'assets', label: 'Assets', icon: Images },
+    { page: 'workflows', label: 'Workflows', icon: ComfyWorkflow },
+    { page: 'apps', label: 'Apps', icon: PanelsTopLeft, prefix: 'app:' },
+    { page: 'assets', label: 'Assets', icon: ComfyAssets },
     { page: 'environments', label: 'Builds', icon: Server, prefix: 'environment:' }
   ]
 ]
@@ -71,7 +68,7 @@ const BUILD: Item[][] = [
     { page: 'environments', label: 'Builds', icon: Server, prefix: 'environment:' }
   ],
   [
-    { page: 'router', label: 'Models', icon: Boxes },
+    { page: 'router', label: 'Models', icon: ComfyModel },
     { page: 'logs', label: 'Logs', icon: ScrollText },
     { page: 'keys', label: 'API keys', icon: KeyRound }
   ]
@@ -101,7 +98,7 @@ const flyout = ref(false)
 const LENSES: { value: Mode; label: string; icon: Component }[] = [
   { value: 'create', label: 'Create', icon: Palette },
   { value: 'build', label: 'Build', icon: Code },
-  { value: 'agent', label: 'Agent', icon: MessageCircle }
+  { value: 'agent', label: 'Agent', icon: Astroid }
 ]
 function lens(m: Mode): void {
   flyout.value = false

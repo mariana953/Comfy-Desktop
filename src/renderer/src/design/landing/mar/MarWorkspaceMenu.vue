@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CreditCard, Gauge, KeyRound, LogOut, ShieldAlert, UserCog, Users } from 'lucide-vue-next'
+import { CreditCard, Gauge, KeyRound, LogOut, Settings2, ShieldAlert, Users } from 'lucide-vue-next'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import DropdownMenuContent from '../ui/DropdownMenuContent.vue'
 import DropdownMenuItem from '../ui/DropdownMenuItem.vue'
@@ -75,7 +75,7 @@ function signOut(): void {
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem @select="toast('Account settings')">
-        <UserCog :size="15" class="text-subtle-foreground" />
+        <Settings2 :size="15" class="text-subtle-foreground" />
         <span class="flex min-w-0 flex-col">
           <span>Account settings</span>
           <span class="truncate text-[12px] text-subtle-foreground">{{ shownEmail }}</span>

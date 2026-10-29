@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ChevronDown, Home, MessageCircle, X } from 'lucide-vue-next'
+import { ChevronDown, Home, X } from 'lucide-vue-next'
+import { Astroid } from '../icons/comfyIcons'
 import LocationIcon from '../../ui/LocationIcon.vue'
 import type { TitleBarCommand, TitleBarState } from '../../titleBarBridge'
 
@@ -120,7 +121,7 @@ const close = (active: boolean): string =>
       :aria-pressed="state.agent"
       @click="emit('command', { type: 'agent' })"
     >
-      <MessageCircle :size="15" />
+      <Astroid :size="15" />
     </button>
   </nav>
 </template>

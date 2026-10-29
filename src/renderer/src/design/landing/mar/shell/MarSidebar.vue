@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import {
-  AppWindow,
-  Boxes,
   ChevronsUpDown,
   Circle,
   Code,
@@ -10,22 +8,21 @@ import {
   Compass,
   GraduationCap,
   Home,
-  Images,
   KeyRound,
   LayoutDashboard,
   LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
-  MessageCircle,
+  PanelsTopLeft,
   MessageSquare,
   Palette,
   Plus,
   Rocket,
   ScrollText,
   Search,
-  Server,
-  Workflow
+  Server
 } from 'lucide-vue-next'
+import { Astroid, ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
 import { go, goIn, openDetail, proto, toast, workspace, type Mode, type Page } from '../../useProto'
 import { agent, resetAgent } from '../../agent'
 import { flow, resetFlow } from '../../appFlow'
@@ -71,9 +68,9 @@ const CREATE: { title?: string; items: Item[] }[] = [
   {
     title: 'Libraries',
     items: [
-      { page: 'workflows', label: 'Workflows', icon: Workflow },
-      { page: 'apps', label: 'Apps', icon: AppWindow, prefix: 'app:' },
-      { page: 'assets', label: 'Assets', icon: Images },
+      { page: 'workflows', label: 'Workflows', icon: ComfyWorkflow },
+      { page: 'apps', label: 'Apps', icon: PanelsTopLeft, prefix: 'app:' },
+      { page: 'assets', label: 'Assets', icon: ComfyAssets },
       {
         page: 'environments',
         label: 'Builds',
@@ -95,7 +92,7 @@ const BUILD: { title?: string; items: Item[] }[] = [
   {
     title: 'API',
     items: [
-      { page: 'router', label: 'Models', icon: Boxes },
+      { page: 'router', label: 'Models', icon: ComfyModel },
       { page: 'logs', label: 'Logs', icon: ScrollText },
       { page: 'keys', label: 'API keys', icon: KeyRound }
     ]
@@ -118,7 +115,7 @@ const projects = computed(() => PROJECTS.map((p, i) => ({ ...p, art: ART[i % ART
 const LENSES: { value: Mode; label: string; icon: Component }[] = [
   { value: 'create', label: 'Create', icon: Palette },
   { value: 'build', label: 'Build', icon: Code },
-  { value: 'agent', label: 'Agent', icon: MessageCircle }
+  { value: 'agent', label: 'Agent', icon: Astroid }
 ]
 const lenses = computed(() =>
   LENSES.filter((l) => l.value !== 'agent' || (can.value.agent && !marTabsOn.value))

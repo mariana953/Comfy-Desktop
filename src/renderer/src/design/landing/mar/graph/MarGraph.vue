@@ -10,15 +10,12 @@ import {
   type Component
 } from 'vue'
 import {
-  Boxes,
   ChevronDown,
   ChevronUp,
-  FolderOpen,
   Hand,
   History,
   Images,
   Keyboard,
-  LayoutTemplate,
   Map as MapIcon,
   Maximize,
   Minus,
@@ -29,9 +26,15 @@ import {
   Search,
   Settings,
   Tag,
-  Workflow,
   X
 } from 'lucide-vue-next'
+import {
+  ComfyAssets,
+  ComfyModel,
+  ComfyNode,
+  ComfyTemplate,
+  ComfyWorkflow
+} from '../icons/comfyIcons'
 import { onCloud } from '../shell/surface'
 import { graphStyle } from './graphStyle'
 import CanvasNode from './CanvasNode.vue'
@@ -241,11 +244,11 @@ const jobsOpen = ref(false)
 
 const RAIL: { icon: Component; label: string }[] = [
   { icon: History, label: 'Queue' },
-  { icon: Boxes, label: 'Nodes' },
-  { icon: Images, label: 'Models' },
-  { icon: Workflow, label: 'Workflows' },
-  { icon: LayoutTemplate, label: 'Templates' },
-  { icon: FolderOpen, label: 'Assets' }
+  { icon: ComfyNode, label: 'Nodes' },
+  { icon: ComfyModel, label: 'Models' },
+  { icon: ComfyWorkflow, label: 'Workflows' },
+  { icon: ComfyTemplate, label: 'Templates' },
+  { icon: ComfyAssets, label: 'Assets' }
 ]
 </script>
 

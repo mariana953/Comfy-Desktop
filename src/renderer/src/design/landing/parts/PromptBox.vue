@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowUp, ChevronDown, ImageUp, Images, Mic, Paperclip, X } from 'lucide-vue-next'
+import {
+  ArrowUp,
+  ChevronDown,
+  ImageUp,
+  Images,
+  Mic,
+  Paperclip,
+  Plus,
+  Upload,
+  X
+} from 'lucide-vue-next'
+import { ComfyAssets } from '../mar/icons/comfyIcons'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import Button from '../ui/Button.vue'
 import DropdownMenuContent from '../ui/DropdownMenuContent.vue'
@@ -151,14 +162,16 @@ function accept(e: KeyboardEvent): void {
         class="flex h-16 w-28 flex-col items-center justify-center gap-1 rounded-control border border-dashed border-border-strong text-ui text-muted-foreground outline-none hover:bg-secondary-background hover:text-base-foreground focus-visible:ring-2 focus-visible:ring-border-focus"
         @click="fileInput?.click()"
       >
-        <ImageUp :size="15" />{{ uploads.length ? 'Add more' : 'Upload yours' }}
+        <component :is="isMariana ? Upload : ImageUp" :size="15" />{{
+          uploads.length ? 'Add more' : 'Upload yours'
+        }}
       </button>
       <button
         type="button"
         class="flex h-16 w-28 flex-col items-center justify-center gap-1 rounded-control border border-border-default bg-secondary-background/40 text-ui text-muted-foreground outline-none hover:bg-secondary-background hover:text-base-foreground focus-visible:ring-2 focus-visible:ring-border-focus"
         @click="toast('Pick from Assets')"
       >
-        <Images :size="15" />From Assets
+        <component :is="isMariana ? ComfyAssets : Images" :size="15" />From Assets
       </button>
       <input
         ref="fileInput"
@@ -219,7 +232,7 @@ function accept(e: KeyboardEvent): void {
         </DropdownMenuContent>
       </DropdownMenuRoot>
       <Button v-else variant="ghost" size="icon-sm" aria-label="Attach"
-        ><Paperclip :size="14"
+        ><component :is="isMariana ? Plus : Paperclip" :size="14"
       /></Button>
       <div class="flex items-center gap-1.5">
         <Button variant="ghost" size="icon-sm" aria-label="Dictate"><Mic :size="14" /></Button>

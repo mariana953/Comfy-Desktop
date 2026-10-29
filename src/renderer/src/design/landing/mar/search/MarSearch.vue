@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type Component } from 'vue'
-import { Circle, FolderOpen, Search, Workflow, X } from 'lucide-vue-next'
+import { Circle, FolderOpen, Search, X } from 'lucide-vue-next'
+import { ComfyWorkflow } from '../icons/comfyIcons'
 import { PROJECTS, TEMPLATES, WORKFLOWS, thumb } from '../../mock'
 import { SPACES } from '../../spaces'
 import { go, openDetail, type Page } from '../../useProto'
@@ -181,7 +182,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
             >
               <img v-if="h.image" :src="h.image" alt="" class="mar-search-thumb" />
               <span v-else class="mar-search-thumb is-icon"
-                ><component :is="h.icon ?? Workflow" :size="15"
+                ><component :is="h.icon ?? ComfyWorkflow" :size="15"
               /></span>
               <span class="min-w-0 flex-1 truncate text-left">{{ h.label }}</span>
               <span v-if="h.meta" class="mar-search-meta">{{ h.meta }}</span>

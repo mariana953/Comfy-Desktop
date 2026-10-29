@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { Bell, ChevronDown, Download, Menu, MessageSquarePlus } from 'lucide-vue-next'
+import {
+  ArrowDownToLine,
+  Bell,
+  ChevronDown,
+  Download,
+  Menu,
+  MessageSquarePlus
+} from 'lucide-vue-next'
 import TitleBarBreadcrumb from './nav/TitleBarBreadcrumb.vue'
 import ComfyCLogo from '../../../components/icons/ComfyCLogo.vue'
 import { toast } from '../useProto'
@@ -53,7 +60,7 @@ import { isMariana } from '../mar/proposal'
     <span class="ml-auto flex items-center gap-3.5 text-muted-foreground">
       <Bell :size="15" />
       <MessageSquarePlus :size="15" />
-      <Download :size="15" />
+      <component :is="isMariana ? ArrowDownToLine : Download" :size="15" />
       <!-- Mar's proposal: the prototype controls, left of the app menu. -->
       <MarProtoMenu v-if="isMariana" />
       <button

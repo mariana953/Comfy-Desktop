@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { ArrowUp, Check, MessageCircle, Play, Plus, Workflow } from 'lucide-vue-next'
+import { ArrowUp, Check, Play, Plus } from 'lucide-vue-next'
+import { Astroid, ComfyWorkflow } from '../icons/comfyIcons'
 import Button from '../../ui/Button.vue'
 import StarterCards from '../../parts/StarterCards.vue'
 import MediaChip from '../MediaChip.vue'
@@ -84,7 +85,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
 <template>
   <div class="mar-agent relative flex h-full flex-col">
     <header class="flex h-14 shrink-0 items-center gap-2 px-6">
-      <MessageCircle :size="16" class="text-muted-foreground" />
+      <Astroid :size="16" class="text-muted-foreground" />
       <h1 class="text-ui font-semibold">Agent</h1>
       <Button v-if="!empty" variant="ghost" size="sm" class="ml-auto" @click="newChat">
         <Plus :size="14" />New chat
@@ -130,7 +131,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
             <div v-if="m.role === 'user'" class="mar-bubble self-end">{{ m.text }}</div>
 
             <div v-else class="flex gap-3">
-              <span class="mar-avatar"><MessageCircle :size="14" /></span>
+              <span class="mar-avatar"><Astroid :size="14" /></span>
               <div class="flex min-w-0 flex-1 flex-col gap-3 pt-1">
                 <!-- What the agent did, step by step. -->
                 <ol v-if="m.steps?.length" class="mar-steps">
@@ -173,7 +174,7 @@ const ARTIFACT_LABEL: Record<string, string> = {
                 <div v-if="!m.pending && m.artifact === 'workflow'" class="mar-card">
                   <div class="mar-card-media">
                     <img :src="thumb('image_flux2')" alt="" />
-                    <MediaChip :icon="Workflow" class="absolute top-2.5 left-2.5"
+                    <MediaChip :icon="ComfyWorkflow" class="absolute top-2.5 left-2.5"
                       >Workflow</MediaChip
                     >
                   </div>
