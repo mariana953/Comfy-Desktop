@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronsUpDown, CreditCard, LogOut, UserCog, Users } from 'lucide-vue-next'
+import { ChevronsUpDown, Coins, CreditCard, LogOut, UserCog, Users } from 'lucide-vue-next'
 import { DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
 import Button from '../ui/Button.vue'
 import DropdownMenuContent from '../ui/DropdownMenuContent.vue'
@@ -50,7 +50,8 @@ function signOut(): void {
       :class="isMariana && 'mar-credits-row'"
       @click="toast('Manage plan & credits')"
     >
-      <span class="size-3.5 shrink-0 rounded-full border-[1.5px] border-[#cfc9b8]" />
+      <Coins v-if="isMariana" :size="15" class="shrink-0 text-muted-foreground" />
+      <span v-else class="size-3.5 shrink-0 rounded-full border-[1.5px] border-[#cfc9b8]" />
       <span class="sidebar-label text-left">Credits</span>
       <span class="tabular-nums">{{ shownCredits }}</span>
     </Button>
