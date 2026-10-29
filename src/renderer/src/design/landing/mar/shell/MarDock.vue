@@ -15,7 +15,8 @@ import {
   ScrollText,
   Server
 } from 'lucide-vue-next'
-import { Astroid, ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
+import { AgentChat } from '../icons/agentChat'
+import { ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
 import LocationIcon from '../../ui/LocationIcon.vue'
 import {
   go,
@@ -98,7 +99,7 @@ const flyout = ref(false)
 const LENSES: { value: Mode; label: string; icon: Component }[] = [
   { value: 'create', label: 'Create', icon: Palette },
   { value: 'build', label: 'Build', icon: Code },
-  { value: 'agent', label: 'Agent', icon: Astroid }
+  { value: 'agent', label: 'Agent', icon: AgentChat }
 ]
 function lens(m: Mode): void {
   flyout.value = false

@@ -22,7 +22,8 @@ import {
   Search,
   Server
 } from 'lucide-vue-next'
-import { Astroid, ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
+import { AgentChat } from '../icons/agentChat'
+import { ComfyAssets, ComfyModel, ComfyWorkflow } from '../icons/comfyIcons'
 import { go, goIn, openDetail, proto, toast, workspace, type Mode, type Page } from '../../useProto'
 import { agent, resetAgent } from '../../agent'
 import { flow, resetFlow } from '../../appFlow'
@@ -116,7 +117,7 @@ const projects = computed(() => PROJECTS.map((p, i) => ({ ...p, art: ART[i % ART
 const LENSES: { value: Mode; label: string; icon: Component }[] = [
   { value: 'create', label: 'Create', icon: Palette },
   { value: 'build', label: 'Build', icon: Code },
-  { value: 'agent', label: 'Agent', icon: Astroid }
+  { value: 'agent', label: 'Agent', icon: AgentChat }
 ]
 const lenses = computed(() =>
   LENSES.filter((l) => l.value !== 'agent' || (can.value.agent && !marTabsOn.value))

@@ -44,7 +44,7 @@ function signOut(): void {
     <DropdownMenuTrigger as-child><slot /></DropdownMenuTrigger>
     <DropdownMenuContent :side align="start" :side-offset="8" class="mar-ws-menu w-68">
       <!-- Who and where, and what's left to spend. -->
-      <div class="mar-ws-card">
+      <div class="mar-ws-card mar-menu-panel">
         <div class="flex items-center gap-3">
           <WorkspaceAvatar :ws="workspace" size="lg" />
           <span class="flex min-w-0 flex-col">
@@ -89,15 +89,11 @@ function signOut(): void {
 </template>
 
 <style>
-/* Global: the menu is portalled to <body>. */
+/* Global: the menu is portalled to <body>. The card is the menu's raised
+   panel (mar/menus/layers.css). */
 .mar-ws-menu .mar-ws-card {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
-  margin-bottom: 4px;
   padding: 10px;
-  border-radius: 10px;
-  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
 }
 :root .proto-ui.proto-ui.proto-ui .mar-ws-credits,
 .mar-ws-menu .mar-ws-credits {

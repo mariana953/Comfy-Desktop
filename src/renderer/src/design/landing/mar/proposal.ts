@@ -1,6 +1,6 @@
 import { computed, reactive, watch } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
-import { Astroid } from './icons/comfyIcons'
+import { AgentChat } from './icons/agentChat'
 import { proto } from '../useProto'
 import { MILESTONES } from '../milestones'
 
@@ -83,4 +83,4 @@ window.addEventListener('storage', (e) => {
 })
 
 /** The Agent lens icon: a chat bubble in Mar's proposal. */
-export const agentIcon = computed(() => (isMariana.value ? Astroid : Sparkles))
+export const agentIcon = computed(() => (isMariana.value ? AgentChat : Sparkles))

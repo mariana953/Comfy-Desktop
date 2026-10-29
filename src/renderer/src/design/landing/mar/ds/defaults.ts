@@ -23,3 +23,4 @@ import '../motion/tabSlide'
 // her proposal.
 import '../shell/marShell.css'
 import '../shell/panelsNav.css'
+import '../menus/layers.css'

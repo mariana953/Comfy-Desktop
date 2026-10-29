@@ -109,7 +109,7 @@ export const PAGES: DsPage[] = [
     group: 'Controls',
     title: 'Menus',
     source:
-      'mar/CreateMenu.vue, mar/MarWorkspaceMenu.vue, parts/PromptBox.vue, parts/nav/SwitcherMenu.vue, ui/DropdownMenu*.vue (menu family in mar/shell/marShell.css)',
+      'mar/CreateMenu.vue, mar/MarWorkspaceMenu.vue, parts/PromptBox.vue, parts/nav/SwitcherMenu.vue, ui/DropdownMenu*.vue (menu family in mar/shell/marShell.css, layers in mar/menus/layers.css)',
     use: 'Any list of actions or choices that opens from a trigger.',
     component: lazy(() => import('./pages/MenusPage.vue'))
   },
