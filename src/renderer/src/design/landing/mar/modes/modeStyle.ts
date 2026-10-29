@@ -4,12 +4,11 @@ import { reactive, watch } from 'vue'
  *  (UI Playground › Mode switch), until one is decided. */
 export type ModeStyle = 'pablo' | 'stack' | 'title' | 'split' | 'foot'
 
+// Stack, Title and Foot still render (MarModeSwitch) but are out of the
+// picker: Mar kept Split as the default and Pablo's pill to compare.
 export const MODE_STYLES: { value: ModeStyle; label: string }[] = [
-  { value: 'pablo', label: 'Pill · picked one named (today)' },
-  { value: 'stack', label: 'Stack · three rows that say what each does' },
-  { value: 'title', label: 'Title · the mode is the heading' },
   { value: 'split', label: 'Split · Create or Build, Agent apart' },
-  { value: 'foot', label: 'Foot · switch at the bottom, by the workspace' }
+  { value: 'pablo', label: 'Pill · picked one named (before)' }
 ]
 
 const KEY = 'comfy.design.mar.modeStyle'
@@ -18,9 +17,9 @@ export const modeStyle = reactive<{ id: ModeStyle }>({
   id: (() => {
     try {
       const v = localStorage.getItem(KEY) as ModeStyle | null
-      return v && MODE_STYLES.some((m) => m.value === v) ? v : 'pablo'
+      return v && MODE_STYLES.some((m) => m.value === v) ? v : 'split'
     } catch {
-      return 'pablo'
+      return 'split'
     }
   })()
 })

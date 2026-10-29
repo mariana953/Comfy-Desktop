@@ -697,6 +697,18 @@
   font-weight: 500;
 }
 
+/* Credits as a row (Pablo's): a soft tile so it reads apart from the
+   navigation above and the workspace below. */
+:root .proto-ui.proto-ui.proto-ui .mar-credits-row {
+  height: 36px;
+  margin-bottom: 2px;
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--color-base-foreground) 5%, transparent);
+}
+:root .proto-ui.proto-ui.proto-ui .mar-credits-row:hover {
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+}
+
 /* Credits (UI Playground › Credits): the workspace and the meter fill
    the foot; the chip is small, next to the tabs. */
 :root .proto-ui.proto-ui.proto-ui :is(.mar-side-ws, .mar-side-meter) {

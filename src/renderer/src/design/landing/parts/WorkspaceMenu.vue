@@ -47,6 +47,7 @@ function signOut(): void {
       v-if="shownCredits && !(isMariana && creditsStyle.id !== 'row')"
       variant="ghost"
       class="h-8 justify-start gap-2.5 px-3 text-base-foreground"
+      :class="isMariana && 'mar-credits-row'"
       @click="toast('Manage plan & credits')"
     >
       <span class="size-3.5 shrink-0 rounded-full border-[1.5px] border-[#cfc9b8]" />

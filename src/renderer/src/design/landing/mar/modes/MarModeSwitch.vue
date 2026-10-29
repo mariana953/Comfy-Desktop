@@ -166,7 +166,7 @@ const HINT: Record<string, string> = {
   flex: 1;
   gap: 2px;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
 }
 :root .proto-ui.proto-ui.proto-ui .mms-seg {
@@ -178,7 +178,7 @@ const HINT: Record<string, string> = {
   justify-content: center;
   gap: 6px;
   padding: 0;
-  border-radius: 999px;
+  border-radius: 7px;
   color: var(--color-muted-foreground);
   font-size: 13px;
 }
@@ -194,7 +194,7 @@ const HINT: Record<string, string> = {
   align-items: center;
   justify-content: center;
   padding: 0;
-  border-radius: 999px;
+  border-radius: 10px;
   background: color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-muted-foreground);
 }
