@@ -1626,3 +1626,16 @@
   --mar-tab-radius: calc(var(--radius-control) - 2px);
   --mar-tab-item-radius: calc(var(--mar-tab-radius) - 3px);
 }
+
+/* Tab counts are off for now (Mar): segmented tabs show only their names.
+   Covers Pablo's segmented control and every Mar tab row. */
+:root[data-mar-ui='on']
+  :is(
+    .mar-pseg-count,
+    .mar-ex-count,
+    .mar-fav-count,
+    .mar-proj-count,
+    [role='group'] > button[data-state] > .tabular-nums
+  ) {
+  display: none;
+}

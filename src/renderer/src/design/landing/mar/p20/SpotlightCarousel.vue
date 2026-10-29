@@ -125,7 +125,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
         </div>
       </Transition>
 
-      <div class="absolute bottom-6 left-9 flex items-center gap-1.5" role="tablist">
+      <div class="absolute bottom-6 left-9 flex items-center gap-1.5" role="tablist" data-no-pill>
         <button
           v-for="(s, i) in SLIDES"
           :key="s.id"

@@ -11,8 +11,14 @@ import { isMariana } from '../proposal'
  * that mount later get the indicator too.
  */
 
-const GROUPS = "[role='group']:has(> button[data-state]), .mar-seg"
-const PICKED = "button[data-state='on'], button[aria-pressed='true']"
+// Every segmented control, whatever it's built from: reka toggle groups,
+// `.mar-seg` rows and role=tablist rows (page tabs, Explore, Favorites,
+// template and deploy modals). Not tablists that aren't segmented: the
+// banner and carousel dots (`data-no-pill`), the code sample's buttons and
+// underline tabs (`.mar-proj-tabs`), which have their own indicator.
+const GROUPS =
+  "[role='group']:has(> button[data-state]), .mar-seg, [role='tablist']:not([data-no-pill], .mar-proj-tabs):has(> button[aria-selected])"
+const PICKED = "button[data-state='on'], button[aria-pressed='true'], button[aria-selected='true']"
 
 function place(group: HTMLElement): void {
   let pill = group.querySelector<HTMLElement>(':scope > .mar-tab-pill')

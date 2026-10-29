@@ -167,6 +167,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
       <div
         class="absolute inset-x-0 bottom-5 z-10 flex justify-center gap-1.5"
         role="tablist"
+        data-no-pill
         aria-label="What's new slides"
       >
         <button

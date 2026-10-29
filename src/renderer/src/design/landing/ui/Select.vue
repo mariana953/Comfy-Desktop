@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends string">
-import { Check, ChevronDown } from 'lucide-vue-next'
+import { ArrowUpDown, Check, ChevronDown } from 'lucide-vue-next'
 import {
   SelectContent,
   SelectItem,
@@ -13,6 +13,7 @@ import {
 } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { cn } from './cn'
+import { isMariana } from '../mar/proposal'
 import { fieldVariants, type FieldVariants } from './field.variants'
 import { floatingSurface, menuItem } from './menu.styles'
 import { PORTAL_TO } from './portal'
@@ -59,7 +60,15 @@ const model = defineModel<T>({ required: true })
         )
       "
     >
-      <span v-if="label" class="text-subtle-foreground">{{ label }}</span>
+      <!-- Mar's proposal: Sort is an icon, not a word (the label stays
+           as the accessible name). -->
+      <ArrowUpDown
+        v-if="isMariana && label === 'Sort'"
+        :size="14"
+        class="shrink-0 text-subtle-foreground"
+        aria-hidden="true"
+      />
+      <span v-else-if="label" class="text-subtle-foreground">{{ label }}</span>
       <SelectValue class="truncate" />
       <ChevronDown :size="13" class="ml-auto shrink-0 text-subtle-foreground" />
     </SelectTrigger>

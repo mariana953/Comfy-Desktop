@@ -49,7 +49,7 @@ async function onCopy(): Promise<void> {
 <template>
   <div class="mar-bs-code">
     <div class="mar-bs-code-bar">
-      <span v-if="options.length" class="flex items-center gap-1" role="tablist">
+      <span v-if="options.length" class="flex items-center gap-1" role="tablist" data-no-pill>
         <button
           v-for="o in options"
           :key="o.value"
