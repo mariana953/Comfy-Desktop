@@ -75,7 +75,8 @@ const tone = computed(() =>
     <Clock v-else-if="status === 'queued'" :size="11" />
     <Users v-else-if="status === 'shared'" :size="11" />
     <ArrowUpCircle v-else-if="status === 'update'" :size="11" />
-    <i v-else-if="status !== 'draft'" class="mar-status-dot" />
+    <i v-else-if="status === 'draft'" class="mar-status-dot is-hollow" />
+    <i v-else class="mar-status-dot" />
     {{ label ?? WORDS[status] }}
   </span>
 </template>
@@ -144,5 +145,12 @@ const tone = computed(() =>
   .is-go .mar-status-dot {
     animation: none;
   }
+}
+/* Draft / Unsaved: production marks unsaved work with a dot; hollow here
+   so it reads as "not saved yet" rather than a live state. */
+.mar-status-dot.is-hollow {
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  animation: none !important;
 }
 </style>

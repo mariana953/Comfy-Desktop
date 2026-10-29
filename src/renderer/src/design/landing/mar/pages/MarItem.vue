@@ -228,7 +228,7 @@ function click(e: MouseEvent): void {
   height: 56px;
   align-items: center;
   gap: 14px;
-  padding: 0 8px 0 40px;
+  padding: 0 8px 0 10px;
   border-radius: 12px;
 }
 .mar-item.is-grid:hover,
@@ -274,13 +274,30 @@ function click(e: MouseEvent): void {
 .mar-item-media img.is-contain {
   object-fit: contain;
 }
+/* No picture yet (e.g. a new workflow): the canvas's dot grid, and the
+   kind's icon on a small tile, so it reads as an empty graph, not a gap. */
 .mar-item-glyph {
   display: flex;
   width: 100%;
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: var(--color-subtle-foreground);
+  background-image: radial-gradient(
+    color-mix(in oklch, var(--color-base-foreground) 14%, transparent) 1px,
+    transparent 1.2px
+  );
+  background-size: 14px 14px;
+  background-position: center;
+  color: var(--color-muted-foreground);
+}
+.is-grid .mar-item-glyph > svg {
+  box-sizing: content-box;
+  padding: 14px;
+  border-radius: var(--radius-control);
+  background: var(--color-card-background);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 8%, transparent),
+    0 8px 24px -10px rgb(0 0 0 / 0.5);
 }
 .mar-item-status {
   position: absolute;
@@ -333,11 +350,14 @@ function click(e: MouseEvent): void {
   opacity: 0;
   transition: opacity 140ms ease;
 }
+/* In a list the check sits on the thumbnail (no gutter of its own), so the
+   row keeps a tight edge at rest and on hover. */
 .is-list .mar-item-check {
   top: 18px !important;
-  left: 12px !important;
-  background: transparent !important;
-  box-shadow: inset 0 0 0 1.5px var(--color-border-strong) !important;
+  left: 20px !important;
+}
+.mar-item.is-list:is(:hover, :focus-within, .is-selecting, .is-selected) .mar-item-media img {
+  opacity: 0.45;
 }
 .mar-item:is(:hover, :focus-within, .is-selecting, .is-selected) .mar-item-check {
   opacity: 1;
@@ -378,18 +398,26 @@ function click(e: MouseEvent): void {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Rename in place: the name itself becomes editable, on a lifted field
+   with a soft ring; selection stays neutral, not browser blue. */
 :root .proto-ui.proto-ui.proto-ui .mar-item-rename {
-  height: 22px;
-  margin: -2px -4px;
-  padding: 0 4px;
+  width: calc(100% + 12px);
+  height: 26px;
+  margin: -4px -6px;
+  padding: 0 6px;
   border: 0;
-  border-radius: 6px;
-  background: var(--color-content-background);
-  box-shadow: inset 0 0 0 1px var(--color-border-focus);
+  border-radius: calc(var(--radius-control) - 4px);
+  background: color-mix(in oklch, var(--color-base-foreground) 8%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 22%, transparent),
+    0 0 0 3px color-mix(in oklch, var(--color-base-foreground) 6%, transparent);
   color: var(--color-base-foreground);
   font-size: 13px;
   font-weight: 500;
   outline: none;
+}
+.mar-item-rename::selection {
+  background: color-mix(in oklch, var(--color-base-foreground) 26%, transparent);
 }
 .mar-item-col {
   flex-shrink: 0;
@@ -430,7 +458,7 @@ function click(e: MouseEvent): void {
   height: 28px;
   align-items: center;
   gap: 14px;
-  padding: 0 8px 0 94px;
+  padding: 0 8px 0 64px;
   color: var(--color-subtle-foreground);
   font-size: 11px;
   font-weight: 500;
