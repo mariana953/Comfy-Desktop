@@ -18,6 +18,7 @@ import { CREDITS_STATES, CREDITS_STYLES, creditsState, creditsStyle } from './cr
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 import { FIRST_RUNS, firstRun } from './firstRun'
+import { LOCAL_SETUPS, MACHINES, localSetup, openSetup } from './setup/setupFlow'
 import { MAR_LOCALS, MAR_USERS, marUser, setUser } from './userStates/userState'
 import { PAGE_STATES, pageState } from './pages/pageState'
 import { LOOKS, marLook } from './looks/looks'
@@ -439,6 +440,43 @@ function set(key: keyof Tuning, value: string): void {
               @update:model-value="(v: string) => ((p20 as Record<string, string>)[r.key] = v)"
             />
           </label>
+        </div>
+      </details>
+
+      <!-- Local setup (mar/setup): the proposed install flow, still being
+           defined, so it sits last and folded. -->
+      <details v-if="isMariana" class="mar-tuner-more">
+        <summary class="cursor-pointer text-ui text-subtle-foreground">
+          Local setup · New Instance and “This computer”
+        </summary>
+        <div class="mt-2.5 flex flex-col gap-1.5">
+          <div class="mar-seg flex gap-1 rounded-control bg-secondary-background p-0.5">
+            <button
+              v-for="s in LOCAL_SETUPS"
+              :key="s.value"
+              type="button"
+              :aria-pressed="localSetup.mode === s.value"
+              :class="[
+                'h-7 flex-1 rounded-[7px] px-2 text-ui outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+                localSetup.mode === s.value
+                  ? 'bg-secondary-background-hover font-medium text-base-foreground'
+                  : 'text-muted-foreground hover:text-base-foreground'
+              ]"
+              @click="localSetup.mode = s.value"
+            >
+              {{ s.label }}
+            </button>
+          </div>
+          <template v-if="localSetup.mode === 'on'">
+            <Select v-model="localSetup.machine" :options="MACHINES" class="w-full" />
+            <button
+              type="button"
+              class="self-start text-ui text-muted-foreground underline-offset-2 hover:text-base-foreground hover:underline"
+              @click="openSetup()"
+            >
+              Open the flow
+            </button>
+          </template>
         </div>
       </details>
 

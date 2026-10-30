@@ -1,0 +1,519 @@
+/* Mar's proposed local setup (MarSetupFlow.vue), inside her step-modal
+ * surface (`.mar-wizard` in shell/marShell.css): soft panels and hairlines
+ * drawn from the theme's ink, so light and dark both hold. Brand yellow
+ * only on install progress, the one "moment" the design system allows it.
+ *
+ * In a layer: the prototype's control reset (ui/tokens.css) reverts to
+ * layered styles, so buttons, labels and inputs here keep theirs. */
+@layer components {
+  .mss,
+  .mss-pill-wrap {
+    --mss-brand: oklch(0.93 0.19 110);
+  }
+  /* On white the brand yellow washes out: the same hue, deeper. */
+  :root[data-ds-theme='light'] :is(.mss, .mss-pill-wrap) {
+    --mss-brand: oklch(0.72 0.17 108);
+  }
+  .mss {
+    --wiz-ink: var(--color-base-foreground);
+    --mss-soft: color-mix(in oklch, var(--wiz-ink) 4%, transparent);
+    --mss-soft-hover: color-mix(in oklch, var(--wiz-ink) 7%, transparent);
+    --mss-line: color-mix(in oklch, var(--wiz-ink) 8%, transparent);
+    --mss-line-strong: color-mix(in oklch, var(--wiz-ink) 16%, transparent);
+    --mss-danger-soft: color-mix(in oklch, var(--color-status-danger) 10%, transparent);
+    --mss-danger-line: color-mix(in oklch, var(--color-status-danger) 32%, transparent);
+  }
+
+  /* Body: scrolls on short windows, the footer stays put. Blocks sit 20
+   * apart; the description hugs its title (marShell.css). */
+  .mss-body {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    overflow-y: auto;
+    animation: mss-step 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mss-body > * + * {
+    margin-top: 20px;
+  }
+  @keyframes mss-step {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  /* Footer bar: actions on the right, the way out on the left. */
+  .mss-foot {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Row options (New Instance, Intel): Mar's row cards, 72 tall, a 40 icon
+   * tile, the title and one line, a chevron at the end. */
+  .mss-opts {
+    display: grid;
+    gap: 8px;
+  }
+  .mss-opt {
+    display: flex;
+    width: 100%;
+    min-height: 72px;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    background-color: var(--mss-soft);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    text-align: left;
+    outline: none;
+    transition:
+      background-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .mss-opt:hover {
+    background-color: var(--mss-soft-hover);
+    box-shadow: inset 0 0 0 1px var(--mss-line-strong);
+  }
+  .mss-opt:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-border-focus);
+  }
+  .mss-opt-icon {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: var(--mss-soft-hover);
+    color: var(--color-muted-foreground);
+  }
+  /* Same tile as Cloud on the first-run Home (MarStartWhere.vue). */
+  .mss-opt-icon.is-cloud {
+    background: linear-gradient(135deg, #f9d7e6, #d9d4fb 50%, #c9f0e1);
+    color: #3b2f55;
+  }
+  .mss-opt-text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+  }
+  /* Picked option (Intel): the ring and a filled radio at the end. */
+  .mss-opt[data-state='checked'] {
+    background-color: var(--mss-soft-hover);
+    box-shadow: inset 0 0 0 1.5px var(--color-base-foreground);
+  }
+  .mss-opt-radio {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1.5px var(--mss-line-strong);
+    transition: box-shadow 160ms ease;
+  }
+  .mss-opt[data-state='checked'] .mss-opt-radio {
+    box-shadow: inset 0 0 0 5px var(--color-base-foreground);
+  }
+  .mss-opt-arrow {
+    flex-shrink: 0;
+    color: var(--color-subtle-foreground);
+    transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mss-opt:hover .mss-opt-arrow {
+    transform: translateX(2px);
+    color: var(--color-muted-foreground);
+  }
+
+  /* What the checks found: one soft panel, a hairline between rows. */
+  .mss-sum {
+    overflow: hidden;
+    border-radius: 14px;
+    background-color: var(--mss-soft);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+  }
+  .mss-sum-head {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px 0 16px;
+    box-shadow: inset 0 -1px 0 var(--mss-line);
+  }
+  .mss-sum-row {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) 16px;
+    align-items: start;
+    gap: 16px;
+    padding: 12px 16px;
+  }
+  .mss-sum-row + .mss-sum-row {
+    box-shadow: inset 0 1px 0 var(--mss-line);
+  }
+  .mss-sum-key {
+    color: var(--color-subtle-foreground);
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+  }
+  .mss-sum-val {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    color: var(--color-base-foreground);
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+  }
+  .mss-ok,
+  .mss-bad {
+    margin-top: 2px;
+  }
+  .mss-ok {
+    color: var(--color-status-running);
+  }
+  .mss-bad {
+    color: var(--color-status-danger);
+  }
+  .mss-sum-row.is-bad {
+    background-color: var(--mss-danger-soft);
+  }
+  .mss-fix {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  /* Callouts: an earlier install (info) or a failed step (error). */
+  .mss-callout {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background-color: var(--mss-soft);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+  }
+  .mss-callout-icon {
+    margin-top: 2px;
+    color: var(--color-muted-foreground);
+  }
+  .mss-callout.is-err {
+    background-color: var(--mss-danger-soft);
+    box-shadow: inset 0 0 0 1px var(--mss-danger-line);
+  }
+  .mss-callout.is-err .mss-callout-icon {
+    color: var(--color-status-danger);
+  }
+
+  /* Consent: the box and its sentence on one line, links underlined. */
+  .mss-consent {
+    display: grid;
+    gap: 10px;
+  }
+  .mss-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+    cursor: pointer;
+  }
+  .mss-link {
+    color: var(--color-base-foreground);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 160ms ease;
+  }
+  .mss-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* Change setup */
+  .mss-fields {
+    display: grid;
+    gap: 20px;
+  }
+  .mss-field {
+    display: grid;
+    gap: 8px;
+  }
+  .mss-radio {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background-color: var(--mss-soft);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    text-align: left;
+    outline: none;
+    transition:
+      background-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .mss-radio:hover {
+    background-color: var(--mss-soft-hover);
+  }
+  .mss-radio[data-state='checked'] {
+    background-color: var(--mss-soft-hover);
+    box-shadow: inset 0 0 0 1.5px var(--color-base-foreground);
+  }
+  .mss-radio:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-border-focus);
+  }
+
+  /* Progress */
+  .mss-prog {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    background-color: var(--mss-soft);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+  }
+  .mss-prog-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-right: 24px;
+  }
+  .mss-bar {
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background-color: var(--mss-line);
+  }
+  .mss-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--mss-brand);
+    transition: width 180ms linear;
+  }
+  .mss-prog.is-err .mss-bar i {
+    background-color: var(--color-status-danger);
+  }
+  .mss-phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    color: var(--color-subtle-foreground);
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+  }
+  .mss-phases li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mss-phases [data-phase='done'] {
+    color: var(--color-muted-foreground);
+  }
+  .mss-phases [data-phase='done'] svg {
+    color: var(--color-status-running);
+  }
+  .mss-phases [data-phase='now'] {
+    color: var(--color-base-foreground);
+  }
+  .mss-phases [data-phase='now'] svg {
+    color: var(--mss-brand);
+  }
+  .mss-phases [data-phase='fail'] {
+    color: var(--color-status-danger);
+  }
+  .mss-phase-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+    opacity: 0.6;
+  }
+  .mss-spin {
+    animation: mss-spin 900ms linear infinite;
+  }
+  @keyframes mss-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .mss-logs-toggle {
+    display: inline-flex;
+    justify-self: start;
+    align-items: center;
+    gap: 4px;
+    margin-left: -4px;
+    padding: 2px 4px;
+    border-radius: 6px;
+    color: var(--color-subtle-foreground);
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+    outline: none;
+  }
+  .mss-logs-toggle:hover {
+    color: var(--color-base-foreground);
+  }
+  .mss-logs-toggle:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-border-focus);
+  }
+  .mss-logs-toggle svg {
+    transition: transform 200ms ease;
+  }
+  .mss-logs {
+    max-height: 144px;
+    overflow: auto;
+    padding: 12px;
+    border-radius: 10px;
+    background-color: color-mix(in oklch, var(--wiz-ink) 5%, transparent);
+    box-shadow: inset 0 0 0 1px var(--mss-line);
+    color: var(--color-muted-foreground);
+    font:
+      12px/1.6 ui-monospace,
+      Menlo,
+      monospace;
+    white-space: pre-wrap;
+  }
+  .mss-logs .e {
+    color: var(--color-status-danger);
+  }
+
+  /* The pick */
+  .mss-pick {
+    display: grid;
+    gap: 16px;
+  }
+  .mss-pick-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .mss-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .mss-card {
+    min-width: 0;
+  }
+  .mss-card > div:last-child {
+    gap: 2px;
+    padding: 8px 6px 4px;
+  }
+  .mss-card.is-nofit {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .mss-card.is-nofit img {
+    filter: grayscale(0.6);
+  }
+  .mss-card-check {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background-color: var(--color-inverted-background);
+    color: var(--color-inverted-foreground);
+    animation: mss-pop 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes mss-pop {
+    from {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  /* Background pill: the step modal's smoked glass, small. */
+  .mss-pill-wrap {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 65;
+  }
+  .mss-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px 10px 12px;
+    border-radius: 16px;
+    background-color: color-mix(
+      in oklch,
+      color-mix(in oklch, var(--color-base-foreground) 5%, var(--color-card-background)) 90%,
+      transparent
+    );
+    backdrop-filter: blur(32px) saturate(1.3);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklch, var(--color-base-foreground) 10%, transparent),
+      var(--shadow-popover);
+    outline: none;
+    transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mss-pill:hover {
+    transform: translateY(-2px);
+  }
+  .mss-pill:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-border-focus),
+      var(--shadow-popover);
+  }
+  .mss-pill-ring {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--mss-brand) calc(var(--p) * 1%),
+      color-mix(in oklch, var(--color-base-foreground) 12%, transparent) 0
+    );
+    mask: radial-gradient(circle, transparent 7px, black 7.5px);
+  }
+  .mss-pill-enter-active,
+  .mss-pill-leave-active {
+    transition:
+      opacity 200ms ease,
+      transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mss-pill-enter-from,
+  .mss-pill-leave-to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  @media (max-width: 760px) {
+    .mss-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .mss-pick-head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mss-body,
+    .mss-card-check,
+    .mss-spin {
+      animation: none;
+    }
+    .mss-pill,
+    .mss-opt-arrow,
+    .mss-pill-enter-active,
+    .mss-pill-leave-active {
+      transition: none;
+    }
+  }
+}
+
+/* Chips on imagery stay dark in both themes, as on Mar's app page. Outside
+ * the layer so it wins over the Badge's overlay utility. */
+.mss-card .bg-media-overlay {
+  background-color: oklch(0 0 0 / 0.5);
+  color: oklch(1 0 0 / 0.9);
+}
