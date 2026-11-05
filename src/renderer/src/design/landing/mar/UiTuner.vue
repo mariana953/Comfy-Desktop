@@ -20,6 +20,7 @@ import { CREDITS_STATES, creditsState } from './credits'
 import { P20, p20 } from './p20/p20'
 import { GRAPH_STYLES, graphStyle } from './graph/graphStyle'
 import { FIRST_RUNS, firstRun } from './firstRun'
+import { LOCAL_SETUPS, MACHINES, localSetup, openSetup } from './setup/setupFlow'
 import { EXAMPLE_LOOKS, exampleLook } from './userStates/exampleLook'
 import { EDITOR_ENTRIES, editorEntry } from './userStates/editorEntry'
 import { MAR_LOCALS, MAR_USERS, marUser, setUser } from './userStates/userState'
@@ -292,6 +293,30 @@ function onScroll(e: Event): void {
             <Seg v-model="graphStyle.id" label="Graph look" :options="GRAPH_STYLES" />
           </Row>
           <Row :show="shows('ports')"><NavOptionsTuner /></Row>
+        </section>
+
+        <!-- Local setup (mar/setup): the proposed install flow behind New
+             Instance and "This computer". Still being defined. -->
+        <section v-if="isMariana" aria-label="Local setup" class="mt-6 flex flex-col">
+          <GroupHead
+            title="Local setup"
+            note="New Instance"
+            :changed="dirty(['localSetup'])"
+            @reset="resetGroup(['localSetup'])"
+          />
+          <Row label="Flow">
+            <Seg v-model="localSetup.mode" label="Flow" :options="LOCAL_SETUPS" />
+          </Row>
+          <template v-if="localSetup.mode === 'on'">
+            <Row label="This computer">
+              <Select v-model="localSetup.machine" :options="MACHINES" class="w-full" />
+            </Row>
+            <Row>
+              <Button variant="ghost" size="sm" class="-ml-2 self-start" @click="openSetup()"
+                >Open the flow</Button
+              >
+            </Row>
+          </template>
         </section>
 
         <!-- More: the screen simulator, the token knobs and the Figma

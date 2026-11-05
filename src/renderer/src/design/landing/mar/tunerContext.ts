@@ -28,6 +28,7 @@ import { marLook } from './looks/looks'
 import { PORTS, ports, type Port } from './navOptions'
 import { dep, scenarioPick } from './deploy/deployData'
 import { pageTransition } from './motion/pageTransition'
+import { localSetup } from './setup/setupFlow'
 
 /**
  * UI Playground: when each tweak changes what's on screen, so the panel
@@ -204,6 +205,11 @@ export const TWEAKS = {
   ports: {
     isDefault: () => PORTS.every((p) => !ports[p.key]),
     reset: () => PORTS.forEach((p) => (ports[p.key] = false))
+  },
+  // Local setup: Today's toast until the proposal is switched on.
+  localSetup: {
+    isDefault: () => localSetup.mode === 'off' && localSetup.machine === 'ready',
+    reset: () => Object.assign(localSetup, { mode: 'off', machine: 'ready' })
   },
   look: one(marLook, 'current'),
   knobs: {
