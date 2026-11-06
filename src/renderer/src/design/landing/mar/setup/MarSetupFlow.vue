@@ -1,70 +1,67 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
-  ArrowDownToLine,
+  ArrowLeft,
   ArrowLeftRight,
   Check,
   ChevronDown,
-  ChevronRight,
-  CircleCheck,
   Cloud,
   Copy,
-  FolderOpen,
+  Cpu,
+  Crown,
+  FolderArchive,
   HardDrive,
-  History,
-  Laptop,
+  LoaderCircle,
   Package,
-  SlidersHorizontal,
   TriangleAlert,
-  X
+  Users,
+  Zap
 } from 'lucide-vue-next'
 import { DialogDescription, DialogRoot, DialogTitle, RadioGroupItem, RadioGroupRoot } from 'reka-ui'
 import ChoiceCard from '../../../../components/ChoiceCard.vue'
-import ComfyCLogo from '../../../../components/icons/ComfyCLogo.vue'
-import Badge from '../../ui/Badge.vue'
+import RunOnCards from './RunOnCards.vue'
+import SetupCanvas from './SetupCanvas.vue'
+import SetupSteps from './SetupSteps.vue'
+import ComfyWordmark from '../../../../components/icons/ComfyWordmark.vue'
 import Button from '../../ui/Button.vue'
 import Checkbox from '../../ui/Checkbox.vue'
 import DialogContent from '../../ui/DialogContent.vue'
 import Input from '../../ui/Input.vue'
-import MediaCard from '../../ui/MediaCard.vue'
 import Select from '../../ui/Select.vue'
 import MarSeg from '../pages/MarSeg.vue'
-import { cn } from '../../ui/cn'
+import en from '@locales/en.json'
 import { PORTAL_TO } from '../../ui/portal'
 import { hostActions, toast } from '../../useProto'
 import {
   DETECTED,
   STARTERS,
   backFromError,
+  canvas,
   cancelInstall,
   chooseCloud,
   chooseLocal,
   closeSetup,
-  dismissReady,
-  fits,
   flow,
   localSetup,
   lowSpace,
-  openReady,
   phaseIndex,
   phases,
   retryInstall,
   setupOn,
   startInstall,
-  toBackground,
-  toForeground,
   unsupported,
   type Starter
 } from './setupFlow'
-import SetupBloom from './SetupBloom.vue'
+import SetupLaptop from './SetupLaptop.vue'
 import './setup.css'
 
 /**
  * Mar's proposed local setup (UI Playground › Local setup › Proposal), in
  * her step-modal family (New space): one smoked-glass modal over the app,
- * the content, then a footer bar with the actions. Set up shows what the
- * checks found and installs in one click; the install shows its progress
- * with the workflow pick in the wait. Copy is the product's, in English.
+ * the content, then a footer bar with the actions. Set up sums up today's
+ * Configure with what the checks found; the template step and the install
+ * wait are today's.
+ * Copy is the product's, in English.
  */
 const open = computed({
   get: () => setupOn.value && flow.open && flow.step !== 'first',
@@ -73,41 +70,107 @@ const open = computed({
   }
 })
 
-const imgUrl = (f: string): string => new URL(`../assets/${f}`, import.meta.url).href
-
-const where = computed(() =>
-  flow.movedDisk ? `/Volumes/${DETECTED.otherDisk.name}/ComfyUI` : DETECTED.path
-)
+const where = computed(() => (flow.movedDisk ? DETECTED.otherPath : DETECTED.path))
 const free = computed(() =>
   flow.movedDisk ? DETECTED.otherDisk.freeGb : lowSpace.value ? DETECTED.lowFreeGb : DETECTED.freeGb
 )
 const freeLabel = (gb: number): string => (gb >= 1000 ? `${(gb / 1000).toFixed(1)} TB` : `${gb} GB`)
 
 // First launch, as shipped today: Local picked, terms off until ticked,
-// usage data and beta on. Consent is asked here once, not in Set up. No
-// Express Install: Set up is already the one-click path, with what it will
-// install in view.
+// usage data and beta on, Express off. Consent is asked here once, not in
+// Set up. Express skips Set up and the template step and installs with
+// the recommended settings, as today.
 const firstOpen = computed(() => setupOn.value && flow.open && flow.step === 'first')
 const runOn = ref<'cloud' | 'local'>('local')
 const terms = ref(false)
 const usage = ref(true)
 const beta = ref(true)
+const express = ref(false)
+// Continue is always on: without the terms it points at them instead.
+const termsAsk = ref(false)
 function continueFirst(): void {
-  if (runOn.value === 'cloud') chooseCloud()
+  if (!terms.value) termsAsk.value = true
+  else if (runOn.value === 'cloud') chooseCloud()
+  else if (express.value && !unsupported.value) installWith(null)
   else chooseLocal()
 }
 
 // Today's estimate: the download, unpacked, takes about 2.25 times its size.
 const REQUIRED_GB = (DETECTED.downloadGb * 2.25).toFixed(1)
 
-const canInstall = computed(() => !lowSpace.value && !unsupported.value)
-
-// Intel Mac: pick the way to run it, then one action follows the pick.
-const intelWay = ref<'cloud' | 'server'>('cloud')
-function continueIntel(): void {
-  if (intelWay.value === 'cloud') hostActions.signIn()
-  else toast('Connect: enter the server address')
+// Set up › Continue: low space asks first, as today. M1 has no Home, so the
+// starter workflow stays a step here, as today. Once the Home exists it
+// offers them after the install instead (StarterShelf.vue).
+const workflowStep = computed(() => localSetup.scope === 'm1')
+function continueSetup(): void {
+  if (lowSpace.value) flow.confirmLowDisk = true
+  else toTemplates()
 }
+function toTemplates(): void {
+  flow.confirmLowDisk = false
+  if (workflowStep.value) flow.step = 'template'
+  else installWith(null)
+}
+const stepNow = computed(() => {
+  if (flow.step === 'setup' || flow.step === 'change') return 2
+  return flow.step === 'template' || !workflowStep.value ? 3 : 4
+})
+const pickedGb = computed(() =>
+  (DETECTED.downloadGb + (flow.picked?.credits ? 0 : (flow.picked?.gb ?? 0))).toFixed(1)
+)
+const dontShowTemplates = ref(false)
+const TABS = [
+  { value: 'image' as const, label: 'Image' },
+  { value: 'video' as const, label: 'Video' },
+  { value: '3d' as const, label: '3D' },
+  { value: 'audio' as const, label: 'Audio' }
+]
+function pick(s: Starter): void {
+  flow.picked = flow.picked?.id === s.id ? null : s
+}
+// Template pictures where the workflow has one; a stock photo otherwise.
+const THUMBS = import.meta.glob<string>('../assets/templates/*.webp', {
+  eager: true,
+  import: 'default'
+})
+const starterImg = (s: Starter): string =>
+  (s.thumb && THUMBS[`../assets/templates/${s.thumb}.webp`]) || imgUrl(s.img)
+// Three to a tab, so the cards have Explore's room: the recommended one, a
+// lighter one and the one that runs on credits.
+const shownStarters = computed(() => {
+  const all = STARTERS[flow.tab]
+  return [...all.filter((s) => !s.credits).slice(0, 2), ...all.filter((s) => s.credits)]
+})
+// Today's card: the model's name over its task, split from the title.
+const starterName = (s: Starter): string => s.title.split(': ')[0] ?? s.title
+const starterTask = (s: Starter): string => s.title.split(': ')[1] ?? s.task ?? ''
+// Today's disk check: a workflow whose models don't fit can't be installed.
+const starterBlocked = computed(() => lowSpace.value && !!flow.picked && !flow.picked.credits)
+function installWith(s: Starter | null): void {
+  flow.picked = s
+  startInstall()
+}
+const imgUrl = (f: string): string => new URL(`../assets/${f}`, import.meta.url).href
+// The install wait's outputs: today's showcase clips, one at a time in a
+// single panel.
+const CLIPS = [
+  { id: 'eye', src: './install-showcase-scene/Assets/eye.webm', poster: 'mock/clip-eye.jpg' },
+  {
+    id: 'clouds',
+    src: './install-showcase-scene/Assets/clouds.webm',
+    poster: 'mock/clip-clouds.jpg'
+  },
+  {
+    id: 'mountains',
+    src: './install-showcase-scene/Assets/dusk_mountains.webm',
+    poster: 'mock/clip-dusk-mountains.jpg'
+  },
+  {
+    id: 'flower',
+    src: './install-showcase-scene/Assets/flower.webm',
+    poster: 'mock/clip-flower.jpg'
+  }
+]
 
 // Change setup: the fields start on what fits this computer.
 const name = ref('ComfyUI')
@@ -115,21 +178,38 @@ const channel = ref<'stable' | 'latest'>('stable')
 const hardware = ref<'mps' | 'cpu'>('mps')
 // Today's install methods on a Mac (Portable is Windows only). Managed
 // builds need a sign-in; a remote server needs only its address.
-const method = ref<'public' | 'managed' | 'remote'>('public')
-const METHODS = [
-  { value: 'public' as const, label: 'Public Builds' },
-  { value: 'managed' as const, label: 'Managed Builds' },
-  { value: 'remote' as const, label: 'Remote Connection' }
-]
+const method = ref<'public' | 'managed' | 'portable' | 'remote'>('public')
+// Remote Connection isn't a source of ComfyUI, so it's a link under the form.
+const SOURCES = computed(() => [
+  { value: 'public' as const, label: 'Official release', meta: 'Public builds', icon: Package },
+  {
+    value: 'managed' as const,
+    label: "Your team's builds",
+    meta: 'Managed builds',
+    icon: Users
+  },
+  // Today's Portable, in its own words; Windows only.
+  ...(localSetup.os === 'windows'
+    ? [
+        {
+          value: 'portable' as const,
+          label: say('portable.label'),
+          meta: say('portable.desc'),
+          icon: FolderArchive
+        }
+      ]
+    : [])
+])
 const serverUrl = ref('')
 const version = ref(DETECTED.version)
+const CPU_MB = 480
 const VERSIONS = [
   { value: DETECTED.version, label: DETECTED.version, hint: 'Latest stable' },
   { value: 'v0.42.3', label: 'v0.42.3' },
   { value: 'v0.42.2', label: 'v0.42.2' }
 ]
 
-// Back leaves Change setup as it found it; Done keeps the edits.
+// Discard leaves Change setup as it found it; Save keeps the edits.
 const draft = () => ({
   method: method.value,
   serverUrl: serverUrl.value,
@@ -158,74 +238,88 @@ const CHANNELS = [
   { value: 'stable' as const, label: 'Stable' },
   { value: 'latest' as const, label: 'Latest on GitHub' }
 ]
-const HARDWARE = [
-  { value: 'mps' as const, label: DETECTED.build, hint: `Matches your ${DETECTED.chip}` },
-  { value: 'cpu' as const, label: 'CPU only', hint: 'Slow. For testing.' }
-]
-
-const TABS = [
-  { value: 'image' as const, label: 'Image' },
-  { value: 'video' as const, label: 'Video' },
-  { value: '3d' as const, label: '3D' },
-  { value: 'audio' as const, label: 'Audio' }
-]
-
-function pick(s: Starter): void {
-  if (!fits(s)) return
-  flow.picked = flow.picked?.id === s.id ? null : s
-}
-const sizeOf = (s: Starter): string => (s.credits ? 'No download' : `${s.gb} GB of models`)
-const freeAfter = computed(() =>
-  Math.round(free.value - DETECTED.downloadGb - (flow.picked?.gb ?? 0))
+// A computer with no GPU has one choice: the CPU it found.
+// Each card says what today's does: ComfyUI, Python and the download, with
+// Recommended on the one that fits. Python and the sizes are mock values.
+const hardwareDetail = (mb: number): string => `ComfyUI ${version.value} · Python 3.12 · ${mb} MB`
+const HARDWARE = computed(() =>
+  DETECTED.build === 'CPU'
+    ? [
+        {
+          value: 'mps' as const,
+          label: 'CPU',
+          meta: hardwareDetail(CPU_MB),
+          summary: 'No GPU acceleration',
+          recommended: true,
+          icon: Cpu
+        }
+      ]
+    : [
+        {
+          value: 'mps' as const,
+          label: DETECTED.build,
+          meta: hardwareDetail(Math.round(DETECTED.downloadGb * 1000)),
+          summary: 'Detected',
+          recommended: true,
+          icon: Zap
+        },
+        {
+          value: 'cpu' as const,
+          label: 'CPU',
+          meta: hardwareDetail(CPU_MB),
+          summary: 'No GPU acceleration',
+          recommended: false,
+          icon: Cpu
+        }
+      ]
+)
+const pickedHardware = computed(
+  () => HARDWARE.value.find((h) => h.value === hardware.value) ?? HARDWARE.value[0]!
 )
 
+// The install wait's Cloud pitch, in the product's own strings.
+const say = (key: string): string =>
+  key.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], en) as string
+
+// It rotates as production's showcase does (useShowcaseCarousel.ts): the
+// nine cards in its order, one every 7 s, held while hovered or focused.
+const PITCHES = ['cloud', 'gpu', 'models', 'partner', 'license', 'nodes', 'loras', 'queue', 'idle']
+const PITCH_MS = 7000
+const pitchAt = ref(0)
+const pitchHeld = ref(false)
+const pitch = computed(() => PITCHES[pitchAt.value % PITCHES.length])
+let pitchTimer: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  pitchTimer = setInterval(() => {
+    if (flow.step === 'installing' && !pitchHeld.value) pitchAt.value++
+  }, PITCH_MS)
+})
+onBeforeUnmount(() => clearInterval(pitchTimer))
+
 const failed = computed(() => flow.step === 'error')
+
+// Like today's stepper: no overall percent, since the whole install can't be
+// timed. Only the download knows its size, so only it gets a detail line.
+const nowIndex = computed(() => (phaseIndex.value < 0 ? phases.value.length - 1 : phaseIndex.value))
+const DOWNLOAD_UNTIL = computed(() => phases.value[0]?.until ?? 100)
+const DOWNLOAD_MB = Math.round(DETECTED.downloadGb * 1000)
+const DOWNLOAD_SPEED = 18
+const stepDetail = computed(() => {
+  if (failed.value || nowIndex.value !== 0) return ''
+  const mb = Math.round((flow.percent / DOWNLOAD_UNTIL.value) * DOWNLOAD_MB)
+  const left = Math.max(1, Math.round((DOWNLOAD_MB - mb) / DOWNLOAD_SPEED))
+  return `${mb} of ${DOWNLOAD_MB} MB · about ${left}s left`
+})
+const downloadPct = computed(() => Math.min(100, (flow.percent / DOWNLOAD_UNTIL.value) * 100))
+function rowState(i: number): string {
+  if (i < nowIndex.value) return 'is-done'
+  if (i > nowIndex.value) return 'is-next'
+  return failed.value ? 'is-fail' : 'is-now'
+}
 </script>
 
 <template>
-  <!-- Background install: a quiet pill, the install keeps going. When it
-       finishes it turns into a ready pill and waits: opening ComfyUI on
-       its own would take the window from whatever the user is doing. -->
-  <Teleport :to="PORTAL_TO">
-    <Transition name="mss-pill" mode="out-in">
-      <div
-        v-if="setupOn && flow.background && flow.ready"
-        key="ready"
-        class="proto-ui mss-pill-wrap"
-        role="status"
-      >
-        <div class="mss-pill is-ready">
-          <span class="mss-pill-done" aria-hidden="true"><Check :size="13" stroke-width="2.5" /></span>
-          <span class="flex flex-col text-left">
-            <span class="text-ui font-medium text-base-foreground">ComfyUI is ready</span>
-            <span class="text-ui text-subtle-foreground">{{
-              flow.picked ? `Opens ${flow.picked.title}` : 'Opens a blank canvas'
-            }}</span>
-          </span>
-          <Button size="sm" variant="primary" class="ml-2" @click="openReady">Open</Button>
-          <button type="button" class="mss-pill-x" aria-label="Dismiss" @click="dismissReady">
-            <X :size="14" />
-          </button>
-        </div>
-      </div>
-      <div
-        v-else-if="setupOn && flow.background && flow.running"
-        key="running"
-        class="proto-ui mss-pill-wrap"
-      >
-        <button type="button" class="mss-pill" aria-label="Show the install" @click="toForeground">
-          <span class="mss-pill-ring" :style="{ '--p': flow.percent }" aria-hidden="true"></span>
-          <span class="flex flex-col text-left">
-            <span class="text-ui font-medium text-base-foreground tabular-nums"
-              >Installing ComfyUI · {{ flow.percent }}%</span
-            >
-            <span class="text-ui text-subtle-foreground">You can keep working</span>
-          </span>
-        </button>
-      </div>
-    </Transition>
-  </Teleport>
-
+  <Teleport v-if="canvas" :to="PORTAL_TO"><SetupCanvas /></Teleport>
   <!-- First launch: today's takeover, unchanged. Local goes on to Set up. -->
   <Teleport :to="PORTAL_TO">
     <Transition name="mss-first">
@@ -237,81 +331,107 @@ const failed = computed(() => flow.step === 'error')
         aria-labelledby="mss-first-title"
       >
         <div class="mss-first-frame">
-          <ComfyCLogo class="mss-first-mark" />
-          <div class="mss-first-hero">
-            <h1 id="mss-first-title" class="mss-first-title">How do you want to run Comfy?</h1>
-            <p class="mss-first-lead">
-              Choose the setup that fits how you work. You can switch later.
-            </p>
-            <!-- Desktop's own ChoiceCard, as on today's first screen. -->
-            <div
-              class="mss-first-cards"
-              role="radiogroup"
-              data-no-pill
-              aria-label="How do you want to run Comfy?"
-            >
-              <ChoiceCard
-                selectable
-                :selected="runOn === 'cloud'"
-                label="Cloud"
-                tagline="Full power. Instant setup."
-                description="Best for **most users** who want powerful GPUs and popular custom nodes, ready anywhere."
-                @click="runOn = 'cloud'"
+          <div v-if="!failed" class="mss-ambient"></div>
+          <ComfyWordmark class="mss-first-mark" />
+          <SetupSteps :now="1" :workflow="workflowStep" />
+          <div class="mss-col">
+            <div class="mss-first-hero">
+              <h1 id="mss-first-title" class="mss-first-title">How do you want to run Comfy?</h1>
+              <p class="mss-first-lead">
+                Choose the setup that fits how you work. You can switch later.
+              </p>
+              <!-- The Home's media cards (RunOnCards), or Desktop's own
+                 ChoiceCard as on today's first screen. -->
+              <RunOnCards
+                v-if="localSetup.cards !== 'today'"
+                v-model="runOn"
+                :variant="localSetup.cards"
               />
-              <ChoiceCard
-                selectable
-                :selected="runOn === 'local'"
-                label="Local"
-                tagline="Full control. Your hardware."
-                description="Best for people who want **full manual control** with versions, custom nodes, and offline workflows."
-                @click="runOn = 'local'"
-              />
-            </div>
-            <!-- Migrate is a Local option; it keeps its room while Cloud is
-                 picked, so switching cards doesn't move the screen. -->
-            <div
-              v-if="localSetup.machine === 'legacy'"
-              class="mss-first-mods"
-              :class="runOn !== 'local' && 'is-off'"
-              :aria-hidden="runOn !== 'local'"
-            >
-              <label class="mss-check">
-                <Checkbox v-model="flow.bringOver" />
-                <span
-                  ><span class="text-base-foreground">Migrate existing instance</span>
-                  <span class="mss-first-hint"
-                    >Bring over <b>workflows, models, and settings</b> from your existing ComfyUI
-                    instance.</span
-                  ></span
-                >
-              </label>
-            </div>
-          </div>
-          <div class="mss-first-bottom">
-            <div class="mss-first-consent">
-              <label class="mss-check">
-                <Checkbox v-model="terms" />
-                <span
-                  >I agree to the <a href="#" class="mss-link" @click.prevent>EULA</a> and
-                  <a href="#" class="mss-link" @click.prevent>Terms of Service</a>.</span
-                >
-              </label>
-              <label class="mss-check">
-                <Checkbox v-model="usage" />
-                <span
-                  >Help improve Comfy by sharing anonymous usage data.
-                  <a href="#" class="mss-link" @click.prevent>Learn more</a></span
-                >
-              </label>
-              <label class="mss-check">
-                <Checkbox v-model="beta" :disabled="!usage" />
-                <span>Opt in to beta features and help test what ships next</span>
-              </label>
-            </div>
-            <div class="mss-first-actions">
-              <Button variant="primary" size="lg" :disabled="!terms" @click="continueFirst"
-                >Continue</Button
+              <div
+                v-else
+                class="mss-first-cards"
+                role="radiogroup"
+                data-no-pill
+                aria-label="How do you want to run Comfy?"
               >
+                <ChoiceCard
+                  selectable
+                  :selected="runOn === 'cloud'"
+                  label="Cloud"
+                  tagline="Full power. Instant setup."
+                  description="Best for **powerful GPUs** and popular custom nodes, ready anywhere."
+                  @click="runOn = 'cloud'"
+                />
+                <ChoiceCard
+                  selectable
+                  :selected="runOn === 'local'"
+                  label="Local"
+                  tagline="Full control. Your hardware."
+                  description="Best for **full manual control** of versions, custom nodes, and offline workflows."
+                  @click="runOn = 'local'"
+                />
+              </div>
+              <!-- Migrate and Express are Local options; they keep their room
+                 while Cloud is picked, so switching cards doesn't move the
+                 screen. -->
+              <div
+                class="mss-first-mods"
+                :class="runOn !== 'local' && 'is-off'"
+                :aria-hidden="runOn !== 'local'"
+              >
+                <label v-if="localSetup.machine === 'legacy'" class="mss-check">
+                  <Checkbox v-model="flow.bringOver" />
+                  <span
+                    ><span class="text-base-foreground">Migrate existing instance</span>
+                    <span class="mss-first-hint"
+                      >Bring over <b>workflows, models, and settings</b> from your existing ComfyUI
+                      instance.</span
+                    ></span
+                  >
+                </label>
+                <label class="mss-check">
+                  <Checkbox v-model="express" />
+                  <span
+                    ><span class="text-base-foreground"
+                      >Express Install with recommended settings</span
+                    >
+                    <span class="mss-first-hint" :class="!express && 'is-off'"
+                      >Detected: {{ DETECTED.build }} - if that's not your hardware, uncheck
+                      Express</span
+                    ></span
+                  >
+                </label>
+              </div>
+            </div>
+            <div class="mss-first-bottom">
+              <!-- Consent, one group at the foot of the screen: the terms
+                 first, the one that gates, then usage data and beta, on by
+                 default as today. -->
+              <div class="mss-first-consent">
+                <label class="mss-check mss-terms" :class="termsAsk && !terms && 'is-ask'">
+                  <Checkbox v-model="terms" />
+                  <span class="grid"
+                    ><span
+                      >I agree to the <a href="#" class="mss-link" @click.prevent>EULA</a> and
+                      <a href="#" class="mss-link" @click.prevent>Terms of Service</a>.</span
+                    ><span v-if="termsAsk && !terms" class="mss-terms-ask" role="alert"
+                      >Agree to continue.</span
+                    ></span
+                  >
+                </label>
+                <label class="mss-check">
+                  <Checkbox v-model="usage" />
+                  <span
+                    >Help improve Comfy by sharing anonymous usage data.
+                    <a href="#" class="mss-link" @click.prevent>Learn more</a></span
+                  >
+                </label>
+                <label class="mss-check">
+                  <Checkbox v-model="beta" :disabled="!usage" />
+                  <span>Opt in to beta features and help test what ships next</span>
+                </label>
+              </div>
+              <Button variant="primary" size="lg" @click="continueFirst">Continue</Button>
             </div>
           </div>
         </div>
@@ -323,7 +443,11 @@ const failed = computed(() => flow.step === 'error')
        frame, above the scrim, so the Home never shows behind them. -->
   <Teleport :to="PORTAL_TO">
     <div v-if="open && flow.takeover" class="proto-ui mss-first is-backdrop" aria-hidden="true">
-      <div class="mss-first-frame"><ComfyCLogo class="mss-first-mark" /></div>
+      <div class="mss-first-frame">
+        <div v-if="!failed" class="mss-ambient"></div>
+        <ComfyWordmark class="mss-first-mark" />
+        <SetupSteps :now="stepNow" :workflow="workflowStep" />
+      </div>
     </div>
   </Teleport>
 
@@ -334,234 +458,118 @@ const failed = computed(() => flow.step === 'error')
       :class="flow.takeover && 'mss-in-takeover z-[72]'"
       :closable="!flow.takeover"
     >
-      <!-- New Instance, when ComfyUI already runs here: every way in. -->
-      <template v-if="flow.step === 'chooser'">
-        <div :key="flow.step" class="mar-wizard-body mss-body">
-          <DialogTitle as="h3" class="text-title font-semibold">New Instance</DialogTitle>
-          <DialogDescription>Add another place to run ComfyUI.</DialogDescription>
-          <div class="mss-opts">
-            <button type="button" class="mss-opt" @click="flow.step = 'setup'">
-              <span class="mss-opt-icon is-bloom"><ArrowDownToLine :size="18" /></span>
-              <span class="mss-opt-text">
-                <span class="text-ui font-medium text-base-foreground">Install ComfyUI</span>
-                <span class="text-ui text-subtle-foreground"
-                  >Set up for your {{ DETECTED.chip }}. {{ DETECTED.downloadGb }} GB.</span
-                >
-              </span>
-              <ChevronRight :size="16" class="mss-opt-arrow" />
-            </button>
-            <button
-              type="button"
-              class="mss-opt"
-              @click="toast('Add a folder: pick an existing ComfyUI folder')"
-            >
-              <span class="mss-opt-icon"><FolderOpen :size="18" /></span>
-              <span class="mss-opt-text">
-                <span class="text-ui font-medium text-base-foreground"
-                  >Add a folder you already have</span
-                >
-                <span class="text-ui text-subtle-foreground"
-                  >Use an existing ComfyUI install without reinstalling it.</span
-                >
-              </span>
-              <ChevronRight :size="16" class="mss-opt-arrow" />
-            </button>
-            <button type="button" class="mss-opt" @click="toast('Restore: drop a snapshot .json')">
-              <span class="mss-opt-icon"><History :size="18" /></span>
-              <span class="mss-opt-text">
-                <span class="text-ui font-medium text-base-foreground"
-                  >Restore from a snapshot</span
-                >
-                <span class="text-ui text-subtle-foreground"
-                  >Rebuild an instance from a saved .json snapshot.</span
-                >
-              </span>
-              <ChevronRight :size="16" class="mss-opt-arrow" />
-            </button>
-            <button
-              type="button"
-              class="mss-opt"
-              @click="toast('Connect: enter the server address')"
-            >
-              <span class="mss-opt-icon"><ArrowLeftRight :size="18" /></span>
-              <span class="mss-opt-text">
-                <span class="text-ui font-medium text-base-foreground">Connect to a server</span>
-                <span class="text-ui text-subtle-foreground"
-                  >ComfyUI running on another computer or on your network.</span
-                >
-              </span>
-              <ChevronRight :size="16" class="mss-opt-arrow" />
-            </button>
-          </div>
-        </div>
-      </template>
-
       <!-- Set up: the checks already ran, one Install. -->
-      <template v-else-if="flow.step === 'setup'">
+      <template v-if="flow.step === 'setup'">
         <div :key="flow.step" class="mar-wizard-body mss-body">
           <template v-if="!unsupported">
             <DialogTitle as="h3" class="text-title font-semibold"
-              >Install ComfyUI on this Mac</DialogTitle
+              >Install ComfyUI on {{ DETECTED.noun }}</DialogTitle
             >
             <DialogDescription
               >Checked for your {{ DETECTED.chip }}. Change anything before you
               install.</DialogDescription
             >
 
-            <!-- The machine it checked, on the bloom stage. -->
-            <div class="mss-stage">
-              <SetupBloom />
-              <div class="mss-stage-ui">
-                <div class="mss-stage-top">
-                  <span class="mss-chip" :class="lowSpace ? 'is-bad' : 'is-ok'">
-                    <TriangleAlert v-if="lowSpace" :size="12" />
-                    <Check v-else :size="12" :stroke-width="2.5" />{{
-                      lowSpace ? 'One thing to fix before installing' : 'Ready to install'
-                    }}
-                  </span>
-                  <button type="button" class="mss-chip is-btn" @click="changeSetup">
-                    <SlidersHorizontal :size="12" />Change
-                  </button>
-                </div>
-                <div class="mss-stage-subject">
-                  <span class="mss-stage-glyph"><Laptop :size="20" /></span>
-                  <span class="grid">
-                    <span class="mss-stage-title"
-                      >{{ DETECTED.chip }} · {{ DETECTED.memGb }} GB</span
-                    >
-                    <span class="mss-stage-sub"
-                      >Detected. Uses the {{ DETECTED.build }} build.</span
-                    >
-                  </span>
-                </div>
-              </div>
+            <!-- The machine it checked, drawn large: the subject of the
+                 screen. What it gets is the list below. -->
+            <div class="mss-machine is-hero">
+              <SetupLaptop :os="localSetup.os" />
+              <span class="grid min-w-0">
+                <span class="mss-machine-kicker"
+                  ><Check :size="11" :stroke-width="3" />Detected</span
+                >
+                <span class="mss-machine-title">{{ DETECTED.chip }}</span>
+                <span class="mss-row-meta">{{ DETECTED.memGb }} GB memory</span>
+              </span>
+              <!-- One Change: every setting opens the same sheet. -->
+              <Button variant="secondary" class="mss-machine-change" @click="changeSetup"
+                >Change</Button
+              >
             </div>
 
-            <section
-              class="mss-tiles"
-              :aria-label="lowSpace ? 'One thing to fix' : 'Ready to install'"
-            >
-              <div class="mss-tile" :class="lowSpace && 'is-bad'">
-                <span class="mss-tile-icon"><HardDrive :size="16" /></span>
-                <span class="mss-sum-val">
-                  <span class="mss-sum-key">Location</span>
-                  <span class="truncate">{{ where }}</span>
-                  <span v-if="!lowSpace" class="text-subtle-foreground"
-                    >{{ freeLabel(free) }} free{{
-                      flow.movedDisk ? ` on ${DETECTED.otherDisk.name}` : ''
-                    }}</span
-                  >
-                  <span v-else class="text-status-danger"
-                    >Only {{ DETECTED.lowFreeGb }} GB free. The install needs
-                    {{ DETECTED.downloadGb }} GB, plus room for models.</span
-                  >
-                  <span v-if="lowSpace" class="mss-fix">
-                    <Button size="sm" variant="secondary" @click="flow.movedDisk = true"
-                      ><HardDrive :size="14" />Install on {{ DETECTED.otherDisk.name }} ·
-                      {{ freeLabel(DETECTED.otherDisk.freeGb) }} free</Button
-                    >
-                    <Button size="sm" variant="ghost" @click="changeSetup">Choose a folder…</Button>
-                  </span>
-                </span>
-                <TriangleAlert
-                  v-if="lowSpace"
-                  :size="16"
-                  class="mss-bad"
-                  aria-label="Needs a fix"
-                />
-                <CircleCheck v-else :size="16" class="mss-ok" aria-label="Checked" />
+            <!-- What gets installed: one grouped list, as the Home's settings,
+                 a line each: what it is, its value, its detail. Only a problem
+                 gets a mark. -->
+            <dl class="mss-summary" aria-label="Install summary">
+              <div class="mss-row">
+                <dt><Zap :size="15" />Hardware</dt>
+                <dd>
+                  <span class="text-base-foreground">{{ pickedHardware.label }}</span>
+                  <span class="mss-row-meta">{{ pickedHardware.summary }}</span>
+                </dd>
               </div>
-              <div class="mss-tile">
-                <span class="mss-tile-icon"><Package :size="16" /></span>
-                <span class="mss-sum-val">
-                  <span class="mss-sum-key">Version</span>
-                  <span>ComfyUI {{ DETECTED.version }} · Stable</span>
-                  <span class="text-subtle-foreground">{{ DETECTED.downloadGb }} GB download</span>
-                </span>
-                <CircleCheck :size="16" class="mss-ok" aria-label="Checked" />
+              <div class="mss-row" :class="lowSpace && 'is-bad'">
+                <dt><HardDrive :size="15" />Location</dt>
+                <dd>
+                  <span class="truncate text-base-foreground">{{ where }}</span>
+                  <span class="mss-row-meta"
+                    ><TriangleAlert v-if="lowSpace" :size="13" aria-label="Low Disk Space" />{{
+                      freeLabel(free)
+                    }}
+                    free · ~{{ REQUIRED_GB }} GB required</span
+                  >
+                </dd>
+              </div>
+              <div class="mss-row">
+                <dt><Package :size="15" />Version</dt>
+                <dd>
+                  <span class="text-base-foreground">ComfyUI {{ DETECTED.version }} · Stable</span>
+                  <span class="mss-row-meta">{{ DETECTED.downloadGb }} GB download</span>
+                </dd>
               </div>
               <!-- Migrate, ticked on the first screen: today's migrate op. -->
-              <div
-                v-if="localSetup.machine === 'legacy' && flow.bringOver"
-                class="mss-tile is-wide"
-              >
-                <span class="mss-tile-icon"><ArrowLeftRight :size="16" /></span>
-                <span class="mss-sum-val">
-                  <span class="mss-sum-key">Migrate existing instance</span>
-                  <span>Workflows, models, and settings</span>
-                  <span class="text-subtle-foreground">From your existing ComfyUI instance</span>
-                </span>
-                <CircleCheck :size="16" class="mss-ok" aria-label="Checked" />
+              <div v-if="localSetup.machine === 'legacy' && flow.bringOver" class="mss-row">
+                <dt><ArrowLeftRight :size="15" />Migrate</dt>
+                <dd>
+                  <span class="text-base-foreground">Workflows, models, and settings</span>
+                  <span class="mss-row-meta">From your existing ComfyUI instance</span>
+                </dd>
               </div>
-            </section>
+            </dl>
           </template>
 
-          <!-- Intel Mac: no local install, so the way forward is here. -->
+          <!-- Intel Mac: today's Unsupported Hardware alert. A local install
+               can't be picked; Cloud is on the first screen, Remote Connection
+               under Change. -->
           <template v-else>
-            <DialogTitle as="h3" class="text-title font-semibold"
-              >ComfyUI can't run on this Mac</DialogTitle
-            >
+            <DialogTitle as="h3" class="text-title font-semibold">Unsupported Hardware</DialogTitle>
             <DialogDescription
-              >It needs a Mac with Apple Silicon (M1 or later). This Mac has an Intel
-              processor.</DialogDescription
+              >ComfyUI requires Apple Silicon (M1/M2/M3) Mac. Intel-based Macs are not
+              supported.</DialogDescription
             >
-            <div class="mss-stage is-short">
-              <SetupBloom tone="err" />
-              <div class="mss-stage-ui">
-                <div class="mss-stage-subject">
-                  <span class="mss-stage-glyph"><Laptop :size="20" /></span>
-                  <span class="mss-stage-title">Intel processor</span>
-                  <span class="mss-chip is-bad ml-auto"
-                    ><TriangleAlert :size="12" />Not supported</span
-                  >
-                </div>
-              </div>
+            <div class="mss-machine is-bad">
+              <SetupLaptop bad />
+              <span class="mss-machine-title">Intel processor</span>
             </div>
-            <RadioGroupRoot v-model="intelWay" class="mss-opts" aria-label="Run ComfyUI">
-              <RadioGroupItem value="cloud" class="mss-opt">
-                <span class="mss-opt-icon is-cloud"><Cloud :size="18" /></span>
-                <span class="mss-opt-text">
-                  <span class="flex items-center gap-2">
-                    <span class="text-ui font-medium text-base-foreground">Comfy Cloud</span>
-                    <Badge>For this Mac</Badge>
-                  </span>
-                  <span class="text-ui text-subtle-foreground"
-                    >Nothing to install. Runs on our GPUs.</span
-                  >
-                </span>
-                <span class="mss-opt-radio"></span>
-              </RadioGroupItem>
-              <RadioGroupItem value="server" class="mss-opt">
-                <span class="mss-opt-icon"><ArrowLeftRight :size="18" /></span>
-                <span class="mss-opt-text">
-                  <span class="text-ui font-medium text-base-foreground">Connect to a server</span>
-                  <span class="text-ui text-subtle-foreground"
-                    >Already run ComfyUI on another machine? Use this Mac as the screen.</span
-                  >
-                </span>
-                <span class="mss-opt-radio"></span>
-              </RadioGroupItem>
-            </RadioGroupRoot>
           </template>
         </div>
         <footer class="mar-wizard-foot mss-foot">
           <Button v-if="flow.takeover" variant="ghost" size="lg" @click="flow.step = 'first'"
-            >Back</Button
+            ><ArrowLeft :size="14" />Back</Button
           >
-          <span class="flex-1 text-ui text-subtle-foreground">{{
-            unsupported ? '' : `${freeLabel(free)} free · ~${REQUIRED_GB} GB required`
-          }}</span>
-          <Button
-            v-if="!unsupported"
-            variant="primary"
-            size="lg"
-            :disabled="!canInstall"
-            @click="startInstall"
-            >Install</Button
-          >
-          <Button v-else variant="primary" size="lg" @click="continueIntel">{{
-            intelWay === 'cloud' ? 'Continue with Cloud' : 'Connect to a server…'
-          }}</Button>
+          <!-- Today's low-space warning: it asks, it doesn't block. -->
+          <template v-if="flow.confirmLowDisk">
+            <span class="mr-auto grid text-ui">
+              <span class="font-medium text-base-foreground">Low Disk Space</span>
+              <span class="text-subtle-foreground"
+                >The target drive only has {{ freeLabel(free) }} free. This operation may require
+                approximately {{ REQUIRED_GB }} GB. You may run out of space during the
+                process.</span
+              >
+            </span>
+            <Button variant="ghost" size="lg" @click="flow.confirmLowDisk = false">Cancel</Button>
+            <Button variant="primary" size="lg" @click="toTemplates">Continue Anyway</Button>
+          </template>
+          <template v-else>
+            <span class="flex-1"></span>
+            <span v-if="!unsupported" class="mss-foot-sum tabular-nums"
+              >{{ DETECTED.downloadGb }} GB download · ~{{ REQUIRED_GB }} GB required</span
+            >
+            <Button v-if="unsupported" size="lg" @click="changeSetup">Change</Button>
+            <Button v-else variant="primary" size="lg" @click="continueSetup">{{
+              workflowStep ? 'Continue' : 'Install'
+            }}</Button>
+          </template>
         </footer>
       </template>
 
@@ -572,25 +580,55 @@ const failed = computed(() => flow.step === 'error')
           <DialogDescription
             >Everything here is already set to what fits this computer.</DialogDescription
           >
-          <div class="mss-fields">
-            <div class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Install method</span>
-              <MarSeg v-model="method" label="Install method" :options="METHODS" />
+          <!-- A settings sheet: label on the left, control on the right,
+               a hairline between rows. Picks are radio cards. -->
+          <div v-if="method !== 'remote'" class="mss-form">
+            <div class="mss-form-row">
+              <span id="mss-from" class="mss-form-label">Get ComfyUI from</span>
+              <RadioGroupRoot v-model="method" class="mss-opts" aria-labelledby="mss-from">
+                <RadioGroupItem
+                  v-for="m in SOURCES"
+                  :key="m.value"
+                  :value="m.value"
+                  class="mss-opt"
+                  :class="m.value === 'portable' && 'is-wide'"
+                >
+                  <span class="mss-opt-icon"><component :is="m.icon" :size="16" /></span>
+                  <span class="mss-opt-text">
+                    <span class="mss-opt-name">{{ m.label }}</span>
+                    <span class="mss-opt-meta">{{ m.meta }}</span>
+                  </span>
+                  <span class="mss-opt-check" aria-hidden="true"
+                    ><Check :size="15" :stroke-width="2.5"
+                  /></span>
+                </RadioGroupItem>
+              </RadioGroupRoot>
             </div>
-            <div v-if="method === 'remote'" class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Server URL</span>
-              <Input
-                v-model="serverUrl"
-                placeholder="http://192.168.1.20:8188"
-                aria-label="Server URL"
-              />
+            <div v-if="method === 'managed'" class="mss-form-row">
+              <span class="mss-form-label">Release</span>
+              <div class="mss-form-note">
+                <span>Sign in to see your workspace's builds.</span>
+                <Button size="sm" variant="secondary" @click="hostActions.signIn()">Sign in</Button>
+              </div>
             </div>
-            <div class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Name</span>
+            <div v-else class="mss-form-row">
+              <span class="mss-form-label">Release</span>
+              <div class="flex flex-wrap items-center gap-2">
+                <MarSeg v-model="channel" label="Release" :options="CHANNELS" />
+                <Select
+                  v-if="channel === 'stable'"
+                  v-model="version"
+                  label="ComfyUI"
+                  :options="VERSIONS"
+                />
+              </div>
+            </div>
+            <div class="mss-form-row">
+              <span class="mss-form-label">Name</span>
               <Input v-model="name" aria-label="Name" />
             </div>
-            <div v-if="method !== 'remote'" class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Location</span>
+            <div class="mss-form-row">
+              <span class="mss-form-label">Location</span>
               <Input :model-value="where" readonly aria-label="Location">
                 <template #trailing>
                   <span class="text-ui whitespace-nowrap text-subtle-foreground"
@@ -601,53 +639,86 @@ const failed = computed(() => flow.step === 'error')
                     variant="subtle"
                     class="mr-1.5"
                     @click.prevent="flow.movedDisk = true"
-                    >Browse…</Button
+                    >Browse</Button
                   >
                 </template>
               </Input>
             </div>
-            <div v-if="method === 'public'" class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Release</span>
-              <div class="flex flex-wrap items-center gap-3">
-                <MarSeg v-model="channel" label="Release" :options="CHANNELS" />
-                <Select
-                  v-if="channel === 'stable'"
-                  v-model="version"
-                  label="ComfyUI"
-                  :options="VERSIONS"
-                />
-              </div>
-            </div>
-            <div v-if="method === 'managed'" class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Release</span>
-              <div class="flex items-center gap-3">
-                <span class="flex-1 text-ui text-subtle-foreground"
-                  >Sign in to see your workspace's builds.</span
-                >
-                <Button size="sm" variant="secondary" @click="hostActions.signIn()">Sign in</Button>
-              </div>
-            </div>
-            <div v-if="method !== 'remote'" class="mss-field">
-              <span class="text-ui font-medium text-base-foreground">Hardware</span>
-              <RadioGroupRoot v-model="hardware" class="grid grid-cols-2 gap-2">
+            <div class="mss-form-row">
+              <span id="mss-hw" class="mss-form-label">Hardware</span>
+              <RadioGroupRoot v-model="hardware" class="mss-opts is-list" aria-labelledby="mss-hw">
                 <RadioGroupItem
                   v-for="h in HARDWARE"
                   :key="h.value"
                   :value="h.value"
-                  class="mss-radio"
+                  class="mss-opt"
                 >
-                  <span class="flex items-center justify-between gap-2">
-                    <span class="text-ui font-medium text-base-foreground">{{ h.label }}</span>
-                    <Badge v-if="h.value === 'mps'">Detected</Badge>
+                  <span class="mss-opt-icon"><component :is="h.icon" :size="16" /></span>
+                  <span class="mss-opt-text">
+                    <span class="mss-opt-name"
+                      >{{ h.label
+                      }}<span v-if="h.recommended" class="mss-opt-tag">{{
+                        say('newInstall.recommended')
+                      }}</span></span
+                    >
+                    <span class="mss-opt-meta">{{ h.meta }}</span>
                   </span>
-                  <span class="text-ui text-subtle-foreground">{{ h.hint }}</span>
+                  <span class="mss-opt-check" aria-hidden="true"
+                    ><Check :size="15" :stroke-width="2.5"
+                  /></span>
                 </RadioGroupItem>
               </RadioGroupRoot>
             </div>
+            <p class="mss-form-aside">
+              Already running ComfyUI on another machine?
+              <button type="button" class="mss-link" @click="method = 'remote'">
+                Connect to a server instead
+              </button>
+            </p>
+            <!-- Today's other two ways in, from the File menu. -->
+            <p class="mss-form-aside is-more">
+              Already have ComfyUI on {{ DETECTED.noun }}?
+              <button
+                type="button"
+                class="mss-link"
+                @click="toast(`Opening ${say('fileMenu.addExistingInstall')}`)"
+              >
+                {{ say('fileMenu.addExistingInstall') }}
+              </button>
+              or
+              <button
+                type="button"
+                class="mss-link"
+                @click="toast(`Opening ${say('fileMenu.loadSnapshot')}`)"
+              >
+                {{ say('fileMenu.loadSnapshot') }}
+              </button>
+            </p>
+          </div>
+
+          <!-- Remote Connection: today's third method, behind the link. -->
+          <div v-else class="mss-form">
+            <div class="mss-form-row">
+              <span class="mss-form-label">Server URL</span>
+              <Input
+                v-model="serverUrl"
+                placeholder="http://192.168.1.20:8188"
+                aria-label="Server URL"
+              />
+            </div>
+            <div class="mss-form-row">
+              <span class="mss-form-label">Name</span>
+              <Input v-model="name" aria-label="Name" />
+            </div>
+            <p class="mss-form-aside">
+              <button type="button" class="mss-link" @click="method = 'public'">
+                Install on {{ DETECTED.noun }} instead
+              </button>
+            </p>
           </div>
         </div>
         <footer class="mar-wizard-foot mss-foot">
-          <Button variant="ghost" size="lg" @click="discardChanges">Back</Button>
+          <Button variant="ghost" size="lg" @click="discardChanges">Discard changes</Button>
           <span class="mr-auto"></span>
           <Button
             v-if="method === 'remote'"
@@ -657,190 +728,220 @@ const failed = computed(() => flow.step === 'error')
             @click="toast(`Connecting to ${serverUrl}`)"
             >Connect</Button
           >
-          <Button v-else variant="primary" size="lg" @click="flow.step = 'setup'">Done</Button>
+          <Button v-else variant="primary" size="lg" @click="flow.step = 'setup'"
+            >Save changes</Button
+          >
         </footer>
       </template>
 
-      <!-- Installing, with the workflow pick in the wait; Error, in place. -->
-      <template v-else>
-        <div :key="failed ? 'error' : 'installing'" class="mar-wizard-body mss-body">
-          <DialogTitle as="h3" class="sr-only">{{
-            failed ? 'The install stopped' : 'Installing ComfyUI'
-          }}</DialogTitle>
-          <section class="mss-prog" :class="failed && 'is-err'">
-            <!-- The bloom resolves with the install, toward what opens first. -->
-            <div class="mss-stage is-tall">
-              <SetupBloom
-                :resolve="flow.percent / 100"
-                :src="flow.picked ? imgUrl(flow.picked.img) : undefined"
-                :tone="failed ? 'err' : 'idle'"
-              />
-              <div class="mss-stage-ui">
-                <div class="mss-stage-top">
-                  <Transition name="mss-fade" mode="out-in">
-                    <span v-if="!failed" :key="flow.picked?.id ?? 'blank'" class="mss-chip">{{
-                      flow.picked ? `Opens with ${flow.picked.title}` : 'Opens with a blank canvas'
-                    }}</span>
-                  </Transition>
-                </div>
-                <div class="mss-stage-foot">
-                  <div class="mss-prog-head">
-                    <span class="mss-stage-title is-big">{{
-                      failed ? 'The install stopped' : 'Installing ComfyUI'
-                    }}</span>
-                    <span v-if="!failed" class="mss-stage-sub tabular-nums"
-                      >{{ flow.percent }}%</span
-                    >
-                  </div>
-                  <div
-                    class="mss-bar"
-                    role="progressbar"
-                    :aria-valuenow="flow.percent"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    aria-label="Install progress"
+      <!-- Template: today's starter-workflow step, after Set up. -->
+      <template v-else-if="flow.step === 'template'">
+        <div :key="flow.step" class="mar-wizard-body mss-body">
+          <DialogTitle as="h3" class="text-title font-semibold"
+            >Choose a starter workflow</DialogTitle
+          >
+          <DialogDescription
+            >Opens a ready-to-run workflow. Models download during setup.</DialogDescription
+          >
+          <div class="mss-pick">
+            <MarSeg
+              v-model="flow.tab"
+              label="Workflow type"
+              :options="TABS"
+              class="mss-pick-tabs"
+            />
+            <!-- Explore's template card, with what today's step says on it:
+                 Recommended, Requires credits, the task and the download. -->
+            <div class="mss-cards" role="radiogroup" aria-label="Choose a starter workflow">
+              <button
+                v-for="s in shownStarters"
+                :key="s.id"
+                type="button"
+                role="radio"
+                :aria-checked="flow.picked?.id === s.id"
+                class="mss-wf"
+                @click="pick(s)"
+              >
+                <span class="mss-wf-media">
+                  <img :src="starterImg(s)" alt="" loading="lazy" />
+                  <span v-if="s.tag === 'Recommended'" class="mss-wf-badge">Recommended</span>
+                  <span v-else-if="s.credits" class="mss-wf-badge is-credits"
+                    ><Crown :size="12" :stroke-width="2.5" />Requires credits</span
                   >
-                    <i :style="{ width: flow.percent + '%' }"></i>
-                  </div>
-                </div>
-              </div>
+                  <span v-if="!s.credits" class="mss-wf-badge is-size tabular-nums"
+                    >~{{ s.gb }} GB</span
+                  >
+                </span>
+                <span class="mss-wf-text">
+                  <span class="mss-wf-name">{{ starterName(s) }}</span>
+                  <span class="mss-wf-task">{{ starterTask(s) }}</span>
+                  <span class="mss-wf-check" aria-hidden="true"
+                    ><Check :size="15" :stroke-width="2.5"
+                  /></span>
+                </span>
+              </button>
             </div>
-            <div class="mss-steps-row">
-              <ol class="mss-phases">
+          </div>
+          <Checkbox v-if="!flow.takeover" v-model="dontShowTemplates"
+            >Don't show this template step again</Checkbox
+          >
+        </div>
+        <footer class="mar-wizard-foot mss-foot">
+          <Button variant="ghost" size="lg" @click="flow.step = 'setup'"
+            ><ArrowLeft :size="14" />Back</Button
+          >
+          <!-- Today's block: the picked workflow's models don't fit. -->
+          <span v-if="starterBlocked" class="mx-2 grid min-w-0 flex-1 text-ui">
+            <span class="font-medium text-base-foreground"
+              >Not Enough Space for Template Models</span
+            >
+            <span class="text-subtle-foreground"
+              >Needs ~{{ pickedGb }} GB, only {{ freeLabel(free) }} free. Free up space or pick a
+              lighter workflow.</span
+            >
+          </span>
+          <template v-else>
+            <span class="flex-1"></span>
+            <span class="mss-foot-sum tabular-nums">{{ pickedGb }} GB download</span>
+          </template>
+          <Button size="lg" @click="installWith(null)">Skip &amp; Install</Button>
+          <Button
+            variant="primary"
+            size="lg"
+            :disabled="starterBlocked"
+            @click="installWith(flow.picked)"
+            >Install</Button
+          >
+        </footer>
+      </template>
+
+      <!-- Installing: the status first, then today's scene of Comfy outputs.
+           The Cloud pitch is one line in the bar. Error: today's Operation
+           failed, in place. -->
+      <template v-else>
+        <div :key="failed ? 'error' : 'installing'" class="mar-wizard-body mss-body mss-body-inst">
+          <DialogTitle as="h3" class="text-title font-semibold">{{
+            failed ? 'Operation failed' : 'Installing ComfyUI'
+          }}</DialogTitle>
+          <!-- Status on the left: today's five steps, all in view, the
+               running one open with its detail. On the right one calm panel:
+               today's showcase clips, one at a time, in place of the scene. -->
+          <section class="mss-inst" :class="failed && 'is-err'">
+            <div class="mss-inst-main">
+              <ol class="mss-inst-steps" aria-live="polite">
                 <li
                   v-for="(p, i) in phases"
                   :key="p.label"
-                  :data-phase="
-                    i < phaseIndex ? 'done' : i === phaseIndex ? (failed ? 'fail' : 'now') : 'todo'
-                  "
+                  class="mss-inst-step"
+                  :class="rowState(i)"
+                  :aria-current="i === nowIndex ? 'step' : undefined"
                 >
-                  <span class="mss-phase-node">
-                    <Check v-if="i < phaseIndex" :size="11" :stroke-width="3" />
-                    <TriangleAlert v-else-if="i === phaseIndex && failed" :size="11" />
-                    <span v-else-if="i === phaseIndex" class="mss-phase-pulse"></span>
+                  <span class="mss-inst-icon" aria-hidden="true">
+                    <Check v-if="i < nowIndex" :size="12" stroke-width="3" />
+                    <TriangleAlert v-else-if="i === nowIndex && failed" :size="13" />
+                    <LoaderCircle v-else-if="i === nowIndex" :size="14" class="mss-spin" />
                   </span>
-                  <span class="truncate"
-                    >{{ p.label }}{{ i === 0 ? ` · ${DETECTED.downloadGb} GB` : '' }}</span
-                  >
+                  <span class="mss-inst-text">
+                    <!-- Only the download knows its size: it gets a percent
+                         by its name and one quiet line of detail. -->
+                    <span class="mss-inst-label"
+                      >{{ p.label
+                      }}<span v-if="i === nowIndex && stepDetail" class="mss-inst-pct tabular-nums"
+                        >{{ Math.round(downloadPct) }}%</span
+                      ></span
+                    >
+                    <span
+                      v-if="i === nowIndex && stepDetail"
+                      class="mss-inst-detail tabular-nums"
+                      >{{ stepDetail }}</span
+                    >
+                  </span>
                 </li>
               </ol>
               <button
-                v-if="!failed"
                 type="button"
-                class="mss-logs-toggle"
+                class="mss-logs-toggle justify-self-start"
                 :aria-expanded="flow.logs"
                 @click="flow.logs = !flow.logs"
               >
-                <ChevronDown :size="14" :class="flow.logs && 'rotate-180'" />{{
-                  flow.logs ? 'Hide logs' : 'View logs'
-                }}
+                <ChevronDown :size="14" :class="flow.logs && 'rotate-180'" />View logs
               </button>
-            </div>
-            <pre v-if="flow.logs && !failed" class="mss-logs">
+              <pre v-if="flow.logs || failed" class="mss-logs">
 [setup] Installing torch==2.7.1 …
-[setup] Downloading torch-2.7.1-cp313-macosx_arm64.whl (74 MB)</pre
-            >
-          </section>
-
-          <!-- Error: what happened and what to do next. -->
-          <template v-if="failed">
-            <div class="mss-callout is-err" role="alert">
-              <span class="mss-tile-icon"><TriangleAlert :size="16" /></span>
-              <div class="grid gap-1">
-                <p class="text-ui font-medium text-base-foreground">
-                  The network connection dropped while downloading packages.
-                </p>
-                <p class="text-ui text-muted-foreground">Check that you are online, then retry.</p>
-              </div>
-            </div>
-            <pre class="mss-logs">
-[setup] Installing torch==2.7.1 …
-[setup] Downloading torch-2.7.1-cp313-macosx_arm64.whl (74 MB)
+[setup] Downloading torch-2.7.1-cp313-macosx_arm64.whl (74 MB)<template v-if="failed">
 <span class="e">ERROR: ConnectionResetError(54, 'Connection reset by peer')</span>
-<span class="e">pip exited with code 2</span></pre>
-          </template>
-
-          <!-- The pick: optional, nothing chosen until you choose. -->
-          <section v-else class="mss-pick" aria-labelledby="mss-pick-title">
-            <!-- Title and tabs share one row; the lead runs under both. -->
-            <div class="mss-pick-head">
-              <h4 id="mss-pick-title" class="text-heading font-semibold text-base-foreground">
-                While it installs, pick something to make first
-              </h4>
-              <MarSeg v-model="flow.tab" label="Workflow type" :options="TABS" />
-              <p class="mss-pick-lead text-ui text-muted-foreground">
-                ComfyUI opens as soon as it is ready. Models keep downloading in the background.
-              </p>
+<span class="e">pip exited with code 2</span></template></pre>
+              <Button v-if="failed" size="sm" class="justify-self-start" @click="toast('Copied')"
+                ><Copy :size="14" />Copy</Button
+              >
             </div>
-            <div class="mss-cards">
-              <!-- Card corners as on Mar's pages: the check top-left, the
-                   chip bottom-left. -->
-              <MediaCard
-                v-for="s in STARTERS[flow.tab]"
-                :key="s.id"
-                ratio="4/3"
-                :selected="flow.picked?.id === s.id"
-                :aria-pressed="flow.picked?.id === s.id"
-                :aria-disabled="!fits(s) || undefined"
-                :class="cn('mss-card', !fits(s) && 'is-nofit')"
-                @click="pick(s)"
-                @keydown.enter.prevent="pick(s)"
-                @keydown.space.prevent="pick(s)"
-              >
-                <template #media>
-                  <img :src="imgUrl(s.img)" alt="" loading="lazy" class="mss-card-img" />
-                  <span v-if="s.tag || s.credits" class="mss-card-chip">
-                    <Badge variant="overlay">{{ s.credits ? 'Uses credits' : s.tag }}</Badge>
-                  </span>
-                </template>
-                <template v-if="flow.picked?.id === s.id" #top-left>
-                  <span class="mss-card-check"><Check :size="12" :stroke-width="3" /></span>
-                </template>
-                <span class="line-clamp-2 text-ui font-medium text-base-foreground">{{
-                  s.title
-                }}</span>
-                <span
-                  class="text-ui tabular-nums"
-                  :class="fits(s) ? 'text-subtle-foreground' : 'text-status-danger'"
-                  >{{ fits(s) ? sizeOf(s) : `Needs ${s.gb} GB, not enough space` }}</span
-                >
-              </MediaCard>
+            <div v-if="!failed" class="mss-inst-media" aria-hidden="true">
+              <video
+                v-for="(c, i) in CLIPS"
+                :key="c.id"
+                :style="{ animationDelay: `${i * 6}s` }"
+                :src="c.src"
+                :poster="imgUrl(c.poster)"
+                autoplay
+                muted
+                loop
+                playsinline
+              ></video>
             </div>
-            <p class="text-ui text-subtle-foreground tabular-nums" aria-live="polite">
-              <template v-if="flow.picked && !flow.picked.credits"
-                >{{ freeAfter }} GB free on this disk after its models download.</template
-              >
-              <template v-else-if="!flow.picked"
-                >Optional. Without a pick, it opens a blank canvas.</template
-              >
-            </p>
           </section>
         </div>
 
         <footer class="mar-wizard-foot mss-foot">
           <template v-if="failed">
-            <Button variant="ghost" size="lg" class="mr-auto" @click="backFromError">Back</Button>
-            <Button size="lg" @click="toast('Error details copied')"
-              ><Copy :size="14" />Copy error details</Button
+            <Button variant="ghost" size="lg" class="mr-auto" @click="backFromError"
+              ><ArrowLeft :size="14" />Back</Button
             >
-            <Button variant="primary" size="lg" @click="retryInstall">Retry install</Button>
+            <Button variant="primary" size="lg" @click="retryInstall">Reboot</Button>
           </template>
           <template v-else-if="!flow.confirmCancel">
+            <p
+              class="mss-pitch"
+              role="region"
+              :aria-label="say('installShowcase.label')"
+              @mouseenter="pitchHeld = true"
+              @mouseleave="pitchHeld = false"
+              @focusin="pitchHeld = true"
+              @focusout="pitchHeld = false"
+            >
+              <Cloud :size="14" class="shrink-0" />
+              <Transition name="mss-pitch-swap" mode="out-in">
+                <span :key="pitch" class="mss-pitch-line"
+                  ><b>{{ say(`installShowcase.${pitch}.title`) }}</b
+                  ><span class="mss-pitch-sep">{{
+                    say(`installShowcase.${pitch}.body`)
+                  }}</span></span
+                >
+              </Transition>
+            </p>
+            <Button variant="secondary" size="lg" @click="toast('Opening Comfy Cloud')">{{
+              say('installShowcase.cloudCta')
+            }}</Button>
             <Button
+              v-if="flow.takeover"
               variant="ghost"
               size="lg"
-              class="mr-auto text-status-danger hover:bg-status-danger/10 hover:text-status-danger"
               @click="flow.confirmCancel = true"
               >Cancel install</Button
             >
-            <Button size="lg" @click="toBackground">Continue in background</Button>
-          </template>
-          <template v-else>
-            <span class="mr-auto text-ui text-base-foreground">Cancel the install?</span>
-            <Button variant="ghost" size="lg" @click="flow.confirmCancel = false"
-              >Keep installing</Button
+            <Button v-else variant="ghost" size="lg" @click="flow.confirmCancel = true"
+              ><ArrowLeft :size="14" />Return to Dashboard</Button
             >
-            <Button variant="destructive" size="lg" @click="cancelInstall">Cancel install</Button>
+          </template>
+          <!-- Today's in-flight confirm: returning cancels the install. -->
+          <template v-else>
+            <span class="mr-auto grid text-ui">
+              <span class="font-medium text-base-foreground">Cancel current operation?</span>
+              <span class="text-subtle-foreground"
+                >Unfinished steps are rolled back where possible.</span
+              >
+            </span>
+            <Button variant="ghost" size="lg" @click="flow.confirmCancel = false">Cancel</Button>
+            <Button variant="destructive" size="lg" @click="cancelInstall">Cancel operation</Button>
           </template>
         </footer>
       </template>
