@@ -1,0 +1,38 @@
+name: Diag E2E app death
+
+on:
+  push:
+    branches: [diag/e2e-app-death]
+
+jobs:
+  e2e:
+    name: Diag (${{ matrix.platform }} ${{ matrix.part }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos, linux]
+        part: [a, b, c]
+        include:
+          - platform: macos
+            os: macos-latest
+          - platform: linux
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec electron-vite build
+      - name: Run
+        env:
+          CI: ''
+        run: ${{ format('{0}pnpm exec playwright test --project={1} --shard={2}/3 --reporter=line', matrix.platform == 'linux' && 'xvfb-run --auto-servernum ' || '', matrix.platform, matrix.part == 'a' && '1' || matrix.part == 'b' && '2' || '3') }}
+      - name: Run family repeated
+        if: always()
+        env:
+          CI: ''
+        run: ${{ format('{0}pnpm exec playwright test --project={1} e2e/beta-activation-notice.test.ts e2e/beta-activation-notice-firstrun.test.ts e2e/beta-activation-notice-lockdown.test.ts e2e/beta-activation-notice-named.test.ts e2e/whats-new-over-canvas.test.ts --repeat-each 8 --reporter=line', matrix.platform == 'linux' && 'xvfb-run --auto-servernum ' || '', matrix.platform) }}

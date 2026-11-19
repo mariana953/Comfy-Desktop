@@ -238,14 +238,52 @@ export async function launchLauncherApp(options?: SeedOptions): Promise<Launcher
   )
 
   await evalWithRetry(() =>
-    application.evaluate(({ app: electronApp, dialog }) => {
+    application.evaluate(({ app: electronApp, dialog, BrowserWindow }) => {
       dialog.showErrorBox = () => {}
       const marked = electronApp as typeof electronApp & {
         __e2eRenderProcessGoneInstalled?: boolean
       }
       if (!marked.__e2eRenderProcessGoneInstalled) {
         marked.__e2eRenderProcessGoneInstalled = true
-        electronApp.on('render-process-gone', () => electronApp.exit(1))
+        electronApp.on('render-process-gone', (_e, wc, d) => {
+          console.log(
+            '[diag] render-process-gone ' +
+              JSON.stringify({
+                reason: d.reason,
+                exitCode: d.exitCode,
+                url: wc.isDestroyed() ? '<destroyed>' : wc.getURL()
+              })
+          )
+          electronApp.exit(1)
+        })
+        electronApp.on('child-process-gone', (_e, d) =>
+          console.log('[diag] child-process-gone ' + JSON.stringify(d))
+        )
+        for (const ev of ['before-quit', 'will-quit', 'quit', 'window-all-closed'] as const) {
+          electronApp.on(ev as 'quit', () =>
+            console.log(
+              '[diag] app ' +
+                ev +
+                ' windows=' +
+                BrowserWindow.getAllWindows().length +
+                ' ' +
+                new Error().stack
+            )
+          )
+        }
+        const realQuit = electronApp.quit.bind(electronApp)
+        electronApp.quit = () => {
+          console.log('[diag] app.quit() called ' + new Error().stack)
+          realQuit()
+        }
+        const realExit = electronApp.exit.bind(electronApp)
+        electronApp.exit = (code?: number) => {
+          console.log('[diag] app.exit(' + code + ') called ' + new Error().stack)
+          realExit(code)
+        }
+        globalThis.process.on('exit', (code) => console.log('[diag] process exit ' + code))
+        for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP'] as const)
+          globalThis.process.on(sig, () => console.log('[diag] signal ' + sig))
       }
     })
   )
@@ -253,6 +291,24 @@ export async function launchLauncherApp(options?: SeedOptions): Promise<Launcher
   const cleanup = async (): Promise<void> => {
     try {
       const proc = application.process()
+      console.log('[diag] cleanup exitCode=' + proc?.exitCode + ' signal=' + proc?.signalCode)
+      if (proc && (proc.exitCode !== null || proc.signalCode !== null)) {
+        const { readdir, readFile: rf } = await import('node:fs/promises')
+        const walk = async (dir: string): Promise<string[]> => {
+          const out: string[] = []
+          for (const d of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
+            const full = path.join(dir, d.name)
+            if (d.isDirectory()) out.push(...(await walk(full)))
+            else if (/\.log$|\.dmp$/.test(d.name)) out.push(full)
+          }
+          return out
+        }
+        for (const f of await walk(homeDir)) {
+          console.log('[diag] file ' + f)
+          if (f.endsWith('.log'))
+            console.log((await rf(f, 'utf-8')).split('\n').slice(-80).join('\n'))
+        }
+      }
       if (proc && proc.exitCode === null) {
         await application.close().catch(() => {})
       }
