@@ -1,8 +1,8 @@
 name: Diag E2E app death
 
 on:
-  push:
-    branches: [diag/e2e-app-death]
+  pull_request:
+    branches: [diag/e2e-base]
 
 jobs:
   e2e:
